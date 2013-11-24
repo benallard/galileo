@@ -1,0 +1,4 @@
+SUBSYSTEM!="usb device", ACTION!="add", GOTO="fitbit_rules_end"
+SYSFS{idVendor}=="2687", SYSFS{idProduct}=="fb01", SYMLINK+="fitbit"
+MODE="0666", OWNER="ben", GROUP="root"
+LABEL="fitbit_rules_end"

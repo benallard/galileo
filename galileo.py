@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import usb.core
 
 import xml.etree.ElementTree as ET
