@@ -229,14 +229,14 @@ class FitbitClient(object):
 
     def uploadResponse(self, response):
         self.dongle.data_write(DM([0xc0, 0x24, 4]+[len(response)&0xff, len(response)>> 8]+[0, 0, 0, 0]))
-        self.dongle.data_read(500)
+        self.dongle.data_read()
 
         for i in range(0,len(response), 20):
             self.dongle.data_write(DM(response[i:i+20]))
-            self.dongle.data_read(500)
+            self.dongle.data_read()
         
         self.dongle.data_write(DM([0xc0, 2]))
-        self.dongle.data_read()
+        self.dongle.data_read(1000)
         self.dongle.data_write(DM([0xc0, 1]))
         self.dongle.data_read()
 
