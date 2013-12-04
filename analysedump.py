@@ -4,12 +4,12 @@ import sys
 import time
 import base64
 
-def readdata():
+def readlog(f):
     """ input is from stdin in the format of lines of long string starting
     with a tab ('\t') representing the hexadcimal representation of the data
     (megadump)"""
     d = []
-    for line in sys.stdin:
+    for line in f:
         if line[0] != '\t':
             if d:
                 return d
@@ -17,6 +17,13 @@ def readdata():
         line = line.strip()
         for i in range(0, len(line), 2):
             d.append(int(line[i:i+2], 16))
+    return d
+
+def readdump(f):
+    """ imput is from ./galileo.py """
+    d = []
+    for line in f:
+        d.extend(int(x,16) for x in line.strip().split())
     return d
 
 def a2s(array):
@@ -103,6 +110,8 @@ def stairs(array, start):
 def daily(array, start):
     index = start
     while array[index] != 0xc0:
+        if array[index] in (0xdb, 0xdc):
+            index += 1
         tstamp = a2lsbi(array[index:index+4])
         index += 4
         if array[index] in (0xdb, 0xdc):
@@ -131,25 +140,25 @@ def analyse(data):
     print a2x(data[index:next_index])
     index = next_index
 
-    assert(data[index:index+4] == [0xc0, 0xdb, 0xdc, 0xdd])
+    assert(data[index:index+4] == [0xc0, 0xdb, 0xdc, 0xdd]), a2x(data[index:index+10])
     index += 4
 
     print "First field"
     index = first_field(data, index)
 
-    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd])
+    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd]), a2x(data[index:index+10])
     index += 5
 
     print "Second field"
     index = minutely(data, index)
 
-    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd])
+    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd]), a2x(data[index:index+10])
     index += 5
 
     print "Third field"
     index = stairs(data, index)
 
-    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd])
+    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd]), a2x(data[index:index+10])
     index += 5
 
     print "Fourth field"
@@ -160,4 +169,4 @@ def analyse(data):
 
 
 if __name__ == "__main__":
-    analyse(readdata())
+    analyse(readdump(sys.stdin))

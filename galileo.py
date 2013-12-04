@@ -222,8 +222,13 @@ class FitbitClient(object):
             d = self.dongle.data_read(2000)
             dump.extend(d.data)
         # megadump footer
-        self.dongle.data_read(4000)
-        #dump.extend(d.data)
+        d = self.dongle.data_read(4000)
+        dataType = d.data[2]
+        nbBytes = d.data[6] * 0xff + d.data[5]
+        transportCRC = d.data[3] * 0xff + d.data[4]
+        esc1 = d.data[7]
+        esc2 = d.data[8]
+        print len(dump), nbBytes
         print 'Done'
         return dump
 
@@ -236,7 +241,7 @@ class FitbitClient(object):
             self.dongle.data_read()
         
         self.dongle.data_write(DM([0xc0, 2]))
-        self.dongle.data_read(1000)
+        self.dongle.data_read(20000) # This one can be very long. He is probably erasing the memory there
         self.dongle.data_write(DM([0xc0, 1]))
         self.dongle.data_read()
 
