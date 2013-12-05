@@ -16,16 +16,16 @@ SYMBOLS = {5:'',
            1: '+'}
 
 def _diff(C, X, Y, i, j):
-    if i > 0 and j > 0 and X[i-1] == Y[j-1]:
-        for chunk in _diff(C, X, Y, i-1, j-1): yield chunk
-        yield (0, X[i-1])
-    else:
-        if j > 0 and (i == 0 or C[i][j-1] >= C[i-1][j]):
-            for chunk in _diff(C, X, Y, i, j-1): yield chunk
+    while i != 0 and j != 0:
+        if X[i-1] == Y[j-1]:
+            yield (0, X[i-1])
+            i -= 1; j -= 1
+        elif (i == 0) or C[i][j-1] >= C[i-1][j]:
             yield (1, Y[j-1])
-        elif i > 0 and (j == 0 or C[i][j-1] < C[i-1][j]):
-            for chunk in _diff(C, X, Y, i-1, j): yield chunk
+            j -= 1
+        else:
             yield (-1, X[i-1])
+            i -= 1
 
 def diff(X, Y, maxL=20):
 
@@ -44,7 +44,7 @@ def diff(X, Y, maxL=20):
     Y = Y[start:]
 
     C = LCS(X, Y)
-    for chunk in _diff(C, X, Y, len(X), len(Y)):
+    for chunk in reversed(list(_diff(C, X, Y, len(X), len(Y)))):
         if s and ((len(s) == maxL) or chunk[0] != oldmode):
             print SYMBOLS[oldmode], ' '.join('%02X' % i for i in s)
             s = []
