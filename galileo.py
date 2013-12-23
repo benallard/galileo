@@ -377,12 +377,18 @@ def main():
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    with open(os.path.join(dirname, 'dump-%d.txt' % int(time.time())), 'wt') as dumpfile:
+    filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
+    with open(filename, 'wt') as dumpfile:
         for i in range(0, len(dump), 16):
             dumpfile.write(a2x(dump[i:i+16])+'\n')
             
     try:
         response = galileo.sync(fitbit.major, fitbit.minor, trackerid, dump)
+
+        with open(filename, 'at') as dumpfile:
+            dumpfile.write('\n')
+            for i in range(0, len(response), 16):
+                dumpfile.write(a2x(response[i:i+16])+'\n')
 
         fitbit.uploadResponse(response)
     except SyncError:
