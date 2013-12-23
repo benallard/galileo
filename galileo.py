@@ -132,9 +132,6 @@ class FitBitDongle(USBDevice):
         return msg
 
 
-class NoTracker(Exception): pass
-
-
 class Tracker(object):
     def __init__(self, Id, addrType, serviceUUID):
         self.id = Id
