@@ -2,7 +2,7 @@ Galileo
 =======
 
 :author: Benoît Allard <benoit.allard@gmx.de>
-:version: 0.1
+:version: 0.2
 :license: LGPL
 :bug tracker: https://bitbucket.org/benallard/galileo/issues
 

@@ -265,7 +265,7 @@ class SyncError(Exception): pass
 
 class GalileoClient(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
-    VERSION = '0.1'
+    VERSION = '0.2'
 
     def __init__(self, url):
         self.url = url
