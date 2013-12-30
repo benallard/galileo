@@ -172,28 +172,22 @@ class FitbitClient(object):
         self.minor = d[3]
         
     def discover(self):
-        # start discovery
         self.dongle.ctrl_write([0x1a, 4, 0xba, 0x56, 0x89, 0xa6, 0xfa, 0xbf,
                            0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
                            0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb,
                            0xa0, 0x0f, 0, 0xd3, 0, 0, 0, 0])
-        self.dongle.ctrl_read()
-        try:
-            d = self.dongle.ctrl_read(10000)
+        self.dongle.ctrl_read() # StartDiscovery
+        d = self.dongle.ctrl_read(10000)
+        while d[0] != 3:
             trackerId = list(d[2:8])
             addrType = list(d[8:9])
             serviceUUID = list(d[17:19])
-            tracker = Tracker(trackerId, addrType, serviceUUID)
-        except TimeoutError:
-            tracker = None
+            yield Tracker(trackerId, addrType, serviceUUID)
+            d = self.dongle.ctrl_read(4000)
 
         # tracker found, cancel discovery
         self.dongle.ctrl_write([2, 5])
-        if tracker is not None:
-            self.dongle.ctrl_read(500)
         self.dongle.ctrl_read(2000) # CancelDiscovery
-
-        return tracker
 
     def establishLink(self, tracker):
         self.dongle.ctrl_write([0xb, 6]+tracker.id+tracker.addrType+tracker.serviceUUID)
@@ -230,7 +224,7 @@ class FitbitClient(object):
             d.makeMagic()
             dump.extend(d.data)
         # megadump footer
-        d = self.dongle.data_read(10000)
+        d = self.dongle.data_read()
         dataType = d.data[2]
         nbBytes = d.data[6] * 0xff + d.data[5]
         transportCRC = d.data[3] * 0xff + d.data[4]
@@ -289,6 +283,7 @@ class GalileoClient(object):
 
 
         class MyFile(object):
+            """ I need a file-like object to write the xml to memory """
             def __init__(self): self.data = ""
             def write(self, data): self.data += data
 
@@ -363,48 +358,56 @@ def main():
 
     fitbit.getDongleInfo()
 
-    tracker = fitbit.discover()
-    if tracker is None:
-        print "No tracker found"
-        return
+    trackers = [t for t in fitbit.discover()]
 
-    galileo.requestStatus()
+    print "%d trackers found" % len(trackers)
 
-    fitbit.establishLink(tracker)
+    for tracker in trackers:
 
-    fitbit.enableTxPipe()
+        galileo.requestStatus()
 
-    fitbit.initializeAirlink()
+        try:
+            fitbit.establishLink(tracker)
+        except TimeoutError:
+            # tracker was known, but disapeared in the meantime
+            continue
 
-    dump = fitbit.getmegaDump()
+        fitbit.enableTxPipe()
 
-    trackerid = ''.join('%02X' % c for c in tracker.id)
+        fitbit.initializeAirlink()
 
-    # Write the dump somewhere for archiving ...
-    dirname = os.path.expanduser(os.path.join('~', '.galileo', trackerid))
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
+        dump = fitbit.getmegaDump()
 
-    filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
-    with open(filename, 'wt') as dumpfile:
-        for i in range(0, len(dump), 16):
-            dumpfile.write(a2x(dump[i:i+16])+'\n')
+        trackerid = ''.join('%02X' % c for c in tracker.id)
+
+        # Write the dump somewhere for archiving ...
+        dirname = os.path.expanduser(os.path.join('~', '.galileo', trackerid))
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
+        with open(filename, 'wt') as dumpfile:
+            for i in range(0, len(dump), 20):
+                dumpfile.write(a2x(dump[i:i+20])+'\n')
             
-    try:
-        response = galileo.sync(fitbit.major, fitbit.minor, trackerid, dump)
+        try:
+            response = galileo.sync(fitbit.major, fitbit.minor, 
+                                    trackerid, dump)
 
-        with open(filename, 'at') as dumpfile:
-            dumpfile.write('\n')
-            for i in range(0, len(response), 16):
-                dumpfile.write(a2x(response[i:i+16])+'\n')
+            with open(filename, 'at') as dumpfile:
+                dumpfile.write('\n')
+                for i in range(0, len(response), 20):
+                    dumpfile.write(a2x(response[i:i+20])+'\n')
 
-        fitbit.uploadResponse(response)
-    except SyncError:
-        print "Error synchronizing"
+            fitbit.uploadResponse(response)
+        except SyncError:
+            print "Error synchronizing"
 
-    fitbit.disableTxPipe()
+        fitbit.disableTxPipe()
 
-    fitbit.terminateAirlink()
+        fitbit.terminateAirlink()
+
+    print "Done."
 
 if __name__ == "__main__":
     main()
