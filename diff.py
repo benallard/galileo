@@ -80,4 +80,9 @@ def diffdir(basedir):
 
 if __name__ == "__main__":
     import sys
-    diffdir(sys.argv[1])
+    if len(sys.argv) == 2:
+        # one param
+        diffdir(sys.argv[1])
+    elif len(sys.argv) == 3:
+        # Two params
+        dumpdiff(sys.argv[1], sys.argv[2])
