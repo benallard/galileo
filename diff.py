@@ -1,3 +1,8 @@
+import os
+
+from analysedump import readdump
+from galileo import s2a
+
 def LCS(X, Y):
     m = len(X)
     n = len(Y)
@@ -10,22 +15,23 @@ def LCS(X, Y):
                 C[i][j] = max(C[i][j-1], C[i-1][j])
     return C
 
-SYMBOLS = {5:'',
-           0: ' ',
+SYMBOLS = {0: ' ',
            -1: '-',
            1: '+'}
 
 def _diff(C, X, Y, i, j):
-    while i != 0 and j != 0:
+    while (i, j) != (0, 0):
         if X[i-1] == Y[j-1]:
             yield (0, X[i-1])
             i -= 1; j -= 1
-        elif (i == 0) or C[i][j-1] >= C[i-1][j]:
+        elif j > 0 and ((i == 0) or (C[i][j-1] >= C[i-1][j])):
             yield (1, Y[j-1])
             j -= 1
-        else:
+        elif i > 0 and ((j == 0) or C[i][j-1] < C[i-1][j]):
             yield (-1, X[i-1])
             i -= 1
+        else:
+            assert False
 
 def diff(X, Y, maxL=20):
 
@@ -52,8 +58,8 @@ def diff(X, Y, maxL=20):
         oldmode = chunk[0]
     # Print the last one
     print SYMBOLS[oldmode], ' '.join('%02X' % i for i in s)
+    return oldmode * len(s)
 
-from analysedump import readdump
 
 def dumpdiff(dump1, dump2):
     with open(dump1) as f:
@@ -64,7 +70,6 @@ def dumpdiff(dump1, dump2):
 
     diff(data1, data2)
 
-import os
 
 def diffdir(basedir):
 
