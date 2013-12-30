@@ -60,13 +60,23 @@ class DataMessage(object):
                 raise ValueError('data %s with wrong length' % data)
             # last byte is length
             self.len = data[-1]
-            self.data = data[:self.len]
+            self.data = list(data[:self.len])
 
     def asList(self):
         return self.data + [0]*(31 - self.len) + [self.len]
 
     def __str__(self):
         return ' '.join(['[', a2x(self.data), ']', '-', str(self.len)])
+
+    def makeMagic(self):
+        patterns = {
+            "DB DD DC": (3, [0xdb, 0xdc]),
+            "DB DC DB DC DD": (5, [0xc0, 0xdb, 0xdc, 0xdd])}
+        for p in patterns:
+            if a2x(self.data).startswith(p):
+                plen, newp = patterns[p]
+                self.data = newp + self.data[plen:]
+                break
         
 DM = DataMessage
 
@@ -209,17 +219,18 @@ class FitbitClient(object):
 
         # begin Megadump
         self.dongle.data_write(DM([0xc0, 0x10, 0xd]))
-        self.dongle.data_read(2000)
+        self.dongle.data_read()
 
         dump = []
         # megadump body
-        d = self.dongle.data_read(2000)
+        d = self.dongle.data_read()
         dump.extend(d.data)
         while d.len == 20:
-            d = self.dongle.data_read(2000)
+            d = self.dongle.data_read()
+            d.makeMagic()
             dump.extend(d.data)
         # megadump footer
-        d = self.dongle.data_read(4000)
+        d = self.dongle.data_read(10000)
         dataType = d.data[2]
         nbBytes = d.data[6] * 0xff + d.data[5]
         transportCRC = d.data[3] * 0xff + d.data[4]
