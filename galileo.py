@@ -68,17 +68,23 @@ class DataMessage(object):
     def __str__(self):
         return ' '.join(['[', a2x(self.data), ']', '-', str(self.len)])
 
-    def makeMagic(self):
-        patterns = {
-            "DB DD DC": (3, [0xdb, 0xdc]),
-            "DB DC DB DC DD": (5, [0xc0, 0xdb, 0xdc, 0xdd])}
-        for p in patterns:
-            if a2x(self.data).startswith(p):
-                plen, newp = patterns[p]
-                self.data = newp + self.data[plen:]
-                break
-        
 DM = DataMessage
+
+def unSLIP(data):
+    """ The protocol uses a particular version of SLIP (RFC 1055) applied
+    only on the first byte of the data"""
+    END = 0300
+    ESC = 0333
+    ESC_END = 0334
+    ESC_ESC = 0335
+    if data[0] == ESC:
+        if data[1] == ESC_END:
+            return [END] + data[2:]
+        elif data[1] == ESC_ESC:
+            return [ESC] + data[2:]
+        else:
+            assert False, "%x not in (%x, %x)" % (data[1], ESS_END, ESC_ESC)
+    return data
 
 class NoDongleException(Exception): pass
 
@@ -221,8 +227,7 @@ class FitbitClient(object):
         dump.extend(d.data)
         while d.len == 20:
             d = self.dongle.data_read()
-            d.makeMagic()
-            dump.extend(d.data)
+            dump.extend(unSLIP(d.data))
         # megadump footer
         d = self.dongle.data_read()
         dataType = d.data[2]
