@@ -225,11 +225,10 @@ class FitbitClient(object):
         # megadump body
         d = self.dongle.data_read()
         dump.extend(d.data)
-        while d.len == 20:
+        while d.data[0] != 0xc0:
             d = self.dongle.data_read()
             dump.extend(unSLIP(d.data))
         # megadump footer
-        d = self.dongle.data_read()
         dataType = d.data[2]
         nbBytes = d.data[6] * 0xff + d.data[5]
         transportCRC = d.data[3] * 0xff + d.data[4]
