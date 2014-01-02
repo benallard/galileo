@@ -136,7 +136,7 @@ class FitBitDongle(USBDevice):
         if l != 32:
             print 'Bug, sent %d, had 32' % l
 
-    def data_read(self, timeout=500):
+    def data_read(self, timeout=2000):
         try:
             data = self.dev.read(0x81, 32, self.DataIF.bInterfaceNumber, timeout=timeout)
         except usb.core.USBError, ue:
@@ -161,19 +161,19 @@ class FitbitClient(object):
 
     def disconnect(self):
         self.dongle.ctrl_write([2, 2])
-        self.dongle.ctrl_read(500) # CancelDiscovery
-        self.dongle.ctrl_read(500) # TerminateLink
+        self.dongle.ctrl_read() # CancelDiscovery
+        self.dongle.ctrl_read() # TerminateLink
         try:
-            self.dongle.ctrl_read(500)
-            self.dongle.ctrl_read(500)
-            self.dongle.ctrl_read(500)
+            self.dongle.ctrl_read()
+            self.dongle.ctrl_read()
+            self.dongle.ctrl_read()
         except TimeoutError:
             # assuming link terminated
             pass
 
     def getDongleInfo(self):
         self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
-        d = self.dongle.ctrl_read(500)
+        d = self.dongle.ctrl_read()
         self.major = d[2]
         self.minor = d[3]
         
@@ -193,16 +193,16 @@ class FitbitClient(object):
 
         # tracker found, cancel discovery
         self.dongle.ctrl_write([2, 5])
-        self.dongle.ctrl_read(2000) # CancelDiscovery
+        self.dongle.ctrl_read() # CancelDiscovery
 
     def establishLink(self, tracker):
         self.dongle.ctrl_write([0xb, 6]+tracker.id+tracker.addrType+tracker.serviceUUID)
-        self.dongle.ctrl_read(2000) # EstablishLink
-        self.dongle.ctrl_read(8000) 
+        self.dongle.ctrl_read() # EstablishLink
+        self.dongle.ctrl_read()
         # established, waiting for service discovery
         # - This one takes long
         self.dongle.ctrl_read(8000) # GAP_LINK_ESTABLISHED_EVENT
-        self.dongle.ctrl_read(2000)
+        self.dongle.ctrl_read()
 
     def enableTxPipe(self):
         # enabling tx pipe
@@ -212,7 +212,7 @@ class FitbitClient(object):
     def initializeAirlink(self):
         self.dongle.data_write(DM([0xc0, 0xa, 0xa, 0, 6, 0, 6, 0, 0, 0, 0xc8, 0]))
         self.dongle.ctrl_read(10000)
-        self.dongle.data_read(2000)
+        self.dongle.data_read()
 
     def getmegaDump(self):
         print 'Megadump'
@@ -247,7 +247,7 @@ class FitbitClient(object):
             self.dongle.data_read()
         
         self.dongle.data_write(DM([0xc0, 2]))
-        self.dongle.data_read(20000) # This one can be very long. He is probably erasing the memory there
+        self.dongle.data_read(60000) # This one can be very long. He is probably erasing the memory there
         self.dongle.data_write(DM([0xc0, 1]))
         self.dongle.data_read()
 
