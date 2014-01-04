@@ -50,12 +50,12 @@ class USBDevice(object):
 class DataMessage(object):
     length = 32
     def __init__(self, data, out=True):
-        if out:
+        if out: # outgoing
             if len(data) > 31:
                 raise ValueError('data %s (%d) too big' % (data, len(data)))
             self.data = data
             self.len = len(data)
-        else:
+        else: # incoming
             if len(data) != 32:
                 raise ValueError('data %s with wrong length' % data)
             # last byte is length
@@ -70,21 +70,17 @@ class DataMessage(object):
 
 DM = DataMessage
 
-def unSLIP(data):
+def unSLIP1(data):
     """ The protocol uses a particular version of SLIP (RFC 1055) applied
     only on the first byte of the data"""
     END = 0300
     ESC = 0333
-    ESC_END = 0334
-    ESC_ESC = 0335
+    ESC_ = {0334: END,
+            0335: ESC}
     if data[0] == ESC:
-        if data[1] == ESC_END:
-            return [END] + data[2:]
-        elif data[1] == ESC_ESC:
-            return [ESC] + data[2:]
-        else:
-            assert False, "%x not in (%x, %x)" % (data[1], ESS_END, ESC_ESC)
+        return [ESC_[data[1]]] + data[2:]
     return data
+
 
 class NoDongleException(Exception): pass
 
@@ -227,7 +223,7 @@ class FitbitClient(object):
         dump.extend(d.data)
         while d.data[0] != 0xc0:
             d = self.dongle.data_read()
-            dump.extend(unSLIP(d.data))
+            dump.extend(unSLIP1(d.data))
         # megadump footer
         dataType = d.data[2]
         nbBytes = d.data[6] * 0xff + d.data[5]
