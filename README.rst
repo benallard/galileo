@@ -42,8 +42,9 @@ dependencies:
 You should copy the file ``50-fitbit.rules`` in the directory
 ``/etc/udev/rules.d`` in order to be able to run the script as a normal user.
 
-You should:
-- replace my username with yours.
+Don't forget to:
+
+- replace my username (``ben``) with yours.
 - restart the udev service: ``sudo service udev restart``
 - unplug and replug the dongle to activate the new rule.
 
