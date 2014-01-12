@@ -364,7 +364,13 @@ def main():
 
     for tracker in trackers:
 
-        galileo.requestStatus()
+        try:
+            galileo.requestStatus()
+        except request.exceptions.ConnectionError:
+            # No internet connection or fitbit server down
+            print "Not able to connect to the fitbit server."
+            print "Check your internet connection"
+            return
 
         try:
             fitbit.establishLink(tracker)
