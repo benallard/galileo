@@ -96,6 +96,8 @@ class NoDongleException(Exception): pass
 
 class TimeoutError(Exception): pass
 
+class DongleWriteException(Exception): pass
+
 class FitBitDongle(USBDevice):
     VID = 0x2687
     PID = 0xfb01
@@ -120,7 +122,8 @@ class FitBitDongle(USBDevice):
         logger.debug('--> %s', a2x(data))
         l = self.dev.write(0x02, data, self.CtrlIF.bInterfaceNumber, timeout=timeout)
         if l != len(data):
-            logger.warning('Bug, sent %d, had %d', l, len(data))
+            logger.error('Bug, sent %d, had %d', l, len(data))
+            raise DongleWriteException
 
     def ctrl_read(self, timeout=2000, length=32):
         try:
@@ -140,7 +143,8 @@ class FitBitDongle(USBDevice):
         logger.debug('==> %s', msg)
         l = self.dev.write(0x01, msg.asList(), self.DataIF.bInterfaceNumber, timeout=timeout)
         if l != 32:
-            logger.warning('Bug, sent %d, had 32', l)
+            logger.error('Bug, sent %d, had 32', l)
+            raise DongleWriteException
 
     def data_read(self, timeout=2000):
         try:
@@ -168,10 +172,10 @@ class FitbitClient(object):
     def disconnect(self):
         logger.info('Disconnecting from any connected trackers')
 
-        self.dongle.ctrl_write([2, 2])
-        self.dongle.ctrl_read() # CancelDiscovery
-        self.dongle.ctrl_read() # TerminateLink
         try:
+            self.dongle.ctrl_write([2, 2])
+            self.dongle.ctrl_read() # CancelDiscovery
+            self.dongle.ctrl_read() # TerminateLink
             self.dongle.ctrl_read()
             self.dongle.ctrl_read()
             self.dongle.ctrl_read()
@@ -180,11 +184,15 @@ class FitbitClient(object):
             pass
 
     def getDongleInfo(self):
-        self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
-        d = self.dongle.ctrl_read()
-        self.major = d[2]
-        self.minor = d[3]
-        logger.debug('Fitbit dongle version major:%d minor:%d', self.major, self.minor)
+        try:
+            self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
+            d = self.dongle.ctrl_read()
+            self.major = d[2]
+            self.minor = d[3]
+            logger.debug('Fitbit dongle version major:%d minor:%d', self.major, self.minor)
+        except TimeoutError:
+            logger.error('Failed to get connected Fitbit dongle information')
+            raise
 
     def discover(self):
         self.dongle.ctrl_write([0x1a, 4, 0xba, 0x56, 0x89, 0xa6, 0xfa, 0xbf,
@@ -398,11 +406,11 @@ def syncAllTrackers():
         logger.info('Attempting to synchronize tracker %s', trackerid)
 
         try:
-            logger.debug('Connecting to fitbit server and requesting status')
+            logger.debug('Connecting to Fitbit server and requesting status')
             galileo.requestStatus()
         except request.exceptions.ConnectionError:
             # No internet connection or fitbit server down
-            logger.error('Not able to connect to the fitbit server. Check your internet connection')
+            logger.error('Not able to connect to the Fitbit server. Check your internet connection')
             return
 
         try:
@@ -430,7 +438,7 @@ def syncAllTrackers():
                 dumpfile.write(a2x(dump[i:i+20])+'\n')
 
         try:
-            logger.info('Sending tracker data to fitbit')
+            logger.info('Sending tracker data to Fitbit')
             response = galileo.sync(fitbit.major, fitbit.minor,
                                     trackerid, dump)
 
@@ -442,13 +450,13 @@ def syncAllTrackers():
             # Even though the next steps might fail, fitbit has accepted
             # the data at this point.
             trackerssyncd += 1
-            logger.info('Successfully sent tracker data to fitbit')
+            logger.info('Successfully sent tracker data to Fitbit')
 
             try:
-                logger.info('Passing fitbit response to tracker')
+                logger.info('Passing Fitbit response to tracker')
                 fitbit.uploadResponse(response)
             except TimeoutError:
-                logger.warning('Timeout error while trying to give fitbit response to tracker %s', trackerid)
+                logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
 
         except SyncError, e:
             logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
