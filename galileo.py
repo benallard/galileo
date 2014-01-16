@@ -365,25 +365,7 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def main():
-    # Define and parse command-line arguments.
-    argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
-                                        epilog="""Access your synchronized data at http://www.fitbit.com.""")
-    verbosity_arggroup = argparser.add_argument_group("progress reporting control")
-    verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
-    verbosity_arggroup2.add_argument("-v", "--verbose",
-                                     action="store_const", const=logging.INFO, dest="log_level",
-                                     help="increase output verbosity")
-    verbosity_arggroup2.add_argument("-d", "--debug",
-                                     action="store_const", const=logging.DEBUG, dest="log_level",
-                                     help="show internal activity (implies verbose)")
-    verbosity_arggroup2.add_argument("-s", "--silent",
-                                     action="store_const", const=True, default=False, dest="silent",
-                                     help="only show errors")
-    cmdlineargs = argparser.parse_args()
-
-    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
-    logger.debug('%s initialising', os.path.basename(sys.argv[0]))
+def syncAllTrackers():
 
     dongle = FitBitDongle()
     dongle.setup()
@@ -478,8 +460,26 @@ def main():
         except TimeoutError:
             logger.warning('Timeout while trying to disconnect from tracker %s', trackerid)
 
-    if not cmdlineargs.silent:
-        print 'Finished. %d trackers found, %d trackers successfully synchronized' % (trackercount, trackerssyncd)
+    return (trackerssyncd, trackercount)
+
 
 if __name__ == "__main__":
-    main()
+
+    # Define and parse command-line arguments.
+    argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
+                                        epilog="""Access your synchronized data at http://www.fitbit.com.""")
+    verbosity_arggroup = argparser.add_argument_group("progress reporting control")
+    verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
+    verbosity_arggroup2.add_argument("-v", "--verbose",
+                                     action="store_const", const=logging.INFO, dest="log_level",
+                                     help="display synchronization progress")
+    verbosity_arggroup2.add_argument("-d", "--debug",
+                                     action="store_const", const=logging.DEBUG, dest="log_level",
+                                     help="show internal activity (implies verbose)")
+    cmdlineargs = argparser.parse_args()
+
+    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
+    logger.debug('%s initialising', os.path.basename(sys.argv[0]))
+
+    syncresult = syncAllTrackers()
+    logger.info('%d out of %d discovered trackers successfully synchronized' % syncresult)
