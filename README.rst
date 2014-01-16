@@ -55,8 +55,8 @@ Example
 
 An example trace can be found in the file ``trace.txt``.
 
-Thanks
-------
+Acknowledgements
+----------------
 
 Special thanks to the folks present @ the `issue 46`_ of libfitbit.
 
