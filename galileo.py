@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+"""\
+galileo.py Utility to synchronize a fitbit tracker with the fitbit server.
+
+Copyright (C) 2013-2014 Benoit Allard
+"""
 
 import usb.core
 
@@ -10,6 +15,8 @@ import base64
 
 import time
 import os
+
+__version__ = '0.2'
 
 def a2x(a, shorten=False):
     shortened = 0
@@ -194,7 +201,7 @@ class FitbitClient(object):
     def establishLink(self, tracker):
         self.dongle.ctrl_write([0xb, 6]+tracker.id+tracker.addrType+tracker.serviceUUID)
         self.dongle.ctrl_read() # EstablishLink
-        self.dongle.ctrl_read()
+        self.dongle.ctrl_read(5000)
         # established, waiting for service discovery
         # - This one takes long
         self.dongle.ctrl_read(8000) # GAP_LINK_ESTABLISHED_EVENT
@@ -265,7 +272,6 @@ class SyncError(Exception): pass
 
 class GalileoClient(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
-    VERSION = '0.2'
 
     def __init__(self, url):
         self.url = url
@@ -277,7 +283,7 @@ class GalileoClient(object):
         id = ET.SubElement(info, 'client-id')
         id.text= self.ID
         version = ET.SubElement(info, 'client-version')
-        version.text =  self.VERSION
+        version.text =  __version__
         mode = ET.SubElement(info, 'client-mode')
         mode.text='status'
 
@@ -303,7 +309,7 @@ class GalileoClient(object):
         id = ET.SubElement(info, 'client-id')
         id.text= self.ID
         version = ET.SubElement(info, 'client-version')
-        version.text =  self.VERSION
+        version.text =  __version__
         mode = ET.SubElement(info, 'client-mode')
         mode.text='sync'
         dongle = ET.SubElement(info, 'dongle-version')
@@ -334,7 +340,7 @@ class GalileoClient(object):
         
         tracker = server.find('tracker')
         if tracker is None:
-            raise SyncError
+            raise SyncError('no tracker')
         if tracker.get('tracker-id') != trackerId:
             print 'Got the response for another tracker ... ', tracker.get('tracker-id'), trackerId
         if tracker.get('type') != 'megadumpresponse':
