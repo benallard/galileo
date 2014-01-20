@@ -380,9 +380,9 @@ class GalileoClient(object):
         if tracker is None:
             raise SyncError('no tracker')
         if tracker.get('tracker-id') != trackerId:
-            logger.warning('Got the response for tracker %s, expected tracker %s', tracker.get('tracker-id'), trackerId)
+            logger.error('Got the response for tracker %s, expected tracker %s', tracker.get('tracker-id'), trackerId)
         if tracker.get('type') != 'megadumpresponse':
-            logger.warning('Not a megadumpresponse')
+            logger.error('Not a megadumpresponse: %s', tracker.get('type'))
 
         data = tracker.find('data')
 
