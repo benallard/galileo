@@ -58,17 +58,11 @@ def first_field(array, start):
     # first timestamp
     index = start
     while array[index] != 0xc0:
-        if array[index] in (0xdb, 0xdc):
-            index += 1
         tstamp = a2lsbi(array[index:index+4])
         print time.strftime("%x %X", time.localtime(tstamp)), hex(tstamp)
         index += 4
-        print "\t%s" % a2x(array[index:index+6])
-        index += 6
-        if array[index] in (0xdb, 0xdc):
-            index += 1
-        print "\t%s" % a2x(array[index:index+5])
-        index += 5
+        print "\t%s" % a2x(array[index:index+11])
+        index += 11
     return index
 
 def minutely(array, start):
@@ -112,18 +106,50 @@ def stairs(array, start):
 def daily(array, start):
     index = start
     while array[index] != 0xc0:
-        if array[index] in (0xdb, 0xdc):
-            index += 1
         tstamp = a2lsbi(array[index:index+4])
         index += 4
-        if array[index] in (0xdb, 0xdc):
-            index += 1
         print time.strftime("%x %X", time.localtime(tstamp)), a2x(array[index:index + 12])
         index += 12
     return index
 
+ESC = 0xdb
+END = 0xc0
+ESC_ = {0xdc: END, 0xdd: ESC}
+
+def unSLIP(data):
+    """ This remove SLIP escaping and yield the parts"""
+    currentpart = -1 # -1 header, 0 body, 1 footer
+    part = []
+    escape = False
+    for c in data:
+#        print "%x" % c
+        if not escape:
+            if c == ESC:
+                escape = True
+            else:
+                part.append(c)
+                if c == END:
+                    if len(part) > 1:
+                        if (part[0] == END) or (currentpart == -1):
+                            yield currentpart, part[1:-1]
+                            part = []
+                            if currentpart == -1:
+                                currentpart = 0
+                        else:
+                            print "skipping", a2x(part[:-1])
+                            part = [c]
+        else:
+            part.append(ESC_[c])
+            escape = False
+    yield 1, part
+
 def analyse(data):
- 
+
+
+    for typ, part in unSLIP(data):
+        print typ, len(part) #, a2x(part))
+
+    return
     # empirical value
     index = 60
 
