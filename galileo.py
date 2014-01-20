@@ -394,7 +394,7 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers():
+def syncAllTrackers(force):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     dongle.setup()
@@ -424,8 +424,11 @@ def syncAllTrackers():
 
         trackerid = a2t(tracker.id)
 
-        if not tracker.wantsToSync:
+        if not tracker.wantsToSync and force:
+            logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
+        elif not tracker.wantsToSync:
             logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
+            trackerssyncd += 1
             continue
 
         logger.info('Attempting to synchronize tracker %s', trackerid)
@@ -509,11 +512,14 @@ def main():
     verbosity_arggroup2.add_argument("-d", "--debug",
                                      action="store_const", const=logging.DEBUG, dest="log_level",
                                      help="show internal activity (implies verbose)")
+    argparser.add_argument("-f", "--force",
+                                     action="store_const", const=True, default=False, dest="force",
+                                     help="synchronize even if tracker reports a recent sync")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
-    total, success = syncAllTrackers()
+    total, success = syncAllTrackers(cmdlineargs.force)
     print '%d out of %d discovered trackers successfully synchronized' % (success, total)
 
 if __name__ == "__main__":
