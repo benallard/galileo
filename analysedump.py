@@ -23,6 +23,8 @@ def readdump(f):
     """ imput is from ./galileo.py """
     d = []
     for line in f:
+        if line.strip() == '':
+            break
         d.extend(int(x,16) for x in line.strip().split())
     return d
 
