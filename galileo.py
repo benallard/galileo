@@ -3,6 +3,7 @@
 galileo.py Utility to synchronize a fitbit tracker with the fitbit server.
 
 Copyright (C) 2013-2014 Benoit Allard
+Copyright (C) 2014 Stuart Hickinbottom
 """
 
 import usb.core
@@ -13,8 +14,16 @@ import requests
 
 import base64
 
+import argparse
+
+import logging
+
 import time
 import os
+import sys
+
+# Module-level logging.
+logger = logging.getLogger(__name__)
 
 from ctypes import c_byte
 
@@ -40,6 +49,8 @@ def a2s(a):
 def s2a(s):
     return [ord(c) for c in s]
 
+def a2t(a):
+    return ''.join('%02X' % x for x in a)
 
 class USBDevice(object):
     def __init__(self, vid, pid):
@@ -95,6 +106,8 @@ class NoDongleException(Exception): pass
 
 class TimeoutError(Exception): pass
 
+class DongleWriteException(Exception): pass
+
 class FitBitDongle(USBDevice):
     VID = 0x2687
     PID = 0xfb01
@@ -112,14 +125,15 @@ class FitBitDongle(USBDevice):
         cfg = self.dev.get_active_configuration();
         self.DataIF = cfg[(0, 0)]
         self.CtrlIF = cfg[(1, 0)]
-        
+
         self.dev.set_configuration()
 
     def ctrl_write(self, data, timeout=2000):
-        print '-->', a2x(data)
+        logger.debug('--> %s', a2x(data))
         l = self.dev.write(0x02, data, self.CtrlIF.bInterfaceNumber, timeout=timeout)
         if l != len(data):
-            print 'Bug, sent %d, had %d' % (l, len(data))
+            logger.error('Bug, sent %d, had %d', l, len(data))
+            raise DongleWriteException
 
     def ctrl_read(self, timeout=2000, length=32):
         try:
@@ -129,17 +143,18 @@ class FitBitDongle(USBDevice):
                 raise TimeoutError
             raise
         if list(data[:2]) == [0x20, 1]:
-            print '<--', a2x(data[:2]), a2s(data[2:])
+            logger.debug('<-- %s %s', a2x(data[:2]), a2s(data[2:]))
         else:
-            print '<--', a2x(data, True)
+            logger.debug('<-- %s', a2x(data, True))
         return data
 
 
     def data_write(self, msg, timeout=2000):
-        print '==>', msg
+        logger.debug('==> %s', msg)
         l = self.dev.write(0x01, msg.asList(), self.DataIF.bInterfaceNumber, timeout=timeout)
         if l != 32:
-            print 'Bug, sent %d, had 32' % l
+            logger.error('Bug, sent %d, had 32', l)
+            raise DongleWriteException
 
     def data_read(self, timeout=2000):
         try:
@@ -149,7 +164,7 @@ class FitBitDongle(USBDevice):
                 raise TimeoutError
             raise
         msg = DM(data, out=False)
-        print '<==', msg
+        logger.debug('<== %s', msg)
         return msg
 
 
@@ -165,10 +180,16 @@ class FitbitClient(object):
         self.dongle = dongle
 
     def disconnect(self):
+        logger.info('Disconnecting from any connected trackers')
+
         self.dongle.ctrl_write([2, 2])
         self.dongle.ctrl_read() # CancelDiscovery
         self.dongle.ctrl_read() # TerminateLink
+
         try:
+            # It is OK to have a timeout with the following ctrl_read as
+            # they are there to clean up any connection left open from
+            # the previous attempts.
             self.dongle.ctrl_read()
             self.dongle.ctrl_read()
             self.dongle.ctrl_read()
@@ -177,11 +198,16 @@ class FitbitClient(object):
             pass
 
     def getDongleInfo(self):
-        self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
-        d = self.dongle.ctrl_read()
-        self.major = d[2]
-        self.minor = d[3]
-        
+        try:
+            self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
+            d = self.dongle.ctrl_read()
+            self.major = d[2]
+            self.minor = d[3]
+            logger.debug('Fitbit dongle version major:%d minor:%d', self.major, self.minor)
+        except TimeoutError:
+            logger.error('Failed to get connected Fitbit dongle information')
+            raise
+
     def discover(self):
         self.dongle.ctrl_write([0x1a, 4, 0xba, 0x56, 0x89, 0xa6, 0xfa, 0xbf,
                            0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
@@ -195,8 +221,8 @@ class FitbitClient(object):
             RSSI = c_byte(d[9]).value
             serviceUUID = list(d[17:19])
             if RSSI < -80:
-                print "Signal has low power (%ddB), higher chance of"\
-                    " miscommunication" % RSSI
+                logger.info("Signal has low power (%ddB), higher chance of"\
+                    " miscommunication", RSSI)
             yield Tracker(trackerId, addrType, serviceUUID)
             d = self.dongle.ctrl_read(4000)
 
@@ -224,7 +250,7 @@ class FitbitClient(object):
         self.dongle.data_read()
 
     def getmegaDump(self):
-        print 'Megadump'
+        logger.debug('Getting Megadump')
 
         # begin Megadump
         self.dongle.data_write(DM([0xc0, 0x10, 0xd]))
@@ -243,8 +269,8 @@ class FitbitClient(object):
         transportCRC = d.data[3] * 0xff + d.data[4]
         esc1 = d.data[7]
         esc2 = d.data[8]
-        print len(dump), nbBytes
-        print 'Done'
+        logger.debug('Megadump done. length %d, embedded length %d', len(dump), nbBytes)
+        logger.debug('transportCRC=0x%04x, esc1=0x%02x, esc2=0x%02x', transportCRC, esc1, esc2)
         return dump
 
     def uploadResponse(self, response):
@@ -254,7 +280,7 @@ class FitbitClient(object):
         for i in range(0,len(response), 20):
             self.dongle.data_write(DM(response[i:i+20]))
             self.dongle.data_read()
-        
+
         self.dongle.data_write(DM([0xc0, 2]))
         self.dongle.data_read(60000) # This one can be very long. He is probably erasing the memory there
         self.dongle.data_write(DM([0xc0, 1]))
@@ -267,14 +293,15 @@ class FitbitClient(object):
     def terminateAirlink(self):
         self.dongle.ctrl_write([2, 7])
         self.dongle.ctrl_read() # TerminateLink
-        
+
         self.dongle.ctrl_read()
         self.dongle.ctrl_read() # GAP_LINK_TERMINATED_EVENT
         self.dongle.ctrl_read() # 22
 
 
-class SyncError(Exception): pass
-
+class SyncError(Exception):
+    def __init__(self, errorstring='Undefined'):
+        self.errorstring = errorstring
 
 class GalileoClient(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
@@ -307,7 +334,7 @@ class GalileoClient(object):
                           data= f.data,
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
-        
+
     def sync(self, major, minor, trackerId, megadump):
         client = ET.Element('galileo-client')
         client.set('version', '2.0')
@@ -334,23 +361,28 @@ class GalileoClient(object):
         f = MyFile()
         tree.write(f, xml_declaration=True, encoding="UTF-8")
 
-        print f.data
+        logger.debug('HTTP POST=%s', f.data)
         r = requests.post(self.url,
                           data= f.data,
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
-        print r.text
+        logger.debug('HTTP response=%s', r.text)
 
         server = ET.fromstring(r.text)
-        
+
+        # Raise error if the server sent us any error text
+        errorstring = server.find('error')
+        if errorstring is not None:
+            raise SyncError(errorstring.text)
+
         tracker = server.find('tracker')
         if tracker is None:
             raise SyncError('no tracker')
         if tracker.get('tracker-id') != trackerId:
-            print 'Got the response for another tracker ... ', tracker.get('tracker-id'), trackerId
+            logger.warning('Got the response for tracker %s, expected tracker %s', tracker.get('tracker-id'), trackerId)
         if tracker.get('type') != 'megadumpresponse':
-            print 'Not a megadumpresponse ...'
+            logger.warning('Not a megadumpresponse')
 
         data = tracker.find('data')
 
@@ -358,7 +390,8 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def main():
+def syncAllTrackers():
+    logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     dongle.setup()
 
@@ -370,33 +403,46 @@ def main():
 
     fitbit.getDongleInfo()
 
-    trackers = [t for t in fitbit.discover()]
+    try:
+        logger.info('Discovering trackers to synchronize')
+        trackers = [t for t in fitbit.discover()]
+    except TimeoutError:
+        logger.debug('Timeout trying to discover trackers')
+        trackers = []
 
-    print "%d trackers found" % len(trackers)
+    trackerssyncd = 0
+    trackercount = len(trackers)
+    logger.info('%d trackers discovered', trackercount)
+    for tracker in trackers:
+        logger.debug('Discovered tracker with ID %s', a2t(tracker.id))
 
     for tracker in trackers:
 
+        trackerid = a2t(tracker.id)
+
+        logger.info('Attempting to synchronize tracker %s', trackerid)
+
         try:
+            logger.debug('Connecting to Fitbit server and requesting status')
             galileo.requestStatus()
         except request.exceptions.ConnectionError:
             # No internet connection or fitbit server down
-            print "Not able to connect to the fitbit server."
-            print "Check your internet connection"
+            logger.error('Not able to connect to the Fitbit server. Check your internet connection')
             return
 
         try:
+            logger.debug('Establishing link with tracker')
             fitbit.establishLink(tracker)
+            fitbit.enableTxPipe()
+            fitbit.initializeAirlink()
         except TimeoutError:
-            # tracker was known, but disapeared in the meantime
+            logger.debug('Timeout while trying to establish link with tracker')
+            logger.warning('Unable to establish link with tracker %s. Skipping it.', trackerid)
+            # tracker was known, but disappeared in the meantime
             continue
 
-        fitbit.enableTxPipe()
-
-        fitbit.initializeAirlink()
-
+        logger.info('Getting data from tracker')
         dump = fitbit.getmegaDump()
-
-        trackerid = ''.join('%02X' % c for c in tracker.id)
 
         # Write the dump somewhere for archiving ...
         dirname = os.path.expanduser(os.path.join('~', '.galileo', trackerid))
@@ -407,9 +453,10 @@ def main():
         with open(filename, 'wt') as dumpfile:
             for i in range(0, len(dump), 20):
                 dumpfile.write(a2x(dump[i:i+20])+'\n')
-            
+
         try:
-            response = galileo.sync(fitbit.major, fitbit.minor, 
+            logger.info('Sending tracker data to Fitbit')
+            response = galileo.sync(fitbit.major, fitbit.minor,
                                     trackerid, dump)
 
             with open(filename, 'at') as dumpfile:
@@ -417,15 +464,49 @@ def main():
                 for i in range(0, len(response), 20):
                     dumpfile.write(a2x(response[i:i+20])+'\n')
 
-            fitbit.uploadResponse(response)
-        except SyncError:
-            print "Error synchronizing"
+            # Even though the next steps might fail, fitbit has accepted
+            # the data at this point.
+            trackerssyncd += 1
+            logger.info('Successfully sent tracker data to Fitbit')
 
-        fitbit.disableTxPipe()
+            try:
+                logger.info('Passing Fitbit response to tracker')
+                fitbit.uploadResponse(response)
+            except TimeoutError:
+                logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
 
-        fitbit.terminateAirlink()
+        except SyncError, e:
+            logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
 
-    print "Done."
+        try:
+            logger.debug('Disconnecting from tracker')
+            fitbit.disableTxPipe()
+            fitbit.terminateAirlink()
+        except TimeoutError:
+            logger.warning('Timeout while trying to disconnect from tracker %s', trackerid)
+
+    return (trackercount, trackerssyncd)
+
+
+def main():
+    """ This is the entry point """
+    # Define and parse command-line arguments.
+    argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
+                                        epilog="""Access your synchronized data at http://www.fitbit.com.""")
+    verbosity_arggroup = argparser.add_argument_group("progress reporting control")
+    verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
+    verbosity_arggroup2.add_argument("-v", "--verbose",
+                                     action="store_const", const=logging.INFO, dest="log_level",
+                                     help="display synchronization progress")
+    verbosity_arggroup2.add_argument("-d", "--debug",
+                                     action="store_const", const=logging.DEBUG, dest="log_level",
+                                     help="show internal activity (implies verbose)")
+    cmdlineargs = argparser.parse_args()
+
+    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
+
+    total, success = syncAllTrackers()
+    print '%d out of %d discovered trackers successfully synchronized' % (success, total)
 
 if __name__ == "__main__":
     main()
