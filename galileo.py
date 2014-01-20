@@ -169,10 +169,11 @@ class FitBitDongle(USBDevice):
 
 
 class Tracker(object):
-    def __init__(self, Id, addrType, serviceUUID):
+    def __init__(self, Id, addrType, serviceUUID, wantsToSync):
         self.id = Id
         self.addrType = addrType
         self.serviceUUID = serviceUUID
+        self.wantsToSync = wantsToSync
 
 
 class FitbitClient(object):
@@ -219,11 +220,14 @@ class FitbitClient(object):
             trackerId = list(d[2:8])
             addrType = list(d[8:9])
             RSSI = c_byte(d[9]).value
+            wantsToSync = d[12] == 4;
+            if wantsToSync:
+                logger.debug('Tracker %s wants to sync', a2t(trackerId))
             serviceUUID = list(d[17:19])
             if RSSI < -80:
-                logger.info("Signal has low power (%ddB), higher chance of"\
-                    " miscommunication", RSSI)
-            yield Tracker(trackerId, addrType, serviceUUID)
+                logger.info("Tracker %s signal has low power (%ddB), higher chance of"\
+                            " miscommunication", a2t(trackerId), RSSI)
+            yield Tracker(trackerId, addrType, serviceUUID, wantsToSync)
             d = self.dongle.ctrl_read(4000)
 
         # tracker found, cancel discovery
@@ -419,6 +423,10 @@ def syncAllTrackers():
     for tracker in trackers:
 
         trackerid = a2t(tracker.id)
+
+        if not tracker.wantsToSync:
+            logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
+            continue
 
         logger.info('Attempting to synchronize tracker %s', trackerid)
 
