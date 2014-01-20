@@ -172,10 +172,14 @@ class FitbitClient(object):
     def disconnect(self):
         logger.info('Disconnecting from any connected trackers')
 
+        self.dongle.ctrl_write([2, 2])
+        self.dongle.ctrl_read() # CancelDiscovery
+        self.dongle.ctrl_read() # TerminateLink
+
         try:
-            self.dongle.ctrl_write([2, 2])
-            self.dongle.ctrl_read() # CancelDiscovery
-            self.dongle.ctrl_read() # TerminateLink
+            # It is OK to have a timeout with the following ctrl_read as
+            # they are there to clean up any connection left open from
+            # the previous attempts.
             self.dongle.ctrl_read()
             self.dongle.ctrl_read()
             self.dongle.ctrl_read()
@@ -374,7 +378,7 @@ class GalileoClient(object):
         return s2a(d)
 
 def syncAllTrackers():
-
+    logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     dongle.setup()
 
@@ -397,7 +401,7 @@ def syncAllTrackers():
     trackercount = len(trackers)
     logger.info('%d trackers discovered', trackercount)
     for tracker in trackers:
-        logger.debug('Discovered tracked ID %s', a2t(tracker.id))
+        logger.debug('Discovered tracker with ID %s', a2t(tracker.id))
 
     for tracker in trackers:
 
@@ -468,11 +472,11 @@ def syncAllTrackers():
         except TimeoutError:
             logger.warning('Timeout while trying to disconnect from tracker %s', trackerid)
 
-    return (trackerssyncd, trackercount)
+    return (trackercount, trackerssyncd)
 
 
-if __name__ == "__main__":
-
+def main():
+    """ This is the entry point """
     # Define and parse command-line arguments.
     argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                         epilog="""Access your synchronized data at http://www.fitbit.com.""")
@@ -487,7 +491,9 @@ if __name__ == "__main__":
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
-    logger.debug('%s initialising', os.path.basename(sys.argv[0]))
 
-    syncresult = syncAllTrackers()
-    logger.info('%d out of %d discovered trackers successfully synchronized' % syncresult)
+    total, success = syncAllTrackers()
+    print '%d out of %d discovered trackers successfully synchronized' % (success, total)
+
+if __name__ == "__main__":
+    main()
