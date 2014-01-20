@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import time
 import base64
@@ -195,6 +196,19 @@ def analyse(data):
     print "Remainder"
     print a2x(data[index:])
 
+def analysedump(dump_dir, index):
+    for root, dirs, files in os.walk(dir):
+        file = sorted(files)[idx]
+        print "Analysing %s" % file
+        with open(os.path.join(root, file)) as f:
+            analyse(readdump(f))
 
 if __name__ == "__main__":
-    analyse(readdump(sys.stdin))
+    if len(sys.argv) == 1:
+        analyse(sys.stdin)
+    else:
+        dir = sys.argv[1]
+        idx = -1
+        if len(sys.argv) > 2:
+            idx = int(sys.argv[2])
+        analysedump(dir, idx)
