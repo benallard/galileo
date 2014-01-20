@@ -16,6 +16,8 @@ import base64
 import time
 import os
 
+from ctypes import c_byte
+
 __version__ = '0.2'
 
 def a2x(a, shorten=False):
@@ -190,7 +192,11 @@ class FitbitClient(object):
         while d[0] != 3:
             trackerId = list(d[2:8])
             addrType = list(d[8:9])
+            RSSI = c_byte(d[9]).value
             serviceUUID = list(d[17:19])
+            if RSSI < -80:
+                print "Signal has low power (%ddB), higher chance of"\
+                    " miscommunication" % RSSI
             yield Tracker(trackerId, addrType, serviceUUID)
             d = self.dongle.ctrl_read(4000)
 
