@@ -425,7 +425,7 @@ def syncAllTrackers():
         try:
             logger.debug('Connecting to Fitbit server and requesting status')
             galileo.requestStatus()
-        except request.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError:
             # No internet connection or fitbit server down
             logger.error('Not able to connect to the Fitbit server. Check your internet connection')
             return
