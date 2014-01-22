@@ -415,6 +415,7 @@ def syncAllTrackers(force):
         trackers = []
 
     trackerssyncd = 0
+    trackersskipped = 0
     trackercount = len(trackers)
     logger.info('%d trackers discovered', trackercount)
     for tracker in trackers:
@@ -428,7 +429,7 @@ def syncAllTrackers(force):
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
         elif tracker.syncedRecently:
             logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
-            trackerssyncd += 1
+            trackersskipped += 1
             continue
 
         logger.info('Attempting to synchronize tracker %s', trackerid)
@@ -496,7 +497,7 @@ def syncAllTrackers(force):
         except TimeoutError:
             logger.warning('Timeout while trying to disconnect from tracker %s', trackerid)
 
-    return (trackercount, trackerssyncd)
+    return (trackercount, trackerssyncd, trackersskipped)
 
 
 def main():
@@ -519,8 +520,8 @@ def main():
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
-    total, success = syncAllTrackers(cmdlineargs.force)
-    print '%d out of %d discovered trackers successfully synchronized' % (success, total)
+    total, success, skipped = syncAllTrackers(cmdlineargs.force)
+    print '%d trackers found, %d skipped, %d successfully synchronised' % (total, skipped, success)
 
 if __name__ == "__main__":
     main()
