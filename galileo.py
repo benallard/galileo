@@ -501,6 +501,9 @@ def main():
     # Define and parse command-line arguments.
     argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                         epilog="""Access your synchronized data at http://www.fitbit.com.""")
+    argparser.add_argument("--version", action="version",
+                           version="%(prog)s " + __version__,
+                           help="print version and exit")
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
     verbosity_arggroup2.add_argument("-v", "--verbose",
