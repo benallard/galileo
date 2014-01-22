@@ -233,7 +233,7 @@ class FitbitClient(object):
                 logger.debug('Tracker %s was not recently synchronized', a2t(trackerId))
             serviceUUID = list(d[17:19])
             if RSSI < -80:
-                logger.info("Tracker %s has low signal power (%ddB), higher chance of"\
+                logger.info("Tracker %s has low signal power (%ddBm), higher chance of"\
                     " miscommunication", a2t(trackerId), RSSI)
             yield Tracker(trackerId, addrType, serviceUUID, syncedRecently)
             d = self.dongle.ctrl_read(4000)
