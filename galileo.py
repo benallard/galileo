@@ -221,7 +221,7 @@ class FitbitClient(object):
             RSSI = c_byte(d[9]).value
             serviceUUID = list(d[17:19])
             if RSSI < -80:
-                logger.info("Signal has low power (%ddB), higher chance of"\
+                logger.info("Signal has low power (%ddBm), higher chance of"\
                     " miscommunication", RSSI)
             yield Tracker(trackerId, addrType, serviceUUID)
             d = self.dongle.ctrl_read(4000)
