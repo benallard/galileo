@@ -21,6 +21,7 @@ import logging
 import time
 import os
 import sys
+import errno
 
 # Module-level logging.
 logger = logging.getLogger(__name__)
@@ -101,6 +102,13 @@ def unSLIP1(data):
         return [ESC_[data[1]]] + data[2:]
     return data
 
+def isATimeout(excpt):
+    if excpt.errno == errno.ETIMEDOUT:
+        return True
+    elif excpt.errno is None and excpt.args == ('Operation timed out',):
+        return True
+    else:
+        return False
 
 class NoDongleException(Exception): pass
 
@@ -139,7 +147,7 @@ class FitBitDongle(USBDevice):
         try:
             data = self.dev.read(0x82, length, self.CtrlIF.bInterfaceNumber, timeout=timeout)
         except usb.core.USBError, ue:
-            if ue.errno == 110:
+            if isATimeout(ue):
                 raise TimeoutError
             raise
         if list(data[:2]) == [0x20, 1]:
@@ -160,7 +168,7 @@ class FitBitDongle(USBDevice):
         try:
             data = self.dev.read(0x81, 32, self.DataIF.bInterfaceNumber, timeout=timeout)
         except usb.core.USBError, ue:
-            if ue.errno == 110:
+            if isATimeout(ue):
                 raise TimeoutError
             raise
         msg = DM(data, out=False)
