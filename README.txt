@@ -32,6 +32,28 @@ too difficult to port it to other platforms.
 Installation
 ------------
 
+The easy way
+~~~~~~~~~~~~
+
+.. warning:: Until the issue10_ is closed, if you want to run the utility as a
+             non-root user, you will have to install the udev rules manually
+             (See `The more complicated way`_).
+
+::
+
+    $ pip install galileo
+    $ galileo
+
+.. note:: If you don't want to install this utility system-wide, you may want
+          to run the commands in a virtualenv_, the functionnalities will not
+          be affected.
+
+.. _issue10: https://bitbucket.org/benallard/galileo/issue/10
+.. _virtualenv: http://www.virtualenv.org
+
+The more complicated way
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 First, you need to clone this repository locally, (or download the
 ``galileo.py`` script to you local machine), and install the required
 dependencies:
@@ -66,3 +88,4 @@ https://docs.google.com/file/d/0BwJmJQV9_KRcSE0ySGxkbG1PbVE/edit and
 
 .. _`issue 46`: https://github.com/openyou/libfitbit/issues/46
 .. _`Ingo Lütkebohle`: https://github.com/iluetkeb
+

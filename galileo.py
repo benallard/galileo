@@ -21,6 +21,7 @@ import logging
 import time
 import os
 import sys
+import errno
 
 # Module-level logging.
 logger = logging.getLogger(__name__)
@@ -101,6 +102,13 @@ def unSLIP1(data):
         return [ESC_[data[1]]] + data[2:]
     return data
 
+def isATimeout(excpt):
+    if excpt.errno == errno.ETIMEDOUT:
+        return True
+    elif excpt.errno is None and excpt.args == ('Operation timed out',):
+        return True
+    else:
+        return False
 
 class NoDongleException(Exception): pass
 
@@ -139,7 +147,7 @@ class FitBitDongle(USBDevice):
         try:
             data = self.dev.read(0x82, length, self.CtrlIF.bInterfaceNumber, timeout=timeout)
         except usb.core.USBError, ue:
-            if ue.errno == 110:
+            if isATimeout(ue):
                 raise TimeoutError
             raise
         if list(data[:2]) == [0x20, 1]:
@@ -160,7 +168,7 @@ class FitBitDongle(USBDevice):
         try:
             data = self.dev.read(0x81, 32, self.DataIF.bInterfaceNumber, timeout=timeout)
         except usb.core.USBError, ue:
-            if ue.errno == 110:
+            if isATimeout(ue):
                 raise TimeoutError
             raise
         msg = DM(data, out=False)
@@ -225,8 +233,8 @@ class FitbitClient(object):
                 logger.debug('Tracker %s was not recently synchronized', a2t(trackerId))
             serviceUUID = list(d[17:19])
             if RSSI < -80:
-                logger.info("Tracker %s signal has low power (%ddB), higher chance of"\
-                            " miscommunication", a2t(trackerId), RSSI)
+                logger.info("Tracker %s has low signal power (%ddB), higher chance of"\
+                    " miscommunication", a2t(trackerId), RSSI)
             yield Tracker(trackerId, addrType, serviceUUID, syncedRecently)
             d = self.dongle.ctrl_read(4000)
 
@@ -437,7 +445,7 @@ def syncAllTrackers(force):
         try:
             logger.debug('Connecting to Fitbit server and requesting status')
             galileo.requestStatus()
-        except request.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError:
             # No internet connection or fitbit server down
             logger.error('Not able to connect to the Fitbit server. Check your internet connection')
             return
@@ -505,6 +513,9 @@ def main():
     # Define and parse command-line arguments.
     argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                         epilog="""Access your synchronized data at http://www.fitbit.com.""")
+    argparser.add_argument("--version", action="version",
+                           version="%(prog)s " + __version__,
+                           help="print version and exit")
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
     verbosity_arggroup2.add_argument("-v", "--verbose",
@@ -521,7 +532,7 @@ def main():
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
     total, success, skipped = syncAllTrackers(cmdlineargs.force)
-    print '%d trackers found, %d skipped, %d successfully synchronised' % (total, skipped, success)
+    print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
 
 if __name__ == "__main__":
     main()
