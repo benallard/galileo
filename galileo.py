@@ -177,10 +177,11 @@ class FitBitDongle(USBDevice):
 
 
 class Tracker(object):
-    def __init__(self, Id, addrType, serviceUUID):
+    def __init__(self, Id, addrType, serviceUUID, syncedRecently):
         self.id = Id
         self.addrType = addrType
         self.serviceUUID = serviceUUID
+        self.syncedRecently = syncedRecently
 
 
 class FitbitClient(object):
@@ -227,11 +228,14 @@ class FitbitClient(object):
             trackerId = list(d[2:8])
             addrType = list(d[8:9])
             RSSI = c_byte(d[9]).value
+            syncedRecently = (d[12] != 4);
+            if not syncedRecently:
+                logger.debug('Tracker %s was not recently synchronized', a2t(trackerId))
             serviceUUID = list(d[17:19])
             if RSSI < -80:
-                logger.info("Signal has low power (%ddBm), higher chance of"\
-                    " miscommunication", RSSI)
-            yield Tracker(trackerId, addrType, serviceUUID)
+                logger.info("Tracker %s has low signal power (%ddBm), higher chance of"\
+                    " miscommunication", a2t(trackerId), RSSI)
+            yield Tracker(trackerId, addrType, serviceUUID, syncedRecently)
             d = self.dongle.ctrl_read(4000)
 
         # tracker found, cancel discovery
@@ -398,7 +402,7 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers():
+def syncAllTrackers(force):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     dongle.setup()
@@ -419,6 +423,7 @@ def syncAllTrackers():
         trackers = []
 
     trackerssyncd = 0
+    trackersskipped = 0
     trackercount = len(trackers)
     logger.info('%d trackers discovered', trackercount)
     for tracker in trackers:
@@ -427,6 +432,13 @@ def syncAllTrackers():
     for tracker in trackers:
 
         trackerid = a2t(tracker.id)
+
+        if tracker.syncedRecently and force:
+            logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
+        elif tracker.syncedRecently:
+            logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
+            trackersskipped += 1
+            continue
 
         logger.info('Attempting to synchronize tracker %s', trackerid)
 
@@ -493,7 +505,7 @@ def syncAllTrackers():
         except TimeoutError:
             logger.warning('Timeout while trying to disconnect from tracker %s', trackerid)
 
-    return (trackercount, trackerssyncd)
+    return (trackercount, trackerssyncd, trackersskipped)
 
 
 def main():
@@ -512,12 +524,15 @@ def main():
     verbosity_arggroup2.add_argument("-d", "--debug",
                                      action="store_const", const=logging.DEBUG, dest="log_level",
                                      help="show internal activity (implies verbose)")
+    argparser.add_argument("-f", "--force",
+                                     action="store_const", const=True, default=False, dest="force",
+                                     help="synchronize even if tracker reports a recent sync")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
-    total, success = syncAllTrackers()
-    print '%d out of %d discovered trackers successfully synchronized' % (success, total)
+    total, success, skipped = syncAllTrackers(cmdlineargs.force)
+    print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
 
 if __name__ == "__main__":
     main()
