@@ -116,6 +116,8 @@ class TimeoutError(Exception): pass
 
 class DongleWriteException(Exception): pass
 
+class PermissionDeniedException(Exception): pass
+
 class FitBitDongle(USBDevice):
     VID = 0x2687
     PID = 0xfb01
@@ -124,17 +126,21 @@ class FitBitDongle(USBDevice):
         USBDevice.__init__(self, self.VID, self.PID)
 
     def setup(self):
-        if self.dev is None:
-            raise NoDongleException()
-        if self.dev.is_kernel_driver_active(0):
-            self.dev.detach_kernel_driver(0)
-        if self.dev.is_kernel_driver_active(1):
-            self.dev.detach_kernel_driver(1)
-        cfg = self.dev.get_active_configuration();
-        self.DataIF = cfg[(0, 0)]
-        self.CtrlIF = cfg[(1, 0)]
+        try:
+            if self.dev is None:
+                raise NoDongleException()
+            if self.dev.is_kernel_driver_active(0):
+                self.dev.detach_kernel_driver(0)
+            if self.dev.is_kernel_driver_active(1):
+                self.dev.detach_kernel_driver(1)
+            cfg = self.dev.get_active_configuration();
+            self.DataIF = cfg[(0, 0)]
+            self.CtrlIF = cfg[(1, 0)]
 
-        self.dev.set_configuration()
+            self.dev.set_configuration()
+        except usb.core.USBError, ue:
+            if ue.errno == errno.EACCES:
+                raise PermissionDeniedException
 
     def ctrl_write(self, data, timeout=2000):
         logger.debug('--> %s', a2x(data))
@@ -541,8 +547,16 @@ def main():
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
-    total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
-    print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
+    try:
+        total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
+        print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
+    except PermissionDeniedException:
+        logger.error('Insufficient permissions to access the Fitbit dongle')
+        logger.error('If you have installed galileo.py yourself then you can also install a')
+        logger.error('udev rule to automatically set the permissions on the Fitbit dongle.')
+        logger.error('Place the following into /etc/udev/rules.d/99-fitbit.rules to do this:')
+        logger.error('SUBSYSTEM=="usb", ATTR{idVendor}=="2687", ATTR{idProduct}=="fb01", SYMLINK+="fitbit", MODE="0666"')
+        logger.error('The dongle must then be removed and reinserted to trigger this new rule.')
 
 if __name__ == "__main__":
     main()

@@ -9,23 +9,25 @@ Galileo
 Introduction
 ------------
 
-This is a python script to synchronise a Fitbit device with the fitbit server.
-It allows you to browse your data on their website, and their apps.
+This is a Python script to synchronize a Fitbit device with the Fitbit
+web service. It allows you to browse your data on their website, and
+their apps.
 
-All bluetooth based trackers are supported. Those are :
+All Bluetooth-based trackers are supported. Those are:
 
 - Fitbit One
 - Fitbit Zip
 - Fitbit Flex
-- Fitbit Force (?)
+- Fitbit Force (unconfirmed - please report success or failure)
 
 .. note:: The Fitbit Ultra tracker is **not supported** as it communicates
           using the ANT protocol. To synchronize it, please use libfitbit_.
 
-This is mainly targetted at Linux as fitbit does not provide software to
-synchronize their device there. But as python is cross-platform and the used
-libraries are available on a broad variety of platform also, it should not be
-too difficult to port it to other platforms.
+This script is mainly targeted at Linux because Fitbit does not
+provide any Linux-compatible software but, as Python is
+cross-platform and the libraries used are available on a broad variety
+of platforms, it should not be too difficult to port it to other
+platforms.
 
 .. _libfitbit: https://github.com/openyou/libfitbit
 
@@ -35,7 +37,7 @@ Installation
 The easy way
 ~~~~~~~~~~~~
 
-.. warning:: Until the issue10_ is closed, if you want to run the utility as a
+.. warning:: Until issue10_ is closed, if you want to run the utility as a
              non-root user, you will have to install the udev rules manually
              (See `The more complicated way`_).
 
@@ -44,9 +46,9 @@ The easy way
     $ pip install galileo
     $ galileo
 
-.. note:: If you don't want to install this utility system-wide, you may want
-          to run the commands in a virtualenv_, the functionnalities will not
-          be affected.
+.. note:: If you don't want to install this utility system-wide, you
+          may want to run the commands in a virtualenv_, the behaviour
+          will not be affected.
 
 .. _issue10: https://bitbucket.org/benallard/galileo/issue/10
 .. _virtualenv: http://www.virtualenv.org
@@ -61,14 +63,14 @@ dependencies:
 - pyusb (tested with 1.0.0b1)
 - requests (tested with 2.0.1)
 
-You should copy the file ``50-fitbit.rules`` in the directory
-``/etc/udev/rules.d`` in order to be able to run the script as a normal user.
+You should copy the file ``99-fitbit.rules`` to the directory
+``/etc/udev/rules.d`` in order to be able to run the script as a
+non-root user.
 
 Don't forget to:
 
-- replace my username (``ben``) with yours.
 - restart the udev service: ``sudo service udev restart``
-- unplug and replug the dongle to activate the new rule.
+- unplug and re-insert the dongle to activate the new rule.
 
 Then simply run the ``galileo.py`` script.
 
@@ -76,6 +78,9 @@ Example
 -------
 
 An example trace can be found in the file ``trace.txt``.
+
+Run the script with the ``--help`` argument to see additional options
+to control the synchronization behavior.
 
 Acknowledgements
 ----------------
@@ -88,4 +93,3 @@ https://docs.google.com/file/d/0BwJmJQV9_KRcSE0ySGxkbG1PbVE/edit and
 
 .. _`issue 46`: https://github.com/openyou/libfitbit/issues/46
 .. _`Ingo Lütkebohle`: https://github.com/iluetkeb
-
