@@ -402,8 +402,14 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers(force=False, dumptofile=True):
+def syncAllTrackers(include=[], exclude=[], force=False, dumptofile=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
+
+    # Make sure the tracker IDs in the include/exclude lists are all
+    # in upper-case to ease comparisons later.
+    include = [x.upper() for x in include]
+    exclude = [x.upper() for x in exclude]
+
     dongle = FitBitDongle()
     dongle.setup()
 
@@ -432,6 +438,20 @@ def syncAllTrackers(force=False, dumptofile=True):
     for tracker in trackers:
 
         trackerid = a2t(tracker.id)
+
+        # If a list of trackers to sync was provided then ignore this
+        # tracker if it's not in that list.
+        if (len(include) > 0) and (not trackerid in include):
+            logger.info('Tracker %s is not in the list of trackers to synchronize; skipping', trackerid)
+            trackersskipped += 1
+            continue
+
+        # If a list of trackers to avoid syncing was provided then
+        # ignore this tracker if it is in that list.
+        if (len(exclude) > 0) and (trackerid in exclude):
+            logger.info('Tracker %s is in the list of trackers to ignore; skipping', trackerid)
+            trackersskipped += 1
+            continue
 
         if tracker.syncedRecently and force:
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
@@ -532,14 +552,22 @@ def main():
                                      action="store_const", const=logging.DEBUG, dest="log_level",
                                      help="show internal activity (implies verbose)")
     argparser.add_argument("-f", "--force",
-                                     action="store_const", const=True, default=False, dest="force",
+                                     action="store_true",
                                      help="synchronize even if tracker reports a recent sync")
-    argparser.add_argument("--no-dump", action="store_const", const=False, default=True, dest="dump", help="Disable the dumping of the megadump to file")
+    argparser.add_argument("--no-dump",
+                           action="store_false", dest="dump",
+                           help="Disable the dumping of the megadump to file")
+    argparser.add_argument("-I", "--include",
+                           nargs="+", metavar="ID", default=[],
+                           help="list of tracker IDs to sync (all if not specified)")
+    argparser.add_argument("-E", "--exclude", default=[],
+                           nargs="+", metavar="ID",
+                           help="list of tracker IDs to not sync (none if not specified)")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
-    total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
+    total, success, skipped = syncAllTrackers(cmdlineargs.include, cmdlineargs.exclude, cmdlineargs.force, cmdlineargs.dump)
     print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
 
 if __name__ == "__main__":
