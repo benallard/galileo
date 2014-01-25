@@ -520,9 +520,9 @@ def main():
     # Define and parse command-line arguments.
     argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                         epilog="""Access your synchronized data at http://www.fitbit.com.""")
-    argparser.add_argument("--version", action="version",
-                           version="%(prog)s " + __version__,
-                           help="print version and exit")
+    argparser.add_argument("-V", "--version",
+                           action="version", version="%(prog)s " + __version__,
+                           help="show version and exit")
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
     verbosity_arggroup2.add_argument("-v", "--verbose",
@@ -534,7 +534,9 @@ def main():
     argparser.add_argument("-f", "--force",
                                      action="store_const", const=True, default=False, dest="force",
                                      help="synchronize even if tracker reports a recent sync")
-    argparser.add_argument("--no-dump", action="store_const", const=False, default=True, dest="dump", help="Disable the dumping of the megadump to file")
+    argparser.add_argument("-n", "--no-dump",
+                           action="store_const", const=False, default=True, dest="dump",
+                           help="disable saving of the megadump to file")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
