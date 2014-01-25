@@ -402,7 +402,7 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers(force):
+def syncAllTrackers(force=False, dumptofile=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     dongle.setup()
@@ -464,25 +464,32 @@ def syncAllTrackers(force):
         logger.info('Getting data from tracker')
         dump = fitbit.getmegaDump()
 
-        # Write the dump somewhere for archiving ...
-        dirname = os.path.expanduser(os.path.join('~', '.galileo', trackerid))
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
+        if dumptofile:
+            # Write the dump somewhere for archiving ...
+            dirname = os.path.expanduser(os.path.join('~', '.galileo', trackerid))
+            if not os.path.exists(dirname):
+                logger.debug("Creating non-existent directory %s", dirname)
+                os.makedirs(dirname)
 
-        filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
-        with open(filename, 'wt') as dumpfile:
-            for i in range(0, len(dump), 20):
-                dumpfile.write(a2x(dump[i:i+20])+'\n')
+            filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
+            logger.debug("Dumping megadump to %s", filename)
+            with open(filename, 'wt') as dumpfile:
+                for i in range(0, len(dump), 20):
+                    dumpfile.write(a2x(dump[i:i+20])+'\n')
+        else:
+            logger.debug("Not dumping anything to disk")
 
         try:
             logger.info('Sending tracker data to Fitbit')
             response = galileo.sync(fitbit.major, fitbit.minor,
                                     trackerid, dump)
 
-            with open(filename, 'at') as dumpfile:
-                dumpfile.write('\n')
-                for i in range(0, len(response), 20):
-                    dumpfile.write(a2x(response[i:i+20])+'\n')
+            if dumptofile:
+                logger.debug("Appending answer from server to %s", filename)
+                with open(filename, 'at') as dumpfile:
+                    dumpfile.write('\n')
+                    for i in range(0, len(response), 20):
+                        dumpfile.write(a2x(response[i:i+20])+'\n')
 
             # Even though the next steps might fail, fitbit has accepted
             # the data at this point.
@@ -527,11 +534,12 @@ def main():
     argparser.add_argument("-f", "--force",
                                      action="store_const", const=True, default=False, dest="force",
                                      help="synchronize even if tracker reports a recent sync")
+    argparser.add_argument("--no-dump", action="store_const", const=False, default=True, dest="dump", help="Disable the dumping of the megadump to file")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
-    total, success, skipped = syncAllTrackers(cmdlineargs.force)
+    total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
     print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
 
 if __name__ == "__main__":
