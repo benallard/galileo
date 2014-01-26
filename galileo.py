@@ -411,7 +411,7 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers(include=[], exclude=[], force=False, dumptofile=True):
+def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
 
     # Make sure the tracker IDs in the include/exclude lists are all
@@ -457,7 +457,7 @@ def syncAllTrackers(include=[], exclude=[], force=False, dumptofile=True):
 
         # If a list of trackers to avoid syncing was provided then
         # ignore this tracker if it is in that list.
-        if (len(exclude) > 0) and (trackerid in exclude):
+        if (trackerid in exclude):
             logger.info('Tracker %s is in the list of trackers to ignore; skipping', trackerid)
             trackersskipped += 1
             continue
@@ -579,7 +579,7 @@ def main():
     argparser.add_argument("-I", "--include",
                            nargs="+", metavar="ID", default=[],
                            help="list of tracker IDs to sync (all if not specified)")
-    argparser.add_argument("-E", "--exclude", default=[],
+    argparser.add_argument("-X", "--exclude", default=[],
                            nargs="+", metavar="ID",
                            help="list of tracker IDs to not sync (none if not specified)")
     cmdlineargs = argparser.parse_args()
