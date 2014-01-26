@@ -116,6 +116,8 @@ class TimeoutError(Exception): pass
 
 class DongleWriteException(Exception): pass
 
+class PermissionDeniedException(Exception): pass
+
 class FitBitDongle(USBDevice):
     VID = 0x2687
     PID = 0xfb01
@@ -126,14 +128,20 @@ class FitBitDongle(USBDevice):
     def setup(self):
         if self.dev is None:
             raise NoDongleException()
-        if self.dev.is_kernel_driver_active(0):
-            self.dev.detach_kernel_driver(0)
-        if self.dev.is_kernel_driver_active(1):
-            self.dev.detach_kernel_driver(1)
+
+        try:
+            if self.dev.is_kernel_driver_active(0):
+                self.dev.detach_kernel_driver(0)
+            if self.dev.is_kernel_driver_active(1):
+                self.dev.detach_kernel_driver(1)
+        except usb.core.USBError, ue:
+            if ue.errno == errno.EACCES:
+                raise PermissionDeniedException
+            raise
+
         cfg = self.dev.get_active_configuration();
         self.DataIF = cfg[(0, 0)]
         self.CtrlIF = cfg[(1, 0)]
-
         self.dev.set_configuration()
 
     def ctrl_write(self, data, timeout=2000):
@@ -520,9 +528,9 @@ def main():
     # Define and parse command-line arguments.
     argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                         epilog="""Access your synchronized data at http://www.fitbit.com.""")
-    argparser.add_argument("--version", action="version",
-                           version="%(prog)s " + __version__,
-                           help="print version and exit")
+    argparser.add_argument("-V", "--version",
+                           action="version", version="%(prog)s " + __version__,
+                           help="show version and exit")
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
     verbosity_arggroup2.add_argument("-v", "--verbose",
@@ -534,12 +542,25 @@ def main():
     argparser.add_argument("-f", "--force",
                                      action="store_const", const=True, default=False, dest="force",
                                      help="synchronize even if tracker reports a recent sync")
-    argparser.add_argument("--no-dump", action="store_const", const=False, default=True, dest="dump", help="Disable the dumping of the megadump to file")
+    argparser.add_argument("--no-dump",
+                           action="store_const", const=False, default=True, dest="dump",
+                           help="disable saving of the megadump to file")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
-    total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
+    try:
+        total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
+    except PermissionDeniedException:
+        logger.error('Insufficient permissions to access the Fitbit dongle')
+        print '\nIf you have installed galileo.py yourself then you can also install a'
+        print 'udev rule to automatically set the permissions on the Fitbit dongle.'
+        print 'Place the following line into the file /etc/udev/rules.d/99-fitbit.rules'
+        print 'to do this:'
+        print '\nSUBSYSTEM=="usb", ATTR{idVendor}=="2687", ATTR{idProduct}=="fb01", SYMLINK+="fitbit", MODE="0666"'
+        print '\nThe dongle must then be removed and reinserted to trigger this new rule.'
+        return
+
     print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
 
 if __name__ == "__main__":
