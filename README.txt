@@ -5,6 +5,10 @@ Galileo
 :version: 0.2
 :license: LGPL
 :bug tracker: https://bitbucket.org/benallard/galileo/issues
+:mailing list: galileo@freelists.org (subscribe_, archive_)
+
+.. _subscribe: mailto:galileo-request@freelists.org?subject=subscribe
+.. _archive: http://freelists.org/archive/galileo/
 
 Introduction
 ------------
