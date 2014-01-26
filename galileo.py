@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 from ctypes import c_byte
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 def a2x(a, shorten=False):
     shortened = 0

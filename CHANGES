@@ -11,9 +11,12 @@ As well as improves the code quality.
 New contributors to this release: Stuart Hickinbottom.
 
 Main changes since 0.2:
+- Improve error reporting when insuficient permissions are set on the usb
+  device (PR #3, issue#10)
 - Add --no-dump to prevent writing a backup of the dump to disc (issue#19).
 - Only sync the trackers that have not been sync'd for some time. Use --force
   to always sync all the discovered trackers (PR #2, issue#13).
+- Warn when the signal from the tracker is too weak (issue#12).
 - Add command-line switches to control verbosity (PR #1, issue#9).
 - Register package to PyPi, and allow installation via pip.
 - Improve detection of the end of the dump (issue#2).
