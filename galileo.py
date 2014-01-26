@@ -136,6 +136,7 @@ class FitBitDongle(USBDevice):
                 self.dev.detach_kernel_driver(1)
         except usb.core.USBError, ue:
             if ue.errno == errno.EACCES:
+                logger.error('Insufficient permissions to access the Fitbit dongle')
                 raise PermissionDeniedException
             raise
 
@@ -552,7 +553,6 @@ def main():
     try:
         total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
     except PermissionDeniedException:
-        logger.error('Insufficient permissions to access the Fitbit dongle')
         print '\nIf you have installed galileo.py yourself then you can also install a'
         print 'udev rule to automatically set the permissions on the Fitbit dongle.'
         print 'Place the following line into the file /etc/udev/rules.d/99-fitbit.rules'
