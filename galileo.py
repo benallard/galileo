@@ -523,6 +523,16 @@ def syncAllTrackers(force=False, dumptofile=True):
 
     return (trackercount, trackerssyncd, trackersskipped)
 
+PERMISSION_DENIED_HELP = """
+To be able to run the fitbit utility as a non-privileged user, you first
+should install a 'udev rule' that lower the permissions needed to access the
+fitbit dongle. In order to do so, as root, create the file
+/etc/udev/rules.d/99-fitbit.rules with the following content (in one line):
+
+SUBSYSTEM=="usb", ATTR{idVendor}=="%(VID)x", ATTR{idProduct}=="%(PID)x", SYMLINK+="fitbit", MODE="0666"
+
+The dongle must then be removed and reinserted to receive the new permissions.""" % {
+	'VID': FitBitDongle.VID, 'PID': FitBitDongle.PID}
 
 def main():
     """ This is the entry point """
@@ -553,12 +563,7 @@ def main():
     try:
         total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
     except PermissionDeniedException:
-        print '\nIf you have installed galileo.py yourself then you can also install a'
-        print 'udev rule to automatically set the permissions on the Fitbit dongle.'
-        print 'Place the following line into the file /etc/udev/rules.d/99-fitbit.rules'
-        print 'to do this:'
-        print '\nSUBSYSTEM=="usb", ATTR{idVendor}=="2687", ATTR{idProduct}=="fb01", SYMLINK+="fitbit", MODE="0666"'
-        print '\nThe dongle must then be removed and reinserted to trigger this new rule.'
+        print PERMISSION_DENIED_HELP
         return
 
     print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
