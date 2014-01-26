@@ -137,8 +137,7 @@ class FitBitDongle(USBDevice):
         except usb.core.USBError, ue:
             if ue.errno == errno.EACCES:
                 raise PermissionDeniedException
-            else:
-                raise
+            raise
 
         cfg = self.dev.get_active_configuration();
         self.DataIF = cfg[(0, 0)]
@@ -552,7 +551,6 @@ def main():
 
     try:
         total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
-        print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
     except PermissionDeniedException:
         logger.error('Insufficient permissions to access the Fitbit dongle')
         print '\nIf you have installed galileo.py yourself then you can also install a'
@@ -561,6 +559,9 @@ def main():
         print 'to do this:'
         print '\nSUBSYSTEM=="usb", ATTR{idVendor}=="2687", ATTR{idProduct}=="fb01", SYMLINK+="fitbit", MODE="0666"'
         print '\nThe dongle must then be removed and reinserted to trigger this new rule.'
+        return
+
+    print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
 
 if __name__ == "__main__":
     main()

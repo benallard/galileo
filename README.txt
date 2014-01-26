@@ -79,7 +79,7 @@ Example
 
 An example trace can be found in the file ``trace.txt``.
 
-Run the script with the ``--help`` argument to see additional options
+Run the script with the ``--help`` argument to see a list of available options
 to control the synchronization behavior.
 
 Acknowledgements
