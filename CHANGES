@@ -1,4 +1,13 @@
-galileo 0.3 (????-??-??)
+galileo 0.4 (????-??-??)
+------------------------
+
+Plan for this release:
+- File based configuration
+- Enhanced stability
+- More configuration options
+- Some breackthrough in the analyse of the dumps (even for Flex/Force ?)
+
+galileo 0.3 (2014-01-27)
 ------------------------
 
 This is the third version of galileo, a free utility to synchronise fitbit
