@@ -54,7 +54,6 @@ The easy way
           may want to install it inside a virtualenv_, the behaviour
           will not be affected.
 
-.. _issue10: https://bitbucket.org/benallard/galileo/issue/10
 .. _virtualenv: http://www.virtualenv.org
 
 The more complicated way
@@ -77,6 +76,18 @@ Don't forget to:
 - unplug and re-insert the dongle to activate the new rule.
 
 Then simply run ``galileo.py``.
+
+Documentation
+-------------
+
+For the moment, this README (and the ``--help`` command line option) is the
+only documentation we have. The wiki_ is meant to gather technical
+information about the project like the communication protocol, or the format
+of the dump. Once this information reached a suffficient level of maturation,
+the goal is to integrate it into the project documentation. So head-on there,
+and start sharing your findings !
+
+.. _wiki: https://bitbucket.org/benallard/galileo/wiki
 
 Example
 -------
