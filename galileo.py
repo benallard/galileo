@@ -237,7 +237,9 @@ class FitbitClient(object):
             trackerId = list(d[2:8])
             addrType = list(d[8:9])
             RSSI = c_byte(d[9]).value
-            syncedRecently = (d[12] != 4);
+            attributes = list(d[11:13])
+            syncedRecently = (d[12] != 4)
+            logger.debug('Tracker: %s, %s, %s, %s, %s', trackerId, addrType, RSSI, attributes, syncedRecently)
             if not syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2t(trackerId))
             serviceUUID = list(d[17:19])
