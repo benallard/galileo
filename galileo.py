@@ -30,6 +30,9 @@ from ctypes import c_byte
 
 __version__ = '0.4dev'
 
+MICRODUMP = 3
+MEGADUMP = 13
+
 def a2x(a, shorten=False):
     shortened = 0
     if shorten:
@@ -272,12 +275,13 @@ class FitbitClient(object):
         self.dongle.ctrl_read(10000)
         self.dongle.data_read()
 
-    def getmegaDump(self):
-        logger.debug('Getting Megadump')
+    def getDump(self, dumptype=MEGADUMP):
+        logger.debug('Getting dump type %d', dumptype)
 
         # begin Megadump
-        self.dongle.data_write(DM([0xc0, 0x10, 0xd]))
-        self.dongle.data_read()
+        self.dongle.data_write(DM([0xc0, 0x10, dumptype]))
+        r = self.dongle.data_read()
+        assert r.data == [0xc0, 0x41, dumptype], r.data
 
         dump = []
         # megadump body
@@ -288,6 +292,7 @@ class FitbitClient(object):
             dump.extend(unSLIP1(d.data))
         # megadump footer
         dataType = d.data[2]
+        assert dataType == dumptype, "%x != %x" % (dataType, dumptype)
         nbBytes = d.data[6] * 0xff + d.data[5]
         transportCRC = d.data[3] * 0xff + d.data[4]
         esc1 = d.data[7]
@@ -479,7 +484,7 @@ def syncAllTrackers(force=False, dumptofile=True, upload=True):
             continue
 
         logger.info('Getting data from tracker')
-        dump = fitbit.getmegaDump()
+        dump = fitbit.getDump()
 
         if dumptofile:
             # Write the dump somewhere for archiving ...
