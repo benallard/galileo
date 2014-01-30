@@ -416,7 +416,11 @@ class GalileoClient(object):
 def syncAllTrackers(force=False, dumptofile=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
-    dongle.setup()
+    try:
+      dongle.setup()
+    except NoDongleException:
+      logger.error("No dongle connected, aborting")
+      return (0, 0, 0)
 
     fitbit = FitbitClient(dongle)
 
