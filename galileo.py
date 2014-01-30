@@ -415,7 +415,7 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers(force=False, dumptofile=True):
+def syncAllTrackers(force=False, dumptofile=True, upload=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     try:
@@ -496,31 +496,34 @@ def syncAllTrackers(force=False, dumptofile=True):
         else:
             logger.debug("Not dumping anything to disk")
 
-        try:
-            logger.info('Sending tracker data to Fitbit')
-            response = galileo.sync(fitbit.major, fitbit.minor,
-                                    trackerid, dump)
-
-            if dumptofile:
-                logger.debug("Appending answer from server to %s", filename)
-                with open(filename, 'at') as dumpfile:
-                    dumpfile.write('\n')
-                    for i in range(0, len(response), 20):
-                        dumpfile.write(a2x(response[i:i+20])+'\n')
-
-            # Even though the next steps might fail, fitbit has accepted
-            # the data at this point.
-            trackerssyncd += 1
-            logger.info('Successfully sent tracker data to Fitbit')
-
+        if not upload:
+            logger.info("Not uploading, as asked ...")
+        else:
             try:
-                logger.info('Passing Fitbit response to tracker')
-                fitbit.uploadResponse(response)
-            except TimeoutError:
-                logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
+                logger.info('Sending tracker data to Fitbit')
+                response = galileo.sync(fitbit.major, fitbit.minor,
+                                        trackerid, dump)
 
-        except SyncError, e:
-            logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
+                if dumptofile:
+                    logger.debug("Appending answer from server to %s", filename)
+                    with open(filename, 'at') as dumpfile:
+                        dumpfile.write('\n')
+                        for i in range(0, len(response), 20):
+                            dumpfile.write(a2x(response[i:i+20])+'\n')
+
+                # Even though the next steps might fail, fitbit has accepted
+                # the data at this point.
+                trackerssyncd += 1
+                logger.info('Successfully sent tracker data to Fitbit')
+
+                try:
+                    logger.info('Passing Fitbit response to tracker')
+                    fitbit.uploadResponse(response)
+                except TimeoutError:
+                    logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
+
+            except SyncError, e:
+                logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
 
         try:
             logger.debug('Disconnecting from tracker')
@@ -564,12 +567,15 @@ def main():
     argparser.add_argument("--no-dump",
                            action="store_const", const=False, default=True, dest="dump",
                            help="disable saving of the megadump to file")
+    argparser.add_argument("--no-upload",
+                           action="store_false", dest='upload',
+                           help="do not upload the dump to the server")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
     try:
-        total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump)
+        total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump, cmdlineargs.upload)
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return

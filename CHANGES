@@ -9,6 +9,8 @@ Plan for this release:
 
 Main changes since 0.3:
 - switch to the HTTPS protocol.
+- Add a --no-upload command line parameter to prevent the uploading of the
+  dump to the server
 
 
 galileo 0.3 (2014-01-27)
