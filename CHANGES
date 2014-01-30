@@ -7,6 +7,10 @@ Plan for this release:
 - More configuration options
 - Some breackthrough in the analyse of the dumps (even for Flex/Force ?)
 
+Main changes since 0.3:
+- switch to the HTTPS protocol.
+
+
 galileo 0.3 (2014-01-27)
 ------------------------
 
@@ -32,6 +36,7 @@ Main changes since 0.2:
 - Unify the timeout values.
 - Code cleanup.
 
+
 galileo 0.2 (2013-12-30)
 ------------------------
 
@@ -48,6 +53,7 @@ Main changes since 0.1:
 - Add a diff.py script to analyse difference in dumps.
 - Also dump the response from the server in the dump file.
 - Code cleanup
+
 
 galileo 0.1 (2013-11-24)
 ------------------------
