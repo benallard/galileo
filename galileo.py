@@ -356,6 +356,8 @@ class GalileoClient(object):
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
+        logger.debug('HTTP response=%s', r.text)
+
     def sync(self, major, minor, trackerId, megadump):
         client = ET.Element('galileo-client')
         client.set('version', '2.0')
@@ -418,7 +420,7 @@ def syncAllTrackers(force=False, dumptofile=True):
 
     fitbit = FitbitClient(dongle)
 
-    galileo = GalileoClient('http://client.fitbit.com/tracker/client/message')
+    galileo = GalileoClient('https://client.fitbit.com/tracker/client/message')
 
     fitbit.disconnect()
 
