@@ -1,4 +1,19 @@
-galileo 0.3 (????-??-??)
+galileo 0.4 (????-??-??)
+------------------------
+
+Plan for this release:
+- File based configuration
+- Enhanced stability
+- More configuration options
+- Some breackthrough in the analyse of the dumps (even for Flex/Force ?)
+
+Main changes since 0.3:
+- switch to the HTTPS protocol.
+- Add a --no-upload command line parameter to prevent the uploading of the
+  dump to the server
+
+
+galileo 0.3 (2014-01-27)
 ------------------------
 
 This is the third version of galileo, a free utility to synchronise fitbit
@@ -11,14 +26,18 @@ As well as improves the code quality.
 New contributors to this release: Stuart Hickinbottom.
 
 Main changes since 0.2:
+- Improve error reporting when insuficient permissions are set on the usb
+  device (PR #3, issue#10)
 - Add --no-dump to prevent writing a backup of the dump to disc (issue#19).
 - Only sync the trackers that have not been sync'd for some time. Use --force
   to always sync all the discovered trackers (PR #2, issue#13).
+- Warn when the signal from the tracker is too weak (issue#12).
 - Add command-line switches to control verbosity (PR #1, issue#9).
 - Register package to PyPi, and allow installation via pip.
 - Improve detection of the end of the dump (issue#2).
 - Unify the timeout values.
 - Code cleanup.
+
 
 galileo 0.2 (2013-12-30)
 ------------------------
@@ -36,6 +55,7 @@ Main changes since 0.1:
 - Add a diff.py script to analyse difference in dumps.
 - Also dump the response from the server in the dump file.
 - Code cleanup
+
 
 galileo 0.1 (2013-11-24)
 ------------------------

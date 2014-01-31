@@ -28,7 +28,10 @@ logger = logging.getLogger(__name__)
 
 from ctypes import c_byte
 
-__version__ = '0.2'
+__version__ = '0.4dev'
+
+MICRODUMP = 3
+MEGADUMP = 13
 
 def a2x(a, shorten=False):
     shortened = 0
@@ -237,7 +240,9 @@ class FitbitClient(object):
             trackerId = list(d[2:8])
             addrType = list(d[8:9])
             RSSI = c_byte(d[9]).value
-            syncedRecently = (d[12] != 4);
+            attributes = list(d[11:13])
+            syncedRecently = (d[12] != 4)
+            logger.debug('Tracker: %s, %s, %s, %s, %s', trackerId, addrType, RSSI, attributes, syncedRecently)
             if not syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2t(trackerId))
             serviceUUID = list(d[17:19])
@@ -270,12 +275,13 @@ class FitbitClient(object):
         self.dongle.ctrl_read(10000)
         self.dongle.data_read()
 
-    def getmegaDump(self):
-        logger.debug('Getting Megadump')
+    def getDump(self, dumptype=MEGADUMP):
+        logger.debug('Getting dump type %d', dumptype)
 
-        # begin Megadump
-        self.dongle.data_write(DM([0xc0, 0x10, 0xd]))
-        self.dongle.data_read()
+        # begin dump of appropriate type
+        self.dongle.data_write(DM([0xc0, 0x10, dumptype]))
+        r = self.dongle.data_read()
+        assert r.data == [0xc0, 0x41, dumptype], r.data
 
         dump = []
         # megadump body
@@ -286,6 +292,7 @@ class FitbitClient(object):
             dump.extend(unSLIP1(d.data))
         # megadump footer
         dataType = d.data[2]
+        assert dataType == dumptype, "%x != %x" % (dataType, dumptype)
         nbBytes = d.data[6] * 0xff + d.data[5]
         transportCRC = d.data[3] * 0xff + d.data[4]
         esc1 = d.data[7]
@@ -356,6 +363,8 @@ class GalileoClient(object):
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
+        logger.debug('HTTP response=%s', r.text)
+
     def sync(self, major, minor, trackerId, megadump):
         client = ET.Element('galileo-client')
         client.set('version', '2.0')
@@ -411,20 +420,23 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True):
+def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, upload=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
+    dongle = FitBitDongle()
+    try:
+      dongle.setup()
+    except NoDongleException:
+      logger.error("No dongle connected, aborting")
+      return (0, 0, 0)
 
     # Make sure the tracker IDs in the include/exclude lists are all
     # in upper-case to ease comparisons later.
     include = [x.upper() for x in include]
     exclude = [x.upper() for x in exclude]
 
-    dongle = FitBitDongle()
-    dongle.setup()
-
     fitbit = FitbitClient(dongle)
 
-    galileo = GalileoClient('http://client.fitbit.com/tracker/client/message')
+    galileo = GalileoClient('https://client.fitbit.com/tracker/client/message')
 
     fitbit.disconnect()
 
@@ -491,7 +503,7 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True):
             continue
 
         logger.info('Getting data from tracker')
-        dump = fitbit.getmegaDump()
+        dump = fitbit.getDump()
 
         if dumptofile:
             # Write the dump somewhere for archiving ...
@@ -508,31 +520,34 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True):
         else:
             logger.debug("Not dumping anything to disk")
 
-        try:
-            logger.info('Sending tracker data to Fitbit')
-            response = galileo.sync(fitbit.major, fitbit.minor,
-                                    trackerid, dump)
-
-            if dumptofile:
-                logger.debug("Appending answer from server to %s", filename)
-                with open(filename, 'at') as dumpfile:
-                    dumpfile.write('\n')
-                    for i in range(0, len(response), 20):
-                        dumpfile.write(a2x(response[i:i+20])+'\n')
-
-            # Even though the next steps might fail, fitbit has accepted
-            # the data at this point.
-            trackerssyncd += 1
-            logger.info('Successfully sent tracker data to Fitbit')
-
+        if not upload:
+            logger.info("Not uploading, as asked ...")
+        else:
             try:
-                logger.info('Passing Fitbit response to tracker')
-                fitbit.uploadResponse(response)
-            except TimeoutError:
-                logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
+                logger.info('Sending tracker data to Fitbit')
+                response = galileo.sync(fitbit.major, fitbit.minor,
+                                        trackerid, dump)
 
-        except SyncError, e:
-            logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
+                if dumptofile:
+                    logger.debug("Appending answer from server to %s", filename)
+                    with open(filename, 'at') as dumpfile:
+                        dumpfile.write('\n')
+                        for i in range(0, len(response), 20):
+                            dumpfile.write(a2x(response[i:i+20])+'\n')
+
+                # Even though the next steps might fail, fitbit has accepted
+                # the data at this point.
+                trackerssyncd += 1
+                logger.info('Successfully sent tracker data to Fitbit')
+
+                try:
+                    logger.info('Passing Fitbit response to tracker')
+                    fitbit.uploadResponse(response)
+                except TimeoutError:
+                    logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
+
+            except SyncError, e:
+                logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
 
         try:
             logger.debug('Disconnecting from tracker')
@@ -575,7 +590,10 @@ def main():
                                      help="synchronize even if tracker reports a recent sync")
     argparser.add_argument("--no-dump",
                            action="store_false", dest="dump",
-                           help="disable the dumping of the megadump to file")
+                           help="disable saving of the megadump to file")
+    argparser.add_argument("--no-upload",
+                           action="store_false", dest="upload",
+                           help="do not upload the dump to the server")
     argparser.add_argument("-I", "--include",
                            nargs="+", metavar="ID", default=[],
                            help="list of tracker IDs to sync (all if not specified)")
@@ -587,7 +605,7 @@ def main():
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
     try:
-        total, success, skipped = syncAllTrackers(cmdlineargs.include, cmdlineargs.exclude, cmdlineargs.force, cmdlineargs.dump)
+        total, success, skipped = syncAllTrackers(cmdlineargs.include, cmdlineargs.exclude, cmdlineargs.force, cmdlineargs.dump, cmdlineargs.upload)
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return

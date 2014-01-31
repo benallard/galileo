@@ -21,7 +21,7 @@ SYMBOLS = {0: ' ',
 
 def _diff(C, X, Y, i, j):
     while (i, j) != (0, 0):
-        if X[i-1] == Y[j-1]:
+        if i > 0 and j > 0 and X[i-1] == Y[j-1]:
             yield (0, X[i-1])
             i -= 1; j -= 1
         elif j > 0 and ((i == 0) or (C[i][j-1] >= C[i-1][j])):
@@ -31,7 +31,7 @@ def _diff(C, X, Y, i, j):
             yield (-1, X[i-1])
             i -= 1
         else:
-            assert False
+            assert False, ' '.join(str(c) for c in [i, j, C[i][j-1], C[i-1][j]])
 
 def diff(X, Y, maxL=20):
 
