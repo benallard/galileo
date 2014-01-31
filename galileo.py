@@ -429,11 +429,6 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
       logger.error("No dongle connected, aborting")
       return (0, 0, 0)
 
-    # Make sure the tracker IDs in the include/exclude lists are all
-    # in upper-case to ease comparisons later.
-    include = [x.upper() for x in include]
-    exclude = [x.upper() for x in exclude]
-
     fitbit = FitbitClient(dongle)
 
     galileo = GalileoClient('https://client.fitbit.com/tracker/client/message')
@@ -595,7 +590,7 @@ def main():
                            action="store_false", dest="upload",
                            help="do not upload the dump to the server")
     argparser.add_argument("-I", "--include",
-                           nargs="+", metavar="ID", default=[],
+                           nargs="+", metavar="ID", default=None,
                            help="list of tracker IDs to sync (all if not specified)")
     argparser.add_argument("-X", "--exclude", default=[],
                            nargs="+", metavar="ID",
@@ -604,8 +599,15 @@ def main():
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
+    # Make sure the tracker IDs in the include/exclude lists are all
+    # in upper-case to ease comparisons later.
+    include = cmdlineargs.include
+    if include:
+        include = [x.upper() for x in include]
+    exclude = [x.upper() for x in cmdlineargs.exclude]
+
     try:
-        total, success, skipped = syncAllTrackers(cmdlineargs.include, cmdlineargs.exclude, cmdlineargs.force, cmdlineargs.dump, cmdlineargs.upload)
+        total, success, skipped = syncAllTrackers(include, exclude, cmdlineargs.force, cmdlineargs.dump, cmdlineargs.upload)
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return
