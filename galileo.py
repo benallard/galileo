@@ -457,7 +457,7 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
 
         # If a list of trackers to sync was provided then ignore this
         # tracker if it's not in that list.
-        if (len(include) > 0) and (not trackerid in include):
+        if (include and (not trackerid in include)):
             logger.info('Tracker %s is not in the list of trackers to synchronize; skipping', trackerid)
             trackersskipped += 1
             continue
