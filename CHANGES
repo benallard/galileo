@@ -8,6 +8,7 @@ Plan for this release:
 - Some breackthrough in the analyse of the dumps (even for Flex/Force ?)
 
 Main changes since 0.3.1:
+- Add --include and --exclude to control which trackers to synchronize (PR #4)
 - Add a --no-upload command line parameter to prevent the uploading of the
   dump to the server
 
