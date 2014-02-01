@@ -13,7 +13,7 @@ with open('README.txt') as file:
 
 setup(
     name="galileo",
-    version='0.4dev',
+    version='0.3.1',
     description="Utility to synchronize a Fitbit tracker with the Fitbit server",
     long_description=long_description,
     author="Benoît Allard",
