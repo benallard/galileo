@@ -22,6 +22,7 @@ import time
 import os
 import sys
 import errno
+import StringIO
 
 # Module-level logging.
 logger = logging.getLogger(__name__)
@@ -348,18 +349,13 @@ class GalileoClient(object):
         mode = ET.SubElement(info, 'client-mode')
         mode.text='status'
 
-
-        class MyFile(object):
-            """ I need a file-like object to write the xml to memory """
-            def __init__(self): self.data = ""
-            def write(self, data): self.data += data
+        f = StringIO.StringIO()
 
         tree = ET.ElementTree(client)
-        f = MyFile()
         tree.write(f, xml_declaration=True, encoding="UTF-8")
 
         r = requests.post(self.url,
-                          data= f.data,
+                          data= f.getvalue(),
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
@@ -383,17 +379,14 @@ class GalileoClient(object):
         data = ET.SubElement(tracker, 'data')
         data.text = base64.b64encode(a2s(megadump))
 
-        class MyFile(object):
-            def __init__(self): self.data = ""
-            def write(self, data): self.data += data
 
         tree = ET.ElementTree(client)
-        f = MyFile()
+        f = StringIO.StringIO()
         tree.write(f, xml_declaration=True, encoding="UTF-8")
 
-        logger.debug('HTTP POST=%s', f.data)
+        logger.debug('HTTP POST=%s', f.getvalue())
         r = requests.post(self.url,
-                          data= f.data,
+                          data= f.getvalue(),
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
