@@ -35,6 +35,10 @@ MICRODUMP = 3
 MEGADUMP = 13
 
 def a2x(a, delim=' ', shorten=False):
+    """ array to string of hexa
+    delim is the delimiter between the hexa
+    shorten don't print the trailing zeros
+    """
     shortened = 0
     if shorten:
         while a[-1] == 0:
@@ -46,12 +50,15 @@ def a2x(a, delim=' ', shorten=False):
     return delim.join('%02X' % x for x in a) + s
 
 def s2x(s):
+    """ string to string of hexa """
     return ' '.join('%02X' % ord(c) for c in s)
 
 def a2s(a):
+    """ array to string """
     return ''.join(chr(c) for c in a)
 
 def s2a(s):
+    """ string to array """
     return [ord(c) for c in s]
 
 class USBDevice(object):
