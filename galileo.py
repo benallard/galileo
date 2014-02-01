@@ -53,9 +53,17 @@ def s2x(s):
     """ string to string of hexa """
     return ' '.join('%02X' % ord(c) for c in s)
 
-def a2s(a):
-    """ array to string """
-    return ''.join(chr(c) for c in a)
+def a2s(a, toPrint=True):
+    """ array to string
+    toPrint indicates that the resulting string is to be printed (stop at the
+    first \0)
+    """
+    s = []
+    for c in a:
+        if toPrint and (c == 0):
+            break
+        s.append(chr(c))
+    return ''.join(s)
 
 def s2a(s):
     """ string to array """
@@ -421,7 +429,7 @@ class GalileoClient(object):
     def sync(self, dongle, trackerId, megadump):
         server = self.post('sync', dongle, (
             'tracker', {'tracker-id': trackerId}, (
-                'data', {}, [], base64.b64encode(a2s(megadump)))))
+                'data', {}, [], base64.b64encode(a2s(megadump, False)))))
 
         tracker = None
         for elem in server:
