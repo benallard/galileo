@@ -332,13 +332,27 @@ class SyncError(Exception):
     def __init__(self, errorstring='Undefined'):
         self.errorstring = errorstring
 
+def tuplesToXML(tuples):
+    if isinstance(tuples, tuple):
+        tuples = [tuples]
+    for tpl in tuples:
+        name, attrs, body = tpl
+        elem = ET.Element(name)
+        for k, v in attrs.iteritems():
+            elem.set(k, v)
+        if isinstance(body, basestring):
+            elem.text = body
+        else:
+            elem.extend(tuplesToXML(body))
+        yield elem
+
 class GalileoClient(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
 
     def __init__(self, url):
         self.url = url
 
-    def post(self, mode, dongle=None):
+    def post(self, mode, dongle=None, data=None):
         client = ET.Element('galileo-client')
         client.set('version', '2.0')
         info = ET.SubElement(client, 'client-info')
@@ -352,50 +366,12 @@ class GalileoClient(object):
             dongleelem = ET.SubElement(info, 'dongle-version')
             dongleelem.set('major', str(dongle.major))
             dongleelem.set('minor', str(dongle.minor))
+        if data is not None:
+            client.extend(tuplesToXML(data))
 
         f = StringIO.StringIO()
 
         tree = ET.ElementTree(client)
-        tree.write(f, xml_declaration=True, encoding="UTF-8")
-
-        r = requests.post(self.url,
-                          data= f.getvalue(),
-                          headers={"Content-Type": "text/xml"})
-        r.raise_for_status()
-
-        logger.debug('HTTP response=%s', r.text)
-
-        server = ET.fromstring(r.text)
-
-        # Raise error if the server sent us any error text
-        errorstring = server.find('error')
-        if errorstring is not None:
-            raise SyncError(errorstring.text)
-
-    def requestStatus(self):
-        self.post('status')
-
-    def sync(self, dongle, trackerId, megadump):
-        client = ET.Element('galileo-client')
-        client.set('version', '2.0')
-        info = ET.SubElement(client, 'client-info')
-        id = ET.SubElement(info, 'client-id')
-        id.text= self.ID
-        version = ET.SubElement(info, 'client-version')
-        version.text =  __version__
-        mode = ET.SubElement(info, 'client-mode')
-        mode.text='sync'
-        dongleelem = ET.SubElement(info, 'dongle-version')
-        dongleelem.set('major', str(dongle.major))
-        dongleelem.set('minor', str(dongle.minor))
-        tracker = ET.SubElement(client, 'tracker')
-        tracker.set('tracker-id', trackerId)
-        data = ET.SubElement(tracker, 'data')
-        data.text = base64.b64encode(a2s(megadump))
-
-
-        tree = ET.ElementTree(client)
-        f = StringIO.StringIO()
         tree.write(f, xml_declaration=True, encoding="UTF-8")
 
         logger.debug('HTTP POST=%s', f.getvalue())
@@ -412,6 +388,16 @@ class GalileoClient(object):
         errorstring = server.find('error')
         if errorstring is not None:
             raise SyncError(errorstring.text)
+
+        return server # soon: XMLToTuple(server)
+
+    def requestStatus(self):
+        self.post('status')
+
+    def sync(self, dongle, trackerId, megadump):
+        server = self.post('sync', dongle, (
+            'tracker', {'tracker-id': trackerId}, (
+                'data', {}, base64.b64encode(a2s(megadump)))))
 
         tracker = server.find('tracker')
         if tracker is None:
