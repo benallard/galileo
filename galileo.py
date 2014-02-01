@@ -338,7 +338,7 @@ class GalileoClient(object):
     def __init__(self, url):
         self.url = url
 
-    def requestStatus(self):
+    def post(self, mode, dongle=None):
         client = ET.Element('galileo-client')
         client.set('version', '2.0')
         info = ET.SubElement(client, 'client-info')
@@ -346,8 +346,12 @@ class GalileoClient(object):
         id.text= self.ID
         version = ET.SubElement(info, 'client-version')
         version.text =  __version__
-        mode = ET.SubElement(info, 'client-mode')
-        mode.text='status'
+        modeelem = ET.SubElement(info, 'client-mode')
+        modeelem.text=mode
+        if dongle is not None:
+            dongleelem = ET.SubElement(info, 'dongle-version')
+            dongleelem.set('major', str(dongle.major))
+            dongleelem.set('minor', str(dongle.minor))
 
         f = StringIO.StringIO()
 
@@ -361,7 +365,17 @@ class GalileoClient(object):
 
         logger.debug('HTTP response=%s', r.text)
 
-    def sync(self, major, minor, trackerId, megadump):
+        server = ET.fromstring(r.text)
+
+        # Raise error if the server sent us any error text
+        errorstring = server.find('error')
+        if errorstring is not None:
+            raise SyncError(errorstring.text)
+
+    def requestStatus(self):
+        self.post('status')
+
+    def sync(self, dongle, trackerId, megadump):
         client = ET.Element('galileo-client')
         client.set('version', '2.0')
         info = ET.SubElement(client, 'client-info')
@@ -371,9 +385,9 @@ class GalileoClient(object):
         version.text =  __version__
         mode = ET.SubElement(info, 'client-mode')
         mode.text='sync'
-        dongle = ET.SubElement(info, 'dongle-version')
-        dongle.set('major', str(major))
-        dongle.set('minor', str(minor))
+        dongleelem = ET.SubElement(info, 'dongle-version')
+        dongleelem.set('major', str(dongle.major))
+        dongleelem.set('minor', str(dongle.minor))
         tracker = ET.SubElement(client, 'tracker')
         tracker.set('tracker-id', trackerId)
         data = ET.SubElement(tracker, 'data')
@@ -513,8 +527,7 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
         else:
             try:
                 logger.info('Sending tracker data to Fitbit')
-                response = galileo.sync(fitbit.major, fitbit.minor,
-                                        trackerid, dump)
+                response = galileo.sync(fitbit, trackerid, dump)
 
                 if dumptofile:
                     logger.debug("Appending answer from server to %s", filename)
