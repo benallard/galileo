@@ -34,7 +34,7 @@ __version__ = '0.4dev'
 MICRODUMP = 3
 MEGADUMP = 13
 
-def a2x(a, shorten=False):
+def a2x(a, delim=' ', shorten=False):
     shortened = 0
     if shorten:
         while a[-1] == 0:
@@ -43,7 +43,7 @@ def a2x(a, shorten=False):
     s = ''
     if shortened:
         s = ' 00 (%d times)' % shortened
-    return ' '.join('%02X' % x for x in a) + s
+    return delim.join('%02X' % x for x in a) + s
 
 def s2x(s):
     return ' '.join('%02X' % ord(c) for c in s)
@@ -166,7 +166,7 @@ class FitBitDongle(USBDevice):
         if list(data[:2]) == [0x20, 1]:
             logger.debug('<-- %s %s', a2x(data[:2]), a2s(data[2:]))
         else:
-            logger.debug('<-- %s', a2x(data, True))
+            logger.debug('<-- %s', a2x(data, shorten=True))
         return data
 
 
