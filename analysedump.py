@@ -23,11 +23,14 @@ def readlog(f):
 def readdump(f):
     """ imput is from ./galileo.py """
     d = []
+    r = []
+    current = d
     for line in f:
         if line.strip() == '':
-            break
-        d.extend(int(x,16) for x in line.strip().split())
-    return d
+            current = r
+            continue
+        current.extend(int(x,16) for x in line.strip().split())
+    return d, r
 
 def a2s(array):
     """ array of int to string """

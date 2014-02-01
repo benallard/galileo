@@ -63,12 +63,14 @@ def diff(X, Y, maxL=20):
 
 def dumpdiff(dump1, dump2):
     with open(dump1) as f:
-        data1 = readdump(f)
+        data1, resp1 = readdump(f)
 
     with open(dump2) as f:
-        data2 = readdump(f)
+        data2, resp2 = readdump(f)
 
     diff(data1, data2)
+    print '-'*20
+    diff(resp1, resp2)
 
 
 def diffdir(basedir):
