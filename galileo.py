@@ -332,19 +332,22 @@ class SyncError(Exception):
     def __init__(self, errorstring='Undefined'):
         self.errorstring = errorstring
 
-def tuplesToXML(tuples):
-    if isinstance(tuples, tuple):
-        tuples = [tuples]
-    for tpl in tuples:
-        name, attrs, body = tpl
-        elem = ET.Element(name)
-        for k, v in attrs.iteritems():
-            elem.set(k, v)
+def tupleToXML(name, attrs={}, body=None):
+    elem = ET.Element(name)
+    for k, v in attrs.iteritems():
+        elem.set(k, v)
+    if body is not None:
         if isinstance(body, basestring):
             elem.text = body
         else:
             elem.extend(tuplesToXML(body))
-        yield elem
+    return elem
+
+def tuplesToXML(tuples):
+    if isinstance(tuples, tuple):
+        tuples = [tuples]
+    for tpl in tuples:
+        yield tupleToXML(*tpl)
 
 class GalileoClient(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
@@ -353,19 +356,17 @@ class GalileoClient(object):
         self.url = url
 
     def post(self, mode, dongle=None, data=None):
-        client = ET.Element('galileo-client')
-        client.set('version', '2.0')
-        info = ET.SubElement(client, 'client-info')
-        id = ET.SubElement(info, 'client-id')
-        id.text= self.ID
-        version = ET.SubElement(info, 'client-version')
-        version.text =  __version__
-        modeelem = ET.SubElement(info, 'client-mode')
-        modeelem.text=mode
+        client = tupleToXML('galileo-client', {'version': "2.0"})
+        info = tupleToXML('client-info', body=[
+            ('client-id', {}, self.ID),
+            ('client-version', {}, __version__),
+            ('client-mode', {}, mode)])
         if dongle is not None:
-            dongleelem = ET.SubElement(info, 'dongle-version')
-            dongleelem.set('major', str(dongle.major))
-            dongleelem.set('minor', str(dongle.minor))
+            info.append(tupleToXML(
+                'dongle-version',
+                {'major': str(dongle.major),
+                 'minor': str(dongle.minor)}))
+        client.append(info)
         if data is not None:
             client.extend(tuplesToXML(data))
 
