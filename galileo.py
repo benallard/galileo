@@ -278,7 +278,7 @@ class FitbitClient(object):
     def getDump(self, dumptype=MEGADUMP):
         logger.debug('Getting dump type %d', dumptype)
 
-        # begin Megadump
+        # begin dump of appropriate type
         self.dongle.data_write(DM([0xc0, 0x10, dumptype]))
         r = self.dongle.data_read()
         assert r.data == [0xc0, 0x41, dumptype], r.data
@@ -420,7 +420,7 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers(force=False, dumptofile=True, upload=True):
+def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, upload=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     try:
@@ -454,6 +454,20 @@ def syncAllTrackers(force=False, dumptofile=True, upload=True):
     for tracker in trackers:
 
         trackerid = a2t(tracker.id)
+
+        # If a list of trackers to sync was provided then ignore this
+        # tracker if it's not in that list.
+        if (include is not None) and (trackerid not in include):
+            logger.info('Tracker %s is not in the include list; skipping', trackerid)
+            trackersskipped += 1
+            continue
+
+        # If a list of trackers to avoid syncing was provided then
+        # ignore this tracker if it is in that list.
+        if trackerid in exclude:
+            logger.info('Tracker %s is in the exclude list; skipping', trackerid)
+            trackersskipped += 1
+            continue
 
         if tracker.syncedRecently and force:
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
@@ -567,20 +581,33 @@ def main():
                                      action="store_const", const=logging.DEBUG, dest="log_level",
                                      help="show internal activity (implies verbose)")
     argparser.add_argument("-f", "--force",
-                                     action="store_const", const=True, default=False, dest="force",
+                                     action="store_true",
                                      help="synchronize even if tracker reports a recent sync")
     argparser.add_argument("--no-dump",
-                           action="store_const", const=False, default=True, dest="dump",
+                           action="store_false", dest="dump",
                            help="disable saving of the megadump to file")
     argparser.add_argument("--no-upload",
-                           action="store_false", dest='upload',
+                           action="store_false", dest="upload",
                            help="do not upload the dump to the server")
+    argparser.add_argument("-I", "--include",
+                           nargs="+", metavar="ID", default=None,
+                           help="list of tracker IDs to sync (all if not specified)")
+    argparser.add_argument("-X", "--exclude", default=[],
+                           nargs="+", metavar="ID",
+                           help="list of tracker IDs to not sync")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
+    # Make sure the tracker IDs in the include/exclude lists are all
+    # in upper-case to ease comparisons later.
+    include = cmdlineargs.include
+    if include is not None:
+        include = [x.upper() for x in include]
+    exclude = [x.upper() for x in cmdlineargs.exclude]
+
     try:
-        total, success, skipped = syncAllTrackers(cmdlineargs.force, cmdlineargs.dump, cmdlineargs.upload)
+        total, success, skipped = syncAllTrackers(include, exclude, cmdlineargs.force, cmdlineargs.dump, cmdlineargs.upload)
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return
