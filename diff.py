@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+
 import os
 
 from analysedump import readdump
-from galileo import s2a
+
+def s2a(s):
+    return [ord(c) for c in s]
 
 def LCS(X, Y):
     m = len(X)
@@ -78,6 +82,8 @@ def diffdir(basedir):
     for root, dirs, files in os.walk(basedir):
         files = sorted(files)
         for i in range(0, len(files) -1):
+            print files[i]
+            print files[i + 1]
             try:
                 dumpdiff(os.path.join(root, files[i]), os.path.join(root, files[i+1]))
             except RuntimeError:
