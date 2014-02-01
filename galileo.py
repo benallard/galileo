@@ -332,22 +332,34 @@ class SyncError(Exception):
     def __init__(self, errorstring='Undefined'):
         self.errorstring = errorstring
 
-def tupleToXML(name, attrs={}, body=None):
-    elem = ET.Element(name)
-    for k, v in attrs.iteritems():
-        elem.set(k, v)
+def toXML(name, attrs={}, childs=[], body=None):
+    elem = ET.Element(name, attrib=attrs)
+    if childs:
+        elem.extend(tuplesToXML(childs))
     if body is not None:
-        if isinstance(body, basestring):
-            elem.text = body
-        else:
-            elem.extend(tuplesToXML(body))
+        elem.text=body
     return elem
 
 def tuplesToXML(tuples):
+    """ tuples is an array (or not) of (name, attrs, childs, body) """
     if isinstance(tuples, tuple):
         tuples = [tuples]
     for tpl in tuples:
-        yield tupleToXML(*tpl)
+        yield toXML(*tpl)
+
+def XMLToTuple(elem):
+    """ Transform an XML element into the following tuple:
+    (tagname, attributes, subelements, text) where:
+     - tagname is the element tag as string
+     - attributes is a dictionnary of the element attributes
+     - subelements are the sub elements as an array of tuple
+     - text is the content of the element, as string or None if no content is
+       there
+    """
+    childs = []
+    for child in elem:
+        childs.append(XMLToTuple(child))
+    return elem.tag, elem.attrib, childs, elem.text
 
 class GalileoClient(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
@@ -356,13 +368,13 @@ class GalileoClient(object):
         self.url = url
 
     def post(self, mode, dongle=None, data=None):
-        client = tupleToXML('galileo-client', {'version': "2.0"})
-        info = tupleToXML('client-info', body=[
-            ('client-id', {}, self.ID),
-            ('client-version', {}, __version__),
-            ('client-mode', {}, mode)])
+        client = toXML('galileo-client', {'version': "2.0"})
+        info = toXML('client-info', childs=[
+            ('client-id', {}, [], self.ID),
+            ('client-version', {}, [], __version__),
+            ('client-mode', {}, [], mode)])
         if dongle is not None:
-            info.append(tupleToXML(
+            info.append(toXML(
                 'dongle-version',
                 {'major': str(dongle.major),
                  'minor': str(dongle.minor)}))
@@ -383,14 +395,21 @@ class GalileoClient(object):
 
         logger.debug('HTTP response=%s', r.text)
 
-        server = ET.fromstring(r.text)
+        tag, attrib, childs, body = XMLToTuple(ET.fromstring(r.text))
 
-        # Raise error if the server sent us any error text
-        errorstring = server.find('error')
-        if errorstring is not None:
-            raise SyncError(errorstring.text)
+	if tag != 'galileo-server':
+            logger.error("Unexpected root element: %s", tag)
 
-        return server # soon: XMLToTuple(server)
+        if attrib['version'] != "2.0":
+            logger.error("Unexpected server version: %s",
+                attrib['version'])
+
+        for child in childs:
+            stag, _, _, sbody = child
+            if stag == 'error':
+                raise SyncError(sbody)
+
+        return childs
 
     def requestStatus(self):
         self.post('status')
@@ -398,21 +417,30 @@ class GalileoClient(object):
     def sync(self, dongle, trackerId, megadump):
         server = self.post('sync', dongle, (
             'tracker', {'tracker-id': trackerId}, (
-                'data', {}, base64.b64encode(a2s(megadump)))))
+                'data', {}, [], base64.b64encode(a2s(megadump)))))
 
-        tracker = server.find('tracker')
+        tracker = None
+        for elem in server:
+            if elem[0] == 'tracker':
+                tracker=elem
+                break
+
         if tracker is None:
             raise SyncError('no tracker')
-        if tracker.get('tracker-id') != trackerId:
-            logger.error('Got the response for tracker %s, expected tracker %s', tracker.get('tracker-id'), trackerId)
-        if tracker.get('type') != 'megadumpresponse':
-            logger.error('Not a megadumpresponse: %s', tracker.get('type'))
 
-        data = tracker.find('data')
+        _, a, c, _ = tracker
+        if a['tracker-id'] != trackerId:
+            logger.error('Got the response for tracker %s, expected tracker %s', a['tracker-id'], trackerId)
+        if a['type'] != 'megadumpresponse':
+            logger.error('Not a megadumpresponse: %s', a['type'])
 
-        d = base64.b64decode(data.text)
+	if len(c) != 1:
+            logger.error("Unexpected childs length: %d", len(c))
+        t, _, _, d = c[0]
+        if t != 'data':
+            raise SyncError('no data')
 
-        return s2a(d)
+        return s2a(base64.b64decode(d))
 
 def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, upload=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
