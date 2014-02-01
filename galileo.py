@@ -418,7 +418,7 @@ def syncAllTrackers(force=False, dumptofile=True):
 
     fitbit = FitbitClient(dongle)
 
-    galileo = GalileoClient('http://client.fitbit.com/tracker/client/message')
+    galileo = GalileoClient('https://client.fitbit.com/tracker/client/message')
 
     fitbit.disconnect()
 
