@@ -457,15 +457,15 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
 
         # If a list of trackers to sync was provided then ignore this
         # tracker if it's not in that list.
-        if (include and (not trackerid in include)):
-            logger.info('Tracker %s is not in the list of trackers to synchronize; skipping', trackerid)
+        if (include is not None) and (trackerid not in include):
+            logger.info('Tracker %s is not in the include list; skipping', trackerid)
             trackersskipped += 1
             continue
 
         # If a list of trackers to avoid syncing was provided then
         # ignore this tracker if it is in that list.
-        if (trackerid in exclude):
-            logger.info('Tracker %s is in the list of trackers to ignore; skipping', trackerid)
+        if trackerid in exclude:
+            logger.info('Tracker %s is in the exclude list; skipping', trackerid)
             trackersskipped += 1
             continue
 
@@ -594,7 +594,7 @@ def main():
                            help="list of tracker IDs to sync (all if not specified)")
     argparser.add_argument("-X", "--exclude", default=[],
                            nargs="+", metavar="ID",
-                           help="list of tracker IDs to not sync (none if not specified)")
+                           help="list of tracker IDs to not sync")
     cmdlineargs = argparser.parse_args()
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
@@ -602,7 +602,7 @@ def main():
     # Make sure the tracker IDs in the include/exclude lists are all
     # in upper-case to ease comparisons later.
     include = cmdlineargs.include
-    if include:
+    if include is not None:
         include = [x.upper() for x in include]
     exclude = [x.upper() for x in cmdlineargs.exclude]
 
