@@ -7,10 +7,24 @@ Plan for this release:
 - More configuration options
 - Some breackthrough in the analyse of the dumps (even for Flex/Force ?)
 
-Main changes since 0.3:
-- switch to the HTTPS protocol.
+Main changes since 0.3.1:
 - Add a --no-upload command line parameter to prevent the uploading of the
   dump to the server
+
+
+galileo 0.3.1 (2014-02-01)
+--------------------------
+
+This is the first patch release of galileo 0.3, a free utility to securely
+synchronize fitbit bluetooth trackers with the fitbit web-service.
+
+This release change the communication protocol used to communicate between
+galileo and the fitbit web-service from a plain-text one (HTTP) to one that
+uses state-of-the-art encryption methods (HTTPS), preventing the data extracted
+from the tracker of being intercepted and read on its way to the fitbit servers.
+
+Main changes since 0.3:
+- Switch the communication protocol from HTTP to HTTPS
 
 
 galileo 0.3 (2014-01-27)
