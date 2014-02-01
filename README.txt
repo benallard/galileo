@@ -13,8 +13,8 @@ Galileo
 Introduction
 ------------
 
-This is a Python utility to synchronize a Fitbit device with the Fitbit
-web service. It allows you to browse your data on their website, and
+This is a Python utility to securely synchronize a Fitbit device with the
+Fitbit web service. It allows you to browse your data on their website, and
 their apps.
 
 All Bluetooth-based trackers are supported. Those are:
@@ -28,7 +28,7 @@ All Bluetooth-based trackers are supported. Those are:
           using the ANT protocol. To synchronize it, please use libfitbit_.
 
 This utility is mainly targeted at Linux because Fitbit does not
-provide any Linux-compatible software but, as Python is
+provide any Linux-compatible software, but as Python is
 cross-platform and the libraries used are available on a broad variety
 of platforms, it should not be too difficult to port it to other
 platforms.
