@@ -297,7 +297,7 @@ class FitbitClient(object):
         transportCRC = d.data[3] * 0xff + d.data[4]
         esc1 = d.data[7]
         esc2 = d.data[8]
-        logger.debug('Megadump done. length %d, embedded length %d', len(dump), nbBytes)
+        logger.debug('Dump done. length %d, embedded length %d', len(dump), nbBytes)
         logger.debug('transportCRC=0x%04x, esc1=0x%02x, esc2=0x%02x', transportCRC, esc1, esc2)
         return dump
 
