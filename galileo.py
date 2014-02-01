@@ -55,7 +55,7 @@ def s2a(s):
     return [ord(c) for c in s]
 
 def a2t(a):
-    return ''.join('%02X' % x for x in a)
+    return a2x(a, delim='')
 
 class USBDevice(object):
     def __init__(self, vid, pid):
