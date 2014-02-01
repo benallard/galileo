@@ -54,9 +54,6 @@ def a2s(a):
 def s2a(s):
     return [ord(c) for c in s]
 
-def a2t(a):
-    return a2x(a, delim='')
-
 class USBDevice(object):
     def __init__(self, vid, pid):
         self.vid = vid
@@ -245,11 +242,11 @@ class FitbitClient(object):
             syncedRecently = (d[12] != 4)
             logger.debug('Tracker: %s, %s, %s, %s, %s', trackerId, addrType, RSSI, attributes, syncedRecently)
             if not syncedRecently:
-                logger.debug('Tracker %s was not recently synchronized', a2t(trackerId))
+                logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
             serviceUUID = list(d[17:19])
             if RSSI < -80:
                 logger.info("Tracker %s has low signal power (%ddBm), higher chance of"\
-                    " miscommunication", a2t(trackerId), RSSI)
+                    " miscommunication", a2x(trackerId, delim=""), RSSI)
             yield Tracker(trackerId, addrType, serviceUUID, syncedRecently)
             d = self.dongle.ctrl_read(4000)
 
@@ -471,11 +468,11 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
     trackercount = len(trackers)
     logger.info('%d trackers discovered', trackercount)
     for tracker in trackers:
-        logger.debug('Discovered tracker with ID %s', a2t(tracker.id))
+        logger.debug('Discovered tracker with ID %s', a2x(tracker.id, delim=""))
 
     for tracker in trackers:
 
-        trackerid = a2t(tracker.id)
+        trackerid = a2x(tracker.id, delim="")
 
         # If a list of trackers to sync was provided then ignore this
         # tracker if it's not in that list.
