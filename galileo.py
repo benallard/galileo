@@ -16,6 +16,8 @@ import base64
 
 import argparse
 
+import yaml
+
 import logging
 
 import time
@@ -33,6 +35,9 @@ __version__ = '0.4dev'
 
 MICRODUMP = 3
 MEGADUMP = 13
+
+DEFAULT_RCFILE_NAME = "~/.galileorc"
+DEFAULT_DUMP_DIR = "~/.galileo"
 
 def a2x(a, shorten=False):
     shortened = 0
@@ -414,7 +419,7 @@ class GalileoClient(object):
 
         return s2a(d)
 
-def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, upload=True):
+def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     try:
@@ -451,19 +456,19 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
 
         # If a list of trackers to sync was provided then ignore this
         # tracker if it's not in that list.
-        if (include is not None) and (trackerid not in include):
+        if (config['include-trackers'] is not None) and (trackerid not in config['include-trackers']):
             logger.info('Tracker %s is not in the include list; skipping', trackerid)
             trackersskipped += 1
             continue
 
         # If a list of trackers to avoid syncing was provided then
         # ignore this tracker if it is in that list.
-        if trackerid in exclude:
+        if trackerid in config['exclude-trackers']:
             logger.info('Tracker %s is in the exclude list; skipping', trackerid)
             trackersskipped += 1
             continue
 
-        if tracker.syncedRecently and force:
+        if tracker.syncedRecently and config['force-sync']:
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
         elif tracker.syncedRecently:
             logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
@@ -494,11 +499,11 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
         logger.info('Getting data from tracker')
         dump = fitbit.getDump()
 
-        if dumptofile:
+        if config['keep-dumps']:
             # Write the dump somewhere for archiving ...
-            dirname = os.path.expanduser(os.path.join('~', '.galileo', trackerid))
+            dirname = os.path.expanduser(os.path.join(config['dump-dir'], trackerid))
             if not os.path.exists(dirname):
-                logger.debug("Creating non-existent directory %s", dirname)
+                logger.debug("Creating non-existent directory for dumps %s", dirname)
                 os.makedirs(dirname)
 
             filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
@@ -509,14 +514,14 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
         else:
             logger.debug("Not dumping anything to disk")
 
-        if not upload:
+        if not config['do-upload']:
             logger.info("Not uploading, as asked ...")
         else:
             try:
                 logger.info('Sending tracker data to Fitbit')
                 response = galileo.sync(fitbit, trackerid, dump)
 
-                if dumptofile:
+                if config['keep-dumps']:
                     logger.debug("Appending answer from server to %s", filename)
                     with open(filename, 'at') as dumpfile:
                         dumpfile.write('\n')
@@ -565,42 +570,142 @@ def main():
     argparser.add_argument("-V", "--version",
                            action="version", version="%(prog)s " + __version__,
                            help="show version and exit")
+    argparser.add_argument("-c", "--config",
+                            nargs=1, metavar="FILE", dest="rcconfigname",
+                            help="use alternative configuration file (defaults to '%s')" % DEFAULT_RCFILE_NAME)
+    argparser.add_argument("--dump-dir",
+                            nargs=1, metavar="DIR", dest="dump_dir",
+                            help="directory for storing dumps (defaults to '%s')" % DEFAULT_DUMP_DIR)
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
     verbosity_arggroup2.add_argument("-v", "--verbose",
-                                     action="store_const", const=logging.INFO, dest="log_level",
+                                     action="store_true",
                                      help="display synchronization progress")
     verbosity_arggroup2.add_argument("-d", "--debug",
-                                     action="store_const", const=logging.DEBUG, dest="log_level",
-                                     help="show internal activity (implies verbose)")
-    argparser.add_argument("-f", "--force",
                                      action="store_true",
-                                     help="synchronize even if tracker reports a recent sync")
-    argparser.add_argument("--no-dump",
-                           action="store_false", dest="dump",
-                           help="disable saving of the megadump to file")
-    argparser.add_argument("--no-upload",
-                           action="store_false", dest="upload",
-                           help="do not upload the dump to the server")
+                                     help="show internal activity (implies verbose)")
+    verbosity_arggroup2.add_argument("-s", "--silent",
+                                     action="store_true",
+                                     help="only show errors and summary (default)")
+    force_arggroup = argparser.add_argument_group("force synchronization control")
+    force_arggroup2 = force_arggroup.add_mutually_exclusive_group()
+    force_arggroup2.add_argument("--force",
+                                 action="store_true",
+                                 help="synchronize even if tracker reports a recent sync")
+    force_arggroup2.add_argument("--no-force",
+                                 action="store_true", dest="no_force",
+                                 help="do not synchronize if tracker reports a recent sync (default)")
+    dump_arggroup = argparser.add_argument_group("dump control")
+    dump_arggroup2 = dump_arggroup.add_mutually_exclusive_group()
+    dump_arggroup2.add_argument("--dump",
+                                action="store_true",
+                                help="enable saving of the megadump to file (default)")
+    dump_arggroup2.add_argument("--no-dump",
+                                action="store_true", dest="no_dump",
+                                help="disable saving of the megadump to file")
+    upload_arggroup = argparser.add_argument_group("upload control")
+    upload_arggroup2 = upload_arggroup.add_mutually_exclusive_group()
+    upload_arggroup2.add_argument("--upload",
+                                  action="store_true",
+                                  help="upload the dump to the server (default)")
+    upload_arggroup2.add_argument("--no-upload",
+                                  action="store_true", dest="no_upload",
+                                  help="do not upload the dump to the server")
     argparser.add_argument("-I", "--include",
-                           nargs="+", metavar="ID", default=None,
+                           nargs="+", metavar="ID",
                            help="list of tracker IDs to sync (all if not specified)")
-    argparser.add_argument("-X", "--exclude", default=[],
+    argparser.add_argument("-X", "--exclude",
                            nargs="+", metavar="ID",
                            help="list of tracker IDs to not sync")
     cmdlineargs = argparser.parse_args()
 
-    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
+    # If an alternative config filename was provided then use it.
+    if cmdlineargs.rcconfigname:
+        rcconfigname = os.path.expanduser(cmdlineargs.rcconfigname[0])
+    else:
+        rcconfigname = os.path.expanduser(DEFAULT_RCFILE_NAME)
+
+    # Load the YAML configuration file.
+    config = {}
+    if os.path.exists(rcconfigname) or cmdlineargs.rcconfigname:
+        try:
+            logger.debug("Trying to load config file: %s", rcconfigname)
+            config = yaml.load(open(rcconfigname, 'rt'))
+        except IOError:
+            logger.warning('Unable to load configuration file: %s', rcconfigname)
+    if config == None:
+        config = {}
+
+    # Override rcfile-provided values with those on the command-line.
+
+    # Logging
+    if cmdlineargs.verbose:
+        config['logging'] = 'verbose'
+    elif cmdlineargs.debug:
+        config['logging'] = 'debug'
+    elif cmdlineargs.silent:
+        config['logging'] = 'default'
+    if not 'logging' in config:
+        config['logging'] = 'default'
+    if config['logging'] == 'verbose':
+        config['log_level'] = logging.INFO
+    elif config['logging'] == 'debug':
+        config['log_level'] = logging.DEBUG
+    else:
+        config['log_level'] = logging.WARNING
+
+    # Includes
+    if cmdlineargs.include:
+        config['include-trackers'] = cmdlineargs.include
+    if not 'include-trackers' in config:
+        config['include-trackers'] = None
+
+    # Excludes
+    if cmdlineargs.exclude:
+        config['exclude-trackers'] = cmdlineargs.exclude
+    if not 'exclude-trackers' in config:
+        config['exclude-trackers'] = []
+
+    # Keep dumps (or not)
+    if cmdlineargs.no_dump:
+        config['keep-dumps'] = False
+    elif cmdlineargs.dump:
+        config['keep-dumps'] = True
+    if not 'keep-dumps' in config:
+        config['keep-dumps'] = True
+
+    # Dump directory
+    if cmdlineargs.dump_dir:
+        config['dump-dir'] = cmdlineargs.dump_dir
+    if not 'dump-dir' in config:
+        config['dump-dir'] = DEFAULT_DUMP_DIR
+
+    # Upload data (or not)
+    if cmdlineargs.no_upload:
+        config['do-upload'] = False
+    elif cmdlineargs.upload:
+        config['do-upload'] = True
+    if not 'do-upload' in config:
+        config['do-upload'] = True
+
+    # Force (or not)
+    if cmdlineargs.no_force:
+        config['force-sync'] = False
+    elif cmdlineargs.force:
+        config['force-sync'] = True
+    if not 'force-sync' in config:
+        config['force-sync'] = False
+
+    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=config['log_level'])
 
     # Make sure the tracker IDs in the include/exclude lists are all
     # in upper-case to ease comparisons later.
-    include = cmdlineargs.include
-    if include is not None:
-        include = [x.upper() for x in include]
-    exclude = [x.upper() for x in cmdlineargs.exclude]
+    if config['include-trackers'] is not None:
+        config['include-trackers'] = [str(x).upper() for x in config['include-trackers']]
+    config['exclude-trackers'] = [str(x).upper() for x in config['exclude-trackers']]
 
     try:
-        total, success, skipped = syncAllTrackers(include, exclude, cmdlineargs.force, cmdlineargs.dump, cmdlineargs.upload)
+        total, success, skipped = syncAllTrackers(config)
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return
