@@ -251,14 +251,14 @@ class FitbitClient(object):
         d = self.dongle.ctrl_read(10000)
         while d[0] != 3:
             trackerId = list(d[2:8])
-            addrType = list(d[8:9])
+            addrType = d[8]
             RSSI = c_byte(d[9]).value
             attributes = list(d[11:13])
             syncedRecently = (d[12] != 4)
-            logger.debug('Tracker: %s, %s, %s, %s, %s', trackerId, addrType, RSSI, attributes, syncedRecently)
+            serviceUUID = list(d[17:19])
+            logger.debug('Tracker: %s, %s, %s, %s (%s), %s', trackerId, addrType, RSSI, attributes, syncedRecently, serviceUUID)
             if not syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
-            serviceUUID = list(d[17:19])
             if RSSI < -80:
                 logger.info("Tracker %s has low signal power (%ddBm), higher chance of"\
                     " miscommunication", a2x(trackerId, delim=""), RSSI)
@@ -270,7 +270,7 @@ class FitbitClient(object):
         self.dongle.ctrl_read() # CancelDiscovery
 
     def establishLink(self, tracker):
-        self.dongle.ctrl_write([0xb, 6]+tracker.id+tracker.addrType+tracker.serviceUUID)
+        self.dongle.ctrl_write([0xb, 6]+tracker.id+[tracker.addrType]+tracker.serviceUUID)
         self.dongle.ctrl_read() # EstablishLink
         self.dongle.ctrl_read(5000)
         # established, waiting for service discovery
