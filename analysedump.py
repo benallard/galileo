@@ -46,7 +46,7 @@ def a2lsbi(array):
     for i in range(len(array)-1, -1, -1):
         integer *= 256
         integer += array[i]
-    #    print a2x(array), hex(integer)
+#        print a2x(array), hex(integer)
     return integer
 
 def a2msbi(array):
@@ -57,106 +57,19 @@ def a2msbi(array):
         integer += array[i]
     return integer
 
-def first_field(array, start):
-    """ 'daily' is highly hypothetical """
-    # first timestamp
-    index = start
-    while array[index] != 0xc0:
-        tstamp = a2lsbi(array[index:index+4])
-        print time.strftime("%x %X", time.localtime(tstamp)), hex(tstamp)
-        index += 4
-        print "\t%s" % a2x(array[index:index+11])
-        index += 11
-    return index
-
-def minutely(array, start):
-    """ this analyses the minute-by-minute information
-    """
-    index = start
-    tstamp = 0
-    while array[index] != 0xc0:
-        if not (array[index] & 0x80):
-            tstamp = a2msbi(array[index:index+4])
-        else:
-            if array[index] != 0x81:
-                print '-',
-                index += 1
-            if array[index] != 0x81:
-                print '--',
-                index += 1
-            print time.strftime("%x %X", time.localtime(tstamp)), a2x(array[index:index+4])
-            tstamp += 60
-        index += 4
-
-    return index
-
-def stairs(array, start):
-    """ Looks like stairs informations are put here """
-    index = start
-    tstamp = 0
-    while array[index] != 0xc0:
-        if not (array[index] & 0x80):
-            tstamp = a2msbi(array[index:index+4])
-            index += 4
-        else:
-            if array[index] != 0x80:
-                #print a2x([array[index]])
-                index += 1
-            print time.strftime("%x %X", time.localtime(tstamp)), a2x(array[index:index+2])
-            tstamp += 60
-            index += 2
-    return index
-
-def daily(array, start):
-    index = start
-    while array[index] != 0xc0:
-        tstamp = a2lsbi(array[index:index+4])
-        index += 4
-        print time.strftime("%x %X", time.localtime(tstamp)), a2x(array[index:index + 12])
-        index += 12
-    return index
-
-ESC = 0xdb
-END = 0xc0
-ESC_ = {0xdc: END, 0xdd: ESC}
-
-def unSLIP(data):
-    """ This remove SLIP escaping and yield the parts"""
-    currentpart = -1 # -1 header, 0 body, 1 footer
-    part = []
-    escape = False
-    for c in data:
-#        print "%x" % c
-        if not escape:
-            if c == ESC:
-                escape = True
-            else:
-                part.append(c)
-                if c == END:
-                    if len(part) > 1:
-                        if (part[0] == END) or (currentpart == -1):
-                            yield currentpart, part[1:-1]
-                            part = []
-                            if currentpart == -1:
-                                currentpart = 0
-                        else:
-                            print "skipping", a2x(part[:-1])
-                            part = [c]
-        else:
-            part.append(ESC_[c])
-            escape = False
-    yield 1, part
-
-def analyse(data):
-
-
-    for typ, part in unSLIP(data):
-        print typ, len(part) #, a2x(part))
-
-    return
+def header(data):
+    index = 40
+    walkStrideLen = a2lsbi(data[index:index+2])
+    index += 2 
+    runStrideLen = a2lsbi(data[index:index+2])
+    index += 2
+    print "Stride lengths: %dmm, %dmm" % (walkStrideLen, runStrideLen)
+    print a2x(data[index:index+4])
+    index += 4
     # empirical value
-    index = 60
+    index += 12
 
+    if index >= len(data): return
     # Greetings
     print "Greetings: '%s'" % a2s(data[index:index+10])
     index += 10
@@ -167,48 +80,142 @@ def analyse(data):
         print "'%s'" % a2s(data[index:index+10])
         index += 10
 
-    # 'C0' looks like a magical value there ...
-    next_index = data.index(0xc0, index)
-    print a2x(data[index:next_index])
-    index = next_index
+def first_field(rec_len):
+    def unknown(data):
+        assert data[:3] == [END, END, 0xdd], a2x(data[:3])
+        index = 3
+        while index < len(data) - 1:
+            tstamp = a2lsbi(data[index:index+4])
+            print time.strftime("%x %X", time.localtime(tstamp)), hex(tstamp)
+            index += 4
+            print "\t%s" % a2x(data[index:index+rec_len])
+            index += rec_len
+    return unknown
 
-    assert(data[index:index+4] == [0xc0, 0xdb, 0xdc, 0xdd]), a2x(data[index:index+10])
-    index += 4
+def minutely(rec_len):
+    """ this analyses the minute-by-minute information
+    """
+    def minutes(data):
+        assert data[:3] == [END, END, 0xdd], a2x(data[:3])
+        index = 3
+        tstamp = 0
+        while index < len(data) - 1:
+            if not (data[index] & 0x80):
+                tstamp = a2msbi(data[index:index+4])
+                index += 4
+            else:
+                print time.strftime("%x %X", time.localtime(tstamp)), a2x(data[index:index+rec_len])
+                tstamp += 60
+                index += rec_len
+    return minutes
 
-    print "First field"
-    index = first_field(data, index)
+def stairs(data):
+    """ Looks like stairs informations are put here """
+    assert data[:3] == [END, END, 0xdd], a2x(data)
+    index = 3
+    index = 3
+    tstamp = 0
+    while  index < len(data) - 1:
+        if not (data[index] & 0x80):
+            tstamp = a2msbi(data[index:index+4])
+            index += 4
+        else:
+            if data[index] != 0x80:
+                #print a2x([array[index]])
+                index += 1
+            print time.strftime("%x %X", time.localtime(tstamp)), a2x(data[index:index+2])
+            tstamp += 60
+            index += 2
 
-    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd]), a2x(data[index:index+10])
-    index += 5
+def daily(data):
+    if len(data) == 2:
+        assert data == [END, END], a2x(data)
+        return
+    assert data[:3] == [END, END, 0xdd], a2x(ata[:3])
+    index = 3
+    while index < len(data) - 1:
+        tstamp = a2lsbi(data[index:index+4])
+        index += 4
+        print time.strftime("%x %X", time.localtime(tstamp)), a2x(data[index:index + 12])
+        index += 12
 
-    print "Second field"
-    index = minutely(data, index)
+def remainder(data):
+    print a2x(data)
 
-    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd]), a2x(data[index:index+10])
-    index += 5
+ESC = 0xdb
+END = 0xc0
+ESC_ = {0xdc: END, 0xdd: ESC}
 
-    print "Third field"
-    index = stairs(data, index)
+def unSLIP(data):
+    """ This remove SLIP escaping and yield the parts
+    The magic are: The first part doesn't ends with 0xC0
+    there are empty parts
+    >>> list(unSLIP([1, 2, 0xc0, 5, 4, 0xc0, 0xc0, 8, 4]))
+    [[1, 2], [192, 5, 4, 192], [192, 8, 4]]
+    >>> list(unSLIP([12, 0xc0, 0, 0, 0xc0, 1, 2, 0xc0, 8, 9]))
+    """
+    first = True
+    part = []
+    escape = False
+    for c in data:
+#        print "%x" % c
+        if not escape:
+            if c == ESC and part and part[0] == END:
+                escape = True
+            else:
+                part.append(c)
+                if c == END:
+                    if len(part) != 1:
+                        if first or (part[0] != END):
+                            yield part[:-1]
+                            part = [part[-1]]
+                            first = False
+                        else:
+                            yield part
+                            part = []
+        else:
+            part.append(ESC_[c])
+            escape = False
+    yield part
 
-    assert(data[index:index+5] == [0xc0, 0xc0, 0xdb, 0xdc, 0xdd]), a2x(data[index:index+10])
-    index += 5
+def analyse(data):
 
-    print "Fourth field"
-    index = daily(data, index)
+    def onscreen(data):
+        print a2x(data)
 
-    print "Remainder"
-    print a2x(data[index:])
+    def skip(data):
+        pass
+
+    display = [onscreen] * 20
+
+    analyses_ZIP = [header, first_field(9), minutely(3), daily] + display
+
+    analyses_ONE = [header, first_field(11), minutely(4), stairs, daily, skip, onscreen, skip, onscreen, onscreen]
+
+
+    analyses = {
+        0x26: analyses_ONE,
+        0xF4: analyses_ZIP,
+	}.get(data[0], display)
+
+    for i, part in enumerate(unSLIP(data)):
+        f = analyses[i]
+        print "%s (%d): %d bytes" % (f.__name__,i, len(part))
+        f(part)
+
 
 def analysedump(dump_dir, index):
     for root, dirs, files in os.walk(dir):
         file = sorted(files)[idx]
-        print "Analysing %s" % file
-        with open(os.path.join(root, file)) as f:
-            analyse(readdump(f))
+    print "Analysing %s" % file
+    with open(os.path.join(root, file)) as f:
+        dump, response = readdump(f)
+        analyse(dump)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        analyse(sys.stdin)
+        dump, response = readdump(sys.stdin)
+        analyse(dump)
     else:
         dir = sys.argv[1]
         idx = -1
