@@ -37,7 +37,6 @@ MICRODUMP = 3
 MEGADUMP = 13
 
 DEFAULT_RCFILE_NAME = "~/.galileorc"
-DEFAULT_DUMP_DIR = "~/.galileo"
 
 def a2x(a, delim=' ', shorten=False):
     """ array to string of hexa
@@ -459,6 +458,123 @@ class GalileoClient(object):
 
         return s2a(base64.b64decode(d))
 
+class Config(object):
+    """Class holding the configuration to be applied during synchronization.
+    The configuration can be loaded from a file in which case the defaults
+    can be overridden; loading from multiple files allows the settings from
+    later files to override those defined in earlier files. Finally, each
+    configuration option can also be set directly, which is used to allow
+    overriding of file-based configuration settings with those explicitly
+    specified on the command line.
+    """
+    DEFAULT_DUMP_DIR = "~/.galileo"
+    def __init__(self):
+        self.__logLevelMap = { 'default': logging.WARNING,
+                               'verbose': logging.INFO,
+                               'debug': logging.DEBUG }
+        self.__logLevelMapReverse = {}
+        for key in self.__logLevelMap:
+            self.__logLevelMapReverse[self.__logLevelMap[key]] = key
+        self.__logLevel = logging.WARNING
+        self._includeTrackers = None
+        self._excludeTrackers = ()
+        self._keepDumps = True
+        self._dumpDir = self.DEFAULT_DUMP_DIR
+        self._doUpload = True
+        self._forceSync = False
+
+    # Property accessors and definitions
+    @property
+    def logLevel(self):
+        """Logging level. Values are as defined in Logging.setLevel() and can
+        be set as an integer or string.
+
+        """
+        return self.__logLevel
+    @logLevel.setter
+    def logLevel(self, value):
+        if isinstance(value, basestring):
+            self.__logLevel = self.__logLevelMap[str(value).lower()]
+        else:
+            self.__logLevel = value
+    @property
+    def keepDumps(self):
+        """Flag indicate data from tracker should be saved."""
+        return self._keepDumps
+    @keepDumps.setter
+    def keepDumps(self, value): self._keepDumps = value
+    @property
+    def includeTrackers(self):
+        """List of trackers to synchronize, or None for to synchronize all.
+        Can be set via a comma-separated list string or from a list.
+
+        """
+        return self._includeTrackers
+    @includeTrackers.setter
+    def includeTrackers(self, value):
+        if isinstance(value, basestring):
+            self._includeTrackers = value.split(',')
+        else:
+            self._includeTrackers = value
+        # Now make sure the list of trackers is all in lower-case to
+        # make comparisons easier later.
+        if self._includeTrackers is not None:
+            self._includeTrackers = [str(x).upper() for x in self._includeTrackers]
+    @property
+    def excludeTrackers(self):
+        """List of trackers to avoid synchronizing. Can be set via a
+        comma-separated list string or from a list.
+
+        """
+        return self._excludeTrackers
+    @excludeTrackers.setter
+    def excludeTrackers(self, value):
+        if isinstance(value, basestring):
+            self._excludeTrackers = value.split(',')
+        else:
+            self._excludeTrackers = value
+        # Now make sure the list of trackers is all in lower-case to
+        # make comparisons easier later.
+        if self._excludeTrackers is not None:
+            self._excludeTrackers = [str(x).upper() for x in self._excludeTrackers]
+    @property
+    def dumpDir(self):
+        """Directory where tracker data should be saved."""
+        return self._dumpDir
+    @dumpDir.setter
+    def dumpDir(self, value): self._dumpDir = value
+    @property
+    def doUpload(self):
+        """Flag indicating whether data from trackers should be uploaded."""
+        return self._doUpload
+    @doUpload.setter
+    def doUpload(self, value): self._doUpload = value
+    @property
+    def forceSync(self):
+        """Flag indicating whether trackers should be synchronized even if
+        recently synchronized.
+
+        """
+        return self._forceSync
+    @forceSync.setter
+    def forceSync(self, value): self._forceSync = value
+
+    def __str__(self):
+        return ("Config: logLevel = %s, " +
+                "keepDumps = %s, " +
+                "includeTrackers = %s, " +
+                "excludeTrackers = %s, " +
+                "dumpDir = %s, " +
+                "doUpload = %s, " +
+                "forceSync = %s") % (
+                    self.__logLevelMapReverse[self.__logLevel],
+                    self._keepDumps,
+                    self._includeTrackers,
+                    self._excludeTrackers,
+                    self._dumpDir,
+                    self._doUpload,
+                    self._forceSync)
+
 def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
@@ -615,7 +731,7 @@ def main():
                             help="use alternative configuration file (defaults to '%s')" % DEFAULT_RCFILE_NAME)
     argparser.add_argument("--dump-dir",
                             nargs=1, metavar="DIR", dest="dump_dir",
-                            help="directory for storing dumps (defaults to '%s')" % DEFAULT_DUMP_DIR)
+                            help="directory for storing dumps (defaults to '%s')" % Config.DEFAULT_DUMP_DIR)
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
     verbosity_arggroup2.add_argument("-v", "--verbose",
@@ -658,6 +774,18 @@ def main():
                            nargs="+", metavar="ID",
                            help="list of tracker IDs to not sync")
     cmdlineargs = argparser.parse_args()
+
+    # TODO: Remove this test code
+    config = Config()
+    print config
+    config.logLevel = 'DEBUG'
+    config.keepDumps=False
+    config.includeTrackers = '123,456,789,abc,DEF'
+    config.excludeTrackers = '789,abc,DEF'
+    config.dumpDir = "~/.galileo-dump"
+    config.doUpload = False
+    config.forceSync = True
+    print config
 
     # If an alternative config filename was provided then use it.
     if cmdlineargs.rcconfigname:
