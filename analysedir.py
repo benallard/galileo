@@ -4,6 +4,7 @@ import os
 import re
 
 from analysedump import readdump
+from analysedump import analyse as longanalyse
 
 TYPES = {0xF4: 'Zip', 0x26: 'One', 0x28: 'Flex'}
 
@@ -14,7 +15,12 @@ def analyse(filename):
   s.append(TYPES[data[0]])
   s.append(str(len(data)))
   s.append(str(len(response)))
-  return ' '.join(s)
+  print ' '.join(s)
+  try:
+    longanalyse(data)
+  except:
+    print filename
+    raise
 
 def main(dirname):
   for root, dirs, files in os.walk(dirname):
@@ -22,7 +28,8 @@ def main(dirname):
       if not re.match('dump-\d{10}.txt', dump):
         continue
       filename = os.path.join(root, dump)
-      print dump, analyse(filename)
+      print dump
+      analyse(filename)
 
 if __name__ == "__main__":
   import sys
