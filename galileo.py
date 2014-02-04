@@ -81,7 +81,7 @@ class USBDevice(object):
             self._dev = usb.core.find(idVendor=self.vid, idProduct=self.pid)
         return self._dev
 
-    def __delete__(self):
+    def __del__(self):
         pass
 
 class DataMessage(object):
