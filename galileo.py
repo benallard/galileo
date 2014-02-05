@@ -279,16 +279,17 @@ class FitbitClient(object):
             d = self.dongle.ctrl_read()
             self.major = d[2]
             self.minor = d[3]
-            logger.debug('Fitbit dongle version major:%d minor:%d', self.major, self.minor)
+            logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
+                         self.minor)
         except TimeoutError:
             logger.error('Failed to get connected Fitbit dongle information')
             raise
 
-    def discover(self):
+    def discover(self, minDuration=4000):
         self.dongle.ctrl_write([0x1a, 4, 0xba, 0x56, 0x89, 0xa6, 0xfa, 0xbf,
                                 0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
-                                0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb,
-                                0xa0, 0x0f, 0, 0xd3, 0, 0, 0, 0])
+                                0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb] +
+                               i2lsba(minDuration, 2) + [0, 0xd3, 0, 0, 0, 0])
         self.dongle.ctrl_read()  # StartDiscovery
         d = self.dongle.ctrl_read(10000)
         while d[0] != 3:
