@@ -357,7 +357,11 @@ class FitbitClient(object):
         transportCRC = a2lsbi(d.data[3:5])
         esc1 = d.data[7]
         esc2 = d.data[8]
-        logger.debug('Dump done. length %d, embedded length %d', len(dump), nbBytes)
+        dumpLen = len(dump) - d.len
+        if dumpLen != nbBytes:
+            logger.error("Error in communication, Expected length: %d bytes,"
+                         " received %d bytes", nbBytes, dumpLen)
+        logger.debug('Dump done, length %d', nbBytes)
         logger.debug('transportCRC=0x%04x, esc1=0x%02x, esc2=0x%02x', transportCRC, esc1, esc2)
         return dump
 
