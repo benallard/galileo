@@ -34,6 +34,7 @@ __version__ = '0.4dev'
 MICRODUMP = 3
 MEGADUMP = 13
 
+
 def a2x(a, delim=' ', shorten=False):
     """ array to string of hexa
     delim is the delimiter between the hexa
@@ -49,9 +50,11 @@ def a2x(a, delim=' ', shorten=False):
         s = ' 00 (%d times)' % shortened
     return delim.join('%02X' % x for x in a) + s
 
+
 def s2x(s):
     """ string to string of hexa """
     return ' '.join('%02X' % ord(c) for c in s)
+
 
 def a2s(a, toPrint=True):
     """ array to string
@@ -65,9 +68,11 @@ def a2s(a, toPrint=True):
         s.append(chr(c))
     return ''.join(s)
 
+
 def s2a(s):
     """ string to array """
     return [ord(c) for c in s]
+
 
 class USBDevice(object):
     def __init__(self, vid, pid):
@@ -81,18 +86,20 @@ class USBDevice(object):
             self._dev = usb.core.find(idVendor=self.vid, idProduct=self.pid)
         return self._dev
 
-    def __delete__(self):
+    def __del__(self):
         pass
+
 
 class DataMessage(object):
     length = 32
+
     def __init__(self, data, out=True):
-        if out: # outgoing
+        if out:  # outgoing
             if len(data) > 31:
                 raise ValueError('data %s (%d) too big' % (data, len(data)))
             self.data = data
             self.len = len(data)
-        else: # incoming
+        else:  # incoming
             if len(data) != 32:
                 raise ValueError('data %s with wrong length' % data)
             # last byte is length
@@ -100,12 +107,13 @@ class DataMessage(object):
             self.data = list(data[:self.len])
 
     def asList(self):
-        return self.data + [0]*(31 - self.len) + [self.len]
+        return self.data + [0] * (31 - self.len) + [self.len]
 
     def __str__(self):
         return ' '.join(['[', a2x(self.data), ']', '-', str(self.len)])
 
 DM = DataMessage
+
 
 def unSLIP1(data):
     """ The protocol uses a particular version of SLIP (RFC 1055) applied
@@ -118,6 +126,7 @@ def unSLIP1(data):
         return [ESC_[data[1]]] + data[2:]
     return data
 
+
 def isATimeout(excpt):
     if excpt.errno == errno.ETIMEDOUT:
         return True
@@ -126,13 +135,18 @@ def isATimeout(excpt):
     else:
         return False
 
+
 class NoDongleException(Exception): pass
+
 
 class TimeoutError(Exception): pass
 
+
 class DongleWriteException(Exception): pass
 
+
 class PermissionDeniedException(Exception): pass
+
 
 class FitBitDongle(USBDevice):
     VID = 0x2687
@@ -156,7 +170,7 @@ class FitBitDongle(USBDevice):
                 raise PermissionDeniedException
             raise
 
-        cfg = self.dev.get_active_configuration();
+        cfg = self.dev.get_active_configuration()
         self.DataIF = cfg[(0, 0)]
         self.CtrlIF = cfg[(1, 0)]
         self.dev.set_configuration()
@@ -180,7 +194,6 @@ class FitBitDongle(USBDevice):
         else:
             logger.debug('<-- %s', a2x(data, shorten=True))
         return data
-
 
     def data_write(self, msg, timeout=2000):
         logger.debug('==> %s', msg)
@@ -217,8 +230,8 @@ class FitbitClient(object):
         logger.info('Disconnecting from any connected trackers')
 
         self.dongle.ctrl_write([2, 2])
-        self.dongle.ctrl_read() # CancelDiscovery
-        self.dongle.ctrl_read() # TerminateLink
+        self.dongle.ctrl_read()  # CancelDiscovery
+        self.dongle.ctrl_read()  # TerminateLink
 
         try:
             # It is OK to have a timeout with the following ctrl_read as
@@ -247,7 +260,7 @@ class FitbitClient(object):
                            0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
                            0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb,
                            0xa0, 0x0f, 0, 0xd3, 0, 0, 0, 0])
-        self.dongle.ctrl_read() # StartDiscovery
+        self.dongle.ctrl_read()  # StartDiscovery
         d = self.dongle.ctrl_read(10000)
         while d[0] != 3:
             trackerId = list(d[2:8])
@@ -264,22 +277,22 @@ class FitbitClient(object):
             if not syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
             if RSSI < -80:
-                logger.info("Tracker %s has low signal power (%ddBm), higher chance of"\
+                logger.info("Tracker %s has low signal power (%ddBm), higher chance of"
                     " miscommunication", a2x(trackerId, delim=""), RSSI)
             yield Tracker(trackerId, addrType, syncedRecently)
             d = self.dongle.ctrl_read(4000)
 
         # tracker found, cancel discovery
         self.dongle.ctrl_write([2, 5])
-        self.dongle.ctrl_read() # CancelDiscovery
+        self.dongle.ctrl_read()  # CancelDiscovery
 
     def establishLink(self, tracker):
-        self.dongle.ctrl_write([0xb, 6]+tracker.id+[tracker.addrType]+tracker.serviceUUID)
-        self.dongle.ctrl_read() # EstablishLink
+        self.dongle.ctrl_write([0xb, 6] + tracker.id + [tracker.addrType] + tracker.serviceUUID)
+        self.dongle.ctrl_read()  # EstablishLink
         self.dongle.ctrl_read(5000)
         # established, waiting for service discovery
         # - This one takes long
-        self.dongle.ctrl_read(8000) # GAP_LINK_ESTABLISHED_EVENT
+        self.dongle.ctrl_read(8000)  # GAP_LINK_ESTABLISHED_EVENT
         self.dongle.ctrl_read()
 
     def enableTxPipe(self):
@@ -319,15 +332,15 @@ class FitbitClient(object):
         return dump
 
     def uploadResponse(self, response):
-        self.dongle.data_write(DM([0xc0, 0x24, 4]+[len(response)&0xff, len(response)>> 8]+[0, 0, 0, 0]))
+        self.dongle.data_write(DM([0xc0, 0x24, 4] + [len(response) & 0xff, len(response) >> 8] + [0, 0, 0, 0]))
         self.dongle.data_read()
 
-        for i in range(0,len(response), 20):
-            self.dongle.data_write(DM(response[i:i+20]))
+        for i in range(0, len(response), 20):
+            self.dongle.data_write(DM(response[i:i + 20]))
             self.dongle.data_read()
 
         self.dongle.data_write(DM([0xc0, 2]))
-        self.dongle.data_read(60000) # This one can be very long. He is probably erasing the memory there
+        self.dongle.data_read(60000)  # This one can be very long. He is probably erasing the memory there
         self.dongle.data_write(DM([0xc0, 1]))
         self.dongle.data_read()
 
@@ -337,24 +350,26 @@ class FitbitClient(object):
 
     def terminateAirlink(self):
         self.dongle.ctrl_write([2, 7])
-        self.dongle.ctrl_read() # TerminateLink
+        self.dongle.ctrl_read()  # TerminateLink
 
         self.dongle.ctrl_read()
-        self.dongle.ctrl_read() # GAP_LINK_TERMINATED_EVENT
-        self.dongle.ctrl_read() # 22
+        self.dongle.ctrl_read()  # GAP_LINK_TERMINATED_EVENT
+        self.dongle.ctrl_read()  # 22
 
 
 class SyncError(Exception):
     def __init__(self, errorstring='Undefined'):
         self.errorstring = errorstring
 
+
 def toXML(name, attrs={}, childs=[], body=None):
     elem = ET.Element(name, attrib=attrs)
     if childs:
         elem.extend(tuplesToXML(childs))
     if body is not None:
-        elem.text=body
+        elem.text = body
     return elem
+
 
 def tuplesToXML(tuples):
     """ tuples is an array (or not) of (name, attrs, childs, body) """
@@ -362,6 +377,7 @@ def tuplesToXML(tuples):
         tuples = [tuples]
     for tpl in tuples:
         yield toXML(*tpl)
+
 
 def XMLToTuple(elem):
     """ Transform an XML element into the following tuple:
@@ -376,6 +392,7 @@ def XMLToTuple(elem):
     for child in elem:
         childs.append(XMLToTuple(child))
     return elem.tag, elem.attrib, childs, elem.text
+
 
 class GalileoClient(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
@@ -405,7 +422,7 @@ class GalileoClient(object):
 
         logger.debug('HTTP POST=%s', f.getvalue())
         r = requests.post(self.url,
-                          data= f.getvalue(),
+                          data=f.getvalue(),
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
@@ -413,7 +430,7 @@ class GalileoClient(object):
 
         tag, attrib, childs, body = XMLToTuple(ET.fromstring(r.text))
 
-	if tag != 'galileo-server':
+        if tag != 'galileo-server':
             logger.error("Unexpected root element: %s", tag)
 
         if attrib['version'] != "2.0":
@@ -438,7 +455,7 @@ class GalileoClient(object):
         tracker = None
         for elem in server:
             if elem[0] == 'tracker':
-                tracker=elem
+                tracker = elem
                 break
 
         if tracker is None:
@@ -450,7 +467,7 @@ class GalileoClient(object):
         if a['type'] != 'megadumpresponse':
             logger.error('Not a megadumpresponse: %s', a['type'])
 
-	if len(c) != 1:
+        if len(c) != 1:
             logger.error("Unexpected childs length: %d", len(c))
         t, _, _, d = c[0]
         if t != 'data':
@@ -458,14 +475,15 @@ class GalileoClient(object):
 
         return s2a(base64.b64decode(d))
 
+
 def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, upload=True):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     try:
-      dongle.setup()
+        dongle.setup()
     except NoDongleException:
-      logger.error("No dongle connected, aborting")
-      return (0, 0, 0)
+        logger.error("No dongle connected, aborting")
+        return (0, 0, 0)
 
     fitbit = FitbitClient(dongle)
 
@@ -549,7 +567,7 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
             logger.debug("Dumping megadump to %s", filename)
             with open(filename, 'wt') as dumpfile:
                 for i in range(0, len(dump), 20):
-                    dumpfile.write(a2x(dump[i:i+20])+'\n')
+                    dumpfile.write(a2x(dump[i:i + 20]) + '\n')
         else:
             logger.debug("Not dumping anything to disk")
 
@@ -565,7 +583,7 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
                     with open(filename, 'at') as dumpfile:
                         dumpfile.write('\n')
                         for i in range(0, len(response), 20):
-                            dumpfile.write(a2x(response[i:i+20])+'\n')
+                            dumpfile.write(a2x(response[i:i + 20]) + '\n')
 
                 # Even though the next steps might fail, fitbit has accepted
                 # the data at this point.
@@ -599,7 +617,8 @@ fitbit dongle. In order to do so, as root, create the file
 SUBSYSTEM=="usb", ATTR{idVendor}=="%(VID)x", ATTR{idProduct}=="%(PID)x", SYMLINK+="fitbit", MODE="0666"
 
 The dongle must then be removed and reinserted to receive the new permissions.""" % {
-	'VID': FitBitDongle.VID, 'PID': FitBitDongle.PID}
+    'VID': FitBitDongle.VID, 'PID': FitBitDongle.PID}
+
 
 def main():
     """ This is the entry point """
