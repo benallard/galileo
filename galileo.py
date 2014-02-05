@@ -69,6 +69,32 @@ def a2s(a, toPrint=True):
     return ''.join(s)
 
 
+def a2lsbi(array):
+    """ array to int (LSB first) """
+    integer = 0
+    for i in range(len(array) - 1, -1, -1):
+        integer *= 256
+        integer += array[i]
+    return integer
+
+
+def a2msbi(array):
+    """ array to int (MSB first) """
+    integer = 0
+    for i in range(len(array)):
+        integer *= 256
+        integer += array[i]
+    return integer
+
+
+def i2lsba(value, width):
+    """ int to array (LSB first) """
+    a = [0] * width
+    for i in range(width):
+        a[i] = (value >> (i*8)) & 0xff
+    return a
+
+
 def s2a(s):
     """ string to array """
     return [ord(c) for c in s]
