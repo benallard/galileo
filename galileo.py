@@ -202,10 +202,10 @@ class FitBitDongle(USBDevice):
 
 
 class Tracker(object):
-    def __init__(self, Id, addrType, serviceUUID, syncedRecently):
+    def __init__(self, Id, addrType, syncedRecently):
         self.id = Id
         self.addrType = addrType
-        self.serviceUUID = serviceUUID
+        self.serviceUUID = [Id[1] ^ Id[3] ^ Id[5], Id[0] ^ Id[2] ^ Id[4]]
         self.syncedRecently = syncedRecently
 
 
@@ -255,14 +255,18 @@ class FitbitClient(object):
             RSSI = c_byte(d[9]).value
             attributes = list(d[11:13])
             syncedRecently = (d[12] != 4)
-            serviceUUID = list(d[17:19])
-            logger.debug('Tracker: %s, %s, %s, %s (%s), %s', trackerId, addrType, RSSI, attributes, syncedRecently, serviceUUID)
+            sUUID = list(d[17:19])
+            serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
+                     trackerId[0] ^ trackerId[2] ^ trackerId[4]]
+            if serviceUUID != sUUID:
+                logger.error("Error in communication, cannot acknowledge the serviceUUID: %s vs %s", a2x(serviceUUID, ':'), a2x(sUUID, ':'))
+            logger.debug('Tracker: %s, %s, %s, %s (%s)', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'), syncedRecently)
             if not syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
             if RSSI < -80:
                 logger.info("Tracker %s has low signal power (%ddBm), higher chance of"\
                     " miscommunication", a2x(trackerId, delim=""), RSSI)
-            yield Tracker(trackerId, addrType, serviceUUID, syncedRecently)
+            yield Tracker(trackerId, addrType, syncedRecently)
             d = self.dongle.ctrl_read(4000)
 
         # tracker found, cancel discovery
