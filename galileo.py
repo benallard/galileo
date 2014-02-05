@@ -516,7 +516,7 @@ class Config(object):
             self._includeTrackers = value.split(',')
         else:
             self._includeTrackers = value
-        # Now make sure the list of trackers is all in lower-case to
+        # Now make sure the list of trackers is all in upper-case to
         # make comparisons easier later.
         if self._includeTrackers is not None:
             self._includeTrackers = [str(x).upper() for x in self._includeTrackers]
@@ -533,7 +533,7 @@ class Config(object):
             self._excludeTrackers = value.split(',')
         else:
             self._excludeTrackers = value
-        # Now make sure the list of trackers is all in lower-case to
+        # Now make sure the list of trackers is all in upper-case to
         # make comparisons easier later.
         if self._excludeTrackers is not None:
             self._excludeTrackers = [str(x).upper() for x in self._excludeTrackers]
@@ -558,6 +558,63 @@ class Config(object):
         return self._forceSync
     @forceSync.setter
     def forceSync(self, value): self._forceSync = value
+
+    def load(self, filename):
+        """Load configuration settings from the named YAML-format
+        configuration file. This configuration file can include a
+        subset of possible parameters in which case only those
+        parameters are changed by the load operation.
+
+        Arguments:
+        - `filename`: The name of the fiie to load parameters from.
+
+        """
+        config = yaml.load(open(filename, 'rt'))
+
+        # Pick the settings out of the loaded configuration.
+        if config['keep-dumps'] is not None:
+            self.keepDumps = config['keep-dumps']
+        if config['do-upload'] is not None:
+            self.doUpload = config['do-upload']
+        if config['dump-dir'] is not None:
+            self.dumpDir = config['dump-dir']
+        if config['logging'] is not None:
+            self.logLevel = config['logging']
+        if config['force-sync'] is not None:
+            self.forceSync = config['force-sync']
+        if config['include-trackers'] is not None:
+            self.includeTrackers = config['include-trackers']
+        if config['exclude-trackers'] is not None:
+            self.excludeTrackers = config['exclude-trackers']
+
+    def shouldSkipTracker(self, trackerid):
+        """Method to check, based on the configuration, whether a particular
+        tracker should be skipped and not synchronized. The
+        includeTrackers and excludeTrackers properties are checked to
+        determine this.
+
+        Arguments:
+        - `trackerid`: Tracker ID (hexadecimal string), to check.
+
+        """
+
+        shouldSkip = False
+
+        # Make sure the tracker ID is in upper-case so that string
+        # comparisons with our lists of tracker IDs work.
+        trackerid = str(trackerid).upper()
+
+        # If a list of trackers to sync is configured then was
+        # provided then ignore this tracker if it's not in that list.
+        if (self._includeTrackers is not None) and (trackerid not in self._includeTrackers):
+            shouldSkip = True
+
+        # If a list of trackers to avoid syncing is configured then
+        # ignore this tracker if it is in that list.
+        if trackerid in self._excludeTrackers:
+            shouldSkip = True
+
+        return shouldSkip
 
     def __str__(self):
         return ("Config: logLevel = %s, " +
@@ -610,21 +667,13 @@ def syncAllTrackers(config):
 
         trackerid = a2x(tracker.id, delim="")
 
-        # If a list of trackers to sync was provided then ignore this
-        # tracker if it's not in that list.
-        if (config['include-trackers'] is not None) and (trackerid not in config['include-trackers']):
-            logger.info('Tracker %s is not in the include list; skipping', trackerid)
+        # Skip this tracker based on include/exclude lists.
+        if config.shouldSkipTracker(trackerid):
+            logger.info('Tracker %s is to be skipped due to configuration; skipping', trackerid)
             trackersskipped += 1
             continue
 
-        # If a list of trackers to avoid syncing was provided then
-        # ignore this tracker if it is in that list.
-        if trackerid in config['exclude-trackers']:
-            logger.info('Tracker %s is in the exclude list; skipping', trackerid)
-            trackersskipped += 1
-            continue
-
-        if tracker.syncedRecently and config['force-sync']:
+        if tracker.syncedRecently and config.forceSync:
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
         elif tracker.syncedRecently:
             logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
@@ -655,9 +704,9 @@ def syncAllTrackers(config):
         logger.info('Getting data from tracker')
         dump = fitbit.getDump()
 
-        if config['keep-dumps']:
+        if config.keepDumps:
             # Write the dump somewhere for archiving ...
-            dirname = os.path.expanduser(os.path.join(config['dump-dir'], trackerid))
+            dirname = os.path.expanduser(os.path.join(config.dumpDir, trackerid))
             if not os.path.exists(dirname):
                 logger.debug("Creating non-existent directory for dumps %s", dirname)
                 os.makedirs(dirname)
@@ -670,14 +719,14 @@ def syncAllTrackers(config):
         else:
             logger.debug("Not dumping anything to disk")
 
-        if not config['do-upload']:
+        if not config.doUpload:
             logger.info("Not uploading, as asked ...")
         else:
             try:
                 logger.info('Sending tracker data to Fitbit')
                 response = galileo.sync(fitbit, trackerid, dump)
 
-                if config['keep-dumps']:
+                if config.keepDumps:
                     logger.debug("Appending answer from server to %s", filename)
                     with open(filename, 'at') as dumpfile:
                         dumpfile.write('\n')
@@ -775,17 +824,8 @@ def main():
                            help="list of tracker IDs to not sync")
     cmdlineargs = argparser.parse_args()
 
-    # TODO: Remove this test code
-    config = Config()
-    print config
-    config.logLevel = 'DEBUG'
-    config.keepDumps=False
-    config.includeTrackers = '123,456,789,abc,DEF'
-    config.excludeTrackers = '789,abc,DEF'
-    config.dumpDir = "~/.galileo-dump"
-    config.doUpload = False
-    config.forceSync = True
-    print config
+    # Basic logging configuration.
+    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=logging.INFO)
 
     # If an alternative config filename was provided then use it.
     if cmdlineargs.rcconfigname:
@@ -793,84 +833,56 @@ def main():
     else:
         rcconfigname = os.path.expanduser(DEFAULT_RCFILE_NAME)
 
-    # Load the YAML configuration file.
-    config = {}
+    # Load the configuration.
+    config = Config()
     if os.path.exists(rcconfigname) or cmdlineargs.rcconfigname:
         try:
             logger.debug("Trying to load config file: %s", rcconfigname)
-            config = yaml.load(open(rcconfigname, 'rt'))
+            config.load(rcconfigname)
         except IOError:
             logger.warning('Unable to load configuration file: %s', rcconfigname)
-    if config == None:
-        config = {}
 
     # Override rcfile-provided values with those on the command-line.
 
     # Logging
     if cmdlineargs.verbose:
-        config['logging'] = 'verbose'
+        config.logLevel = 'verbose'
     elif cmdlineargs.debug:
-        config['logging'] = 'debug'
+        config.logLevel = 'debug'
     elif cmdlineargs.silent:
-        config['logging'] = 'default'
-    if not 'logging' in config:
-        config['logging'] = 'default'
-    if config['logging'] == 'verbose':
-        config['log_level'] = logging.INFO
-    elif config['logging'] == 'debug':
-        config['log_level'] = logging.DEBUG
-    else:
-        config['log_level'] = logging.WARNING
+        config.logLevel = 'default'
 
     # Includes
     if cmdlineargs.include:
-        config['include-trackers'] = cmdlineargs.include
-    if not 'include-trackers' in config:
-        config['include-trackers'] = None
+        config.includeTrackers = cmdlineargs.include
 
     # Excludes
     if cmdlineargs.exclude:
-        config['exclude-trackers'] = cmdlineargs.exclude
-    if not 'exclude-trackers' in config:
-        config['exclude-trackers'] = []
+        config.excludeTrackers = cmdlineargs.exclude
 
     # Keep dumps (or not)
     if cmdlineargs.no_dump:
-        config['keep-dumps'] = False
+        config.keepDumps = False
     elif cmdlineargs.dump:
-        config['keep-dumps'] = True
-    if not 'keep-dumps' in config:
-        config['keep-dumps'] = True
+        config.keepDumps = True
 
     # Dump directory
     if cmdlineargs.dump_dir:
-        config['dump-dir'] = cmdlineargs.dump_dir
-    if not 'dump-dir' in config:
-        config['dump-dir'] = DEFAULT_DUMP_DIR
+        config.dumpDir = cmdlineargs.dump_dir
 
     # Upload data (or not)
     if cmdlineargs.no_upload:
-        config['do-upload'] = False
+        config.doUpload = False
     elif cmdlineargs.upload:
-        config['do-upload'] = True
-    if not 'do-upload' in config:
-        config['do-upload'] = True
+        config.doUpload = True
 
     # Force (or not)
     if cmdlineargs.no_force:
-        config['force-sync'] = False
+        config.forceSync = False
     elif cmdlineargs.force:
-        config['force-sync'] = True
-    if not 'force-sync' in config:
-        config['force-sync'] = False
+        config.forceSync = True
 
-    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=config['log_level'])
-
-    # Make sure the tracker IDs in the include/exclude lists are all
-    # in upper-case to ease comparisons later.
-    if config['include-trackers'] is not None:
-        config['include-trackers'] = [str(x).upper() for x in config['include-trackers']]
-    config['exclude-trackers'] = [str(x).upper() for x in config['exclude-trackers']]
+    logging.basicConfig(level=config.logLevel)
 
     try:
         total, success, skipped = syncAllTrackers(config)
