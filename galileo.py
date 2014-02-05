@@ -353,8 +353,8 @@ class FitbitClient(object):
         # megadump footer
         dataType = d.data[2]
         assert dataType == dumptype, "%x != %x" % (dataType, dumptype)
-        nbBytes = d.data[6] * 0xff + d.data[5]
-        transportCRC = d.data[3] * 0xff + d.data[4]
+        nbBytes = a2lsbi(d.data[5:7])
+        transportCRC = a2lsbi(d.data[3:5])
         esc1 = d.data[7]
         esc2 = d.data[8]
         logger.debug('Dump done. length %d, embedded length %d', len(dump), nbBytes)
@@ -362,7 +362,7 @@ class FitbitClient(object):
         return dump
 
     def uploadResponse(self, response):
-        self.dongle.data_write(DM([0xc0, 0x24, 4] + [len(response) & 0xff, len(response) >> 8] + [0, 0, 0, 0]))
+        self.dongle.data_write(DM([0xc0, 0x24, 4] + i2lsba(len(response), 2) + [0, 0, 0, 0]))
         self.dongle.data_read()
 
         for i in range(0, len(response), 20):
