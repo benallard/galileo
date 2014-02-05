@@ -257,9 +257,9 @@ class FitbitClient(object):
 
     def discover(self):
         self.dongle.ctrl_write([0x1a, 4, 0xba, 0x56, 0x89, 0xa6, 0xfa, 0xbf,
-                           0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
-                           0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb,
-                           0xa0, 0x0f, 0, 0xd3, 0, 0, 0, 0])
+                                0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
+                                0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb,
+                                0xa0, 0x0f, 0, 0xd3, 0, 0, 0, 0])
         self.dongle.ctrl_read()  # StartDiscovery
         d = self.dongle.ctrl_read(10000)
         while d[0] != 3:
@@ -270,15 +270,16 @@ class FitbitClient(object):
             syncedRecently = (d[12] != 4)
             sUUID = list(d[17:19])
             serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
-                     trackerId[0] ^ trackerId[2] ^ trackerId[4]]
+                           trackerId[0] ^ trackerId[2] ^ trackerId[4]]
             if serviceUUID != sUUID:
                 logger.error("Error in communication, cannot acknowledge the serviceUUID: %s vs %s", a2x(serviceUUID, ':'), a2x(sUUID, ':'))
             logger.debug('Tracker: %s, %s, %s, %s (%s)', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'), syncedRecently)
             if not syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
             if RSSI < -80:
-                logger.info("Tracker %s has low signal power (%ddBm), higher chance of"
-                    " miscommunication", a2x(trackerId, delim=""), RSSI)
+                logger.info("Tracker %s has low signal power (%ddBm), higher"
+                            " chance of miscommunication",
+                            a2x(trackerId, delim=""), RSSI)
             yield Tracker(trackerId, addrType, syncedRecently)
             d = self.dongle.ctrl_read(4000)
 
@@ -435,7 +436,7 @@ class GalileoClient(object):
 
         if attrib['version'] != "2.0":
             logger.error("Unexpected server version: %s",
-                attrib['version'])
+                         attrib['version'])
 
         for child in childs:
             stag, _, _, sbody = child
@@ -637,8 +638,8 @@ def main():
                                      action="store_const", const=logging.DEBUG, dest="log_level",
                                      help="show internal activity (implies verbose)")
     argparser.add_argument("-f", "--force",
-                                     action="store_true",
-                                     help="synchronize even if tracker reports a recent sync")
+                           action="store_true",
+                           help="synchronize even if tracker reports a recent sync")
     argparser.add_argument("--no-dump",
                            action="store_false", dest="dump",
                            help="disable saving of the megadump to file")
