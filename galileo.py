@@ -215,10 +215,13 @@ class FitBitDongle(USBDevice):
 
 
 class Tracker(object):
-    def __init__(self, Id, addrType, syncedRecently):
+    def __init__(self, Id, addrType, syncedRecently, serviceUUID=None):
         self.id = Id
         self.addrType = addrType
-        self.serviceUUID = [Id[1] ^ Id[3] ^ Id[5], Id[0] ^ Id[2] ^ Id[4]]
+        if serviceUUID is None:
+            self.serviceUUID = [Id[1] ^ Id[3] ^ Id[5], Id[0] ^ Id[2] ^ Id[4]]
+        else:
+            self.serviceUUID = serviceUUID
         self.syncedRecently = syncedRecently
 
 
@@ -271,7 +274,7 @@ class FitbitClient(object):
             sUUID = list(d[17:19])
             serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
-            if serviceUUID != sUUID:
+            if not syncedRecently and (serviceUUID != sUUID):
                 logger.error("Error in communication, cannot acknowledge the serviceUUID: %s vs %s", a2x(serviceUUID, ':'), a2x(sUUID, ':'))
             logger.debug('Tracker: %s, %s, %s, %s (%s)', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'), syncedRecently)
             if not syncedRecently:
@@ -280,7 +283,7 @@ class FitbitClient(object):
                 logger.info("Tracker %s has low signal power (%ddBm), higher"
                             " chance of miscommunication",
                             a2x(trackerId, delim=""), RSSI)
-            yield Tracker(trackerId, addrType, syncedRecently)
+            yield Tracker(trackerId, addrType, syncedRecently, sUUID)
             d = self.dongle.ctrl_read(4000)
 
         # tracker found, cancel discovery
