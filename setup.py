@@ -22,7 +22,7 @@ setup(
     platforms='any',
     keywords=['fitbit', 'synchronize', 'health', 'tracker'],
     license="LGPL",
-    install_requires=["requests","pyusb"],
+    install_requires=["requests", "pyusb"],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
@@ -34,7 +34,7 @@ setup(
     ],
     py_modules=['galileo'],
     entry_points={
-        'console_scripts':[
+        'console_scripts': [
             'galileo = galileo:main'
         ],
     },

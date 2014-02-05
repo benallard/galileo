@@ -4,38 +4,43 @@ import os
 
 from analysedump import readdump
 
+
 def s2a(s):
     return [ord(c) for c in s]
+
 
 def LCS(X, Y):
     m = len(X)
     n = len(Y)
-    C = [[0] * (n+1) for i in range(m+1)]
-    for i in range(1, m+1):
-        for j in range(1, n+1):
-            if X[i-1] == Y[j-1]:
-                C[i][j] = C[i-1][j-1] + 1
+    C = [[0] * (n + 1) for i in range(m + 1)]
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if X[i - 1] == Y[j - 1]:
+                C[i][j] = C[i - 1][j - 1] + 1
             else:
-                C[i][j] = max(C[i][j-1], C[i-1][j])
+                C[i][j] = max(C[i][j - 1], C[i - 1][j])
     return C
 
 SYMBOLS = {0: ' ',
            -1: '-',
            1: '+'}
 
+
 def _diff(C, X, Y, i, j):
     while (i, j) != (0, 0):
-        if i > 0 and j > 0 and X[i-1] == Y[j-1]:
-            yield (0, X[i-1])
-            i -= 1; j -= 1
-        elif j > 0 and ((i == 0) or (C[i][j-1] >= C[i-1][j])):
-            yield (1, Y[j-1])
+        if i > 0 and j > 0 and X[i - 1] == Y[j - 1]:
+            yield (0, X[i - 1])
+            i -= 1
             j -= 1
-        elif i > 0 and ((j == 0) or C[i][j-1] < C[i-1][j]):
-            yield (-1, X[i-1])
+        elif j > 0 and ((i == 0) or (C[i][j - 1] >= C[i - 1][j])):
+            yield (1, Y[j - 1])
+            j -= 1
+        elif i > 0 and ((j == 0) or C[i][j - 1] < C[i - 1][j]):
+            yield (-1, X[i - 1])
             i -= 1
         else:
-            assert False, ' '.join(str(c) for c in [i, j, C[i][j-1], C[i-1][j]])
+            assert False, ' '.join(str(c) for c in [i, j, C[i][j - 1], C[i - 1][j]])
+
 
 def diff(X, Y, maxL=20):
 
@@ -73,7 +78,7 @@ def dumpdiff(dump1, dump2):
         data2, resp2 = readdump(f)
 
     diff(data1, data2)
-    print '-'*20
+    print '-' * 20
     diff(resp1, resp2)
 
 
@@ -81,13 +86,13 @@ def diffdir(basedir):
 
     for root, dirs, files in os.walk(basedir):
         files = sorted(files)
-        for i in range(0, len(files) -1):
+        for i in range(0, len(files) - 1):
             print files[i]
             print files[i + 1]
             try:
-                dumpdiff(os.path.join(root, files[i]), os.path.join(root, files[i+1]))
+                dumpdiff(os.path.join(root, files[i]), os.path.join(root, files[i + 1]))
             except RuntimeError:
-                print 'Trouble with %s and %s' % (files[i], files[i+1])
+                print 'Trouble with %s and %s' % (files[i], files[i + 1])
             print '------------------------------------'
 
 
