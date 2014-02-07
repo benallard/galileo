@@ -306,7 +306,8 @@ class FitbitClient(object):
             serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
             if not syncedRecently and (serviceUUID != sUUID):
-                logger.error("Error in communication, cannot acknowledge the serviceUUID: %s vs %s", a2x(serviceUUID, ':'), a2x(sUUID, ':'))
+                logger.error("Error in communication to tracker %s, cannot acknowledge the serviceUUID: %s vs %s",
+                             a2x(trackerId, delim=""), a2x(serviceUUID, ':'), a2x(sUUID, ':'))
             logger.debug('Tracker: %s, %s, %s, %s (%s)', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'), syncedRecently)
             if not syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
@@ -644,20 +645,34 @@ class Config(object):
         config = yaml.load(open(filename, 'rt'))
 
         # Pick the settings out of the loaded configuration.
-        if config['keep-dumps'] is not None:
+        try:
             self.keepDumps = config['keep-dumps']
-        if config['do-upload'] is not None:
+        except KeyError:
+            pass
+        try:
             self.doUpload = config['do-upload']
-        if config['dump-dir'] is not None:
+        except KeyError:
+            pass
+        try:
             self.dumpDir = config['dump-dir']
-        if config['logging'] is not None:
+        except KeyError:
+            pass
+        try:
             self.logLevel = config['logging']
-        if config['force-sync'] is not None:
+        except KeyError:
+            pass
+        try:
             self.forceSync = config['force-sync']
-        if config['include-trackers'] is not None:
+        except KeyError:
+            pass
+        try:
             self.includeTrackers = config['include-trackers']
-        if config['exclude-trackers'] is not None:
+        except KeyError:
+            pass
+        try:
             self.excludeTrackers = config['exclude-trackers']
+        except KeyError:
+            pass
 
     def shouldSkipTracker(self, trackerid):
         """Method to check, based on the configuration, whether a particular
