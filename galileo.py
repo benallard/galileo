@@ -241,14 +241,18 @@ class FitBitDongle(USBDevice):
 
 
 class Tracker(object):
-    def __init__(self, Id, addrType, syncedRecently, serviceUUID=None):
+    def __init__(self, Id, addrType, attributes, serviceUUID=None):
         self.id = Id
         self.addrType = addrType
         if serviceUUID is None:
             self.serviceUUID = [Id[1] ^ Id[3] ^ Id[5], Id[0] ^ Id[2] ^ Id[4]]
         else:
             self.serviceUUID = serviceUUID
-        self.syncedRecently = syncedRecently
+        self.attributes = attributes
+
+    @property
+    def syncedRecently(self):
+        return self.attributes[1] != 4
 
 
 class CRC(object):
@@ -354,20 +358,20 @@ class FitbitClient(object):
             addrType = d[8]
             RSSI = c_byte(d[9]).value
             attributes = list(d[11:13])
-            syncedRecently = (d[12] != 4)
             sUUID = list(d[17:19])
             serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
-            if not syncedRecently and (serviceUUID != sUUID):
+            tracker = Tracker(trackerId, addrType, attributes, sUUID)
+            if not tracker.syncedRecently and (serviceUUID != sUUID):
                 logger.error("Error in communication, cannot acknowledge the serviceUUID: %s vs %s", a2x(serviceUUID, ':'), a2x(sUUID, ':'))
-            logger.debug('Tracker: %s, %s, %s, %s (%s)', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'), syncedRecently)
-            if not syncedRecently:
-                logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
+            logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'))
             if RSSI < -80:
                 logger.info("Tracker %s has low signal power (%ddBm), higher"
                             " chance of miscommunication",
                             a2x(trackerId, delim=""), RSSI)
-            yield Tracker(trackerId, addrType, syncedRecently, sUUID)
+            if not tracker.syncedRecently:
+                logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
+            yield tracker
             d = self.dongle.ctrl_read(minDuration)
 
         # tracker found, cancel discovery
