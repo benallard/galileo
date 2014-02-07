@@ -251,6 +251,63 @@ class Tracker(object):
         self.syncedRecently = syncedRecently
 
 
+class CRC(object):
+    def __init__(self, IV, FV):
+        self.value = IV
+        self.FV = FV
+
+    def update(self, array):
+        for c in array:
+            self.update_byte(c)
+
+    def final(self):
+        return self.value ^ self.FV
+
+
+class CRC_CCITT(CRC):
+    TABLE = [
+        0x0000, 0x1081, 0x2102, 0x3183,
+        0x4204, 0x5285, 0x6306, 0x7387,
+        0x8408, 0x9489, 0xa50a, 0xb58b,
+        0xc60c, 0xd68d, 0xe70e, 0xf78f]
+
+    def __init__(self, IV=0xffff):
+        CRC.__init__(self, IV)
+
+    def update_byte(self, byte):
+        reg = self.value
+        reg = (reg >> 4) ^ CRC_CCITT.TABLE[(reg ^ byte) & 0x000f]
+        reg = (reg >> 4) ^ CRC_CCITT.TABLE[(reg ^ (byte >> 4)) & 0x000f]
+        self.value = reg
+
+
+class CRC16(CRC):
+    def __init__(self, poly=0x1021, Invert=True, IV=0x0000, FV=0x0000):
+        self.poly = poly
+        CRC.__init__(self, IV, FV)
+        if Invert:
+            self.update_byte = self.update_byte_MSB
+        else:
+            self.update_byte = self.update_byte_LSB
+
+    def update_byte_MSB(self, byte):
+        self.value ^= byte << 8
+        for i in range(8):
+            if self.value & 0x8000:
+                self.value = (self.value << 1) ^ self.poly
+            else:
+                self.value <<= 1
+        self.value &= 0xffff
+
+    def update_byte_LSB(self, byte):
+        self.value ^= byte
+        for i in range(8):
+            if self.value & 0x0001:
+                self.value = (self.value >> 1) ^ self.poly
+            else:
+                self.value >>= 1
+
+
 class FitbitClient(object):
     def __init__(self, dongle):
         self.dongle = dongle
@@ -345,12 +402,16 @@ class FitbitClient(object):
         assert r.data == [0xc0, 0x41, dumptype], r.data
 
         dump = []
+        crc = CRC16()
         # megadump body
         d = self.dongle.data_read()
         dump.extend(d.data)
+        crc.update(d.data)
         while d.data[0] != 0xc0:
             d = self.dongle.data_read()
             dump.extend(unSLIP1(d.data))
+            if d.data[0] != 0xc0:
+                crc.update(unSLIP1(d.data))
         # megadump footer
         dataType = d.data[2]
         assert dataType == dumptype, "%x != %x" % (dataType, dumptype)
@@ -362,6 +423,10 @@ class FitbitClient(object):
         if dumpLen != nbBytes:
             logger.error("Error in communication, Expected length: %d bytes,"
                          " received %d bytes", nbBytes, dumpLen)
+        crcVal = crc.final()
+        if transportCRC != crcVal:
+            logger.error("error in communication, Expected CRC: 0x%04X,"
+                         " received 0x%04X", crcVal, transportCRC)
         logger.debug('Dump done, length %d', nbBytes)
         logger.debug('transportCRC=0x%04x, esc1=0x%02x, esc2=0x%02x', transportCRC, esc1, esc2)
         return dump
