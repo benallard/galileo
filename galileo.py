@@ -256,7 +256,9 @@ class Tracker(object):
 
 
 class CRC(object):
-    def __init__(self, IV, FV):
+    """ An abstract mother class to group the different CRC16 implementations
+    """
+    def __init__(self, IV, FV=0x0000):
         self.value = IV
         self.FV = FV
 
@@ -268,7 +270,12 @@ class CRC(object):
         return self.value ^ self.FV
 
 
+# Remarks: the following class is not used in the project, however, it
+# caries hours of trial and errors trying to figure out the CRC used
+# that at the moment, I don't feel like removing it ...
 class CRC_CCITT(CRC):
+    """ An implementation of the CCITT CRC16 flavor algorithm, taken from
+    the linux kernel """
     TABLE = [
         0x0000, 0x1081, 0x2102, 0x3183,
         0x4204, 0x5285, 0x6306, 0x7387,
@@ -286,6 +293,7 @@ class CRC_CCITT(CRC):
 
 
 class CRC16(CRC):
+    """ A rather generic CRC16 class """
     def __init__(self, poly=0x1021, Invert=True, IV=0x0000, FV=0x0000):
         self.poly = poly
         CRC.__init__(self, IV, FV)
