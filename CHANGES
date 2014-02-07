@@ -5,9 +5,10 @@ Plan for this release:
 - File based configuration
 - Enhanced stability
 - More configuration options
-- Some breackthrough in the analyse of the dumps (even for Flex/Force ?)
+- Some breakthrough in the analyse of the dumps (even for Flex/Force ?)
 
 Main changes since 0.3.1:
+- Validation of the CRC value of the dumps (issue#15)
 - Add --include and --exclude to control which trackers to synchronize (PR #4)
 - Add a --no-upload command line parameter to prevent the uploading of the
   dump to the server
@@ -41,7 +42,7 @@ As well as improves the code quality.
 New contributors to this release: Stuart Hickinbottom.
 
 Main changes since 0.2:
-- Improve error reporting when insuficient permissions are set on the usb
+- Improve error reporting when insufficient permissions are set on the usb
   device (PR #3, issue#10)
 - Add --no-dump to prevent writing a backup of the dump to disc (issue#19).
 - Only sync the trackers that have not been sync'd for some time. Use --force
