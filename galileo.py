@@ -348,7 +348,7 @@ class FitbitClient(object):
                                 0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb] +
                                i2lsba(minDuration, 2) + [0, 0xd3, 0, 0, 0, 0])
         self.dongle.ctrl_read()  # StartDiscovery
-        d = self.dongle.ctrl_read(10000)
+        d = self.dongle.ctrl_read(minDuration)
         while d[0] != 3:
             trackerId = list(d[2:8])
             addrType = d[8]
@@ -368,7 +368,7 @@ class FitbitClient(object):
                             " chance of miscommunication",
                             a2x(trackerId, delim=""), RSSI)
             yield Tracker(trackerId, addrType, syncedRecently, sUUID)
-            d = self.dongle.ctrl_read(4000)
+            d = self.dongle.ctrl_read(minDuration)
 
         # tracker found, cancel discovery
         self.dongle.ctrl_write([2, 5])
