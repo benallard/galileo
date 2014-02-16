@@ -533,11 +533,11 @@ class Config(object):
                                'verbose': logging.INFO,
                                'debug': logging.DEBUG }
         self.__logLevelMapReverse = {}
-        for key in self.__logLevelMap:
-            self.__logLevelMapReverse[self.__logLevelMap[key]] = key
+        for key, value in self.__logLevelMap.iteritems():
+            self.__logLevelMapReverse[value] = key
         self.__logLevel = logging.WARNING
         self._includeTrackers = None
-        self._excludeTrackers = ()
+        self._excludeTrackers = []
         self._keepDumps = True
         self._dumpDir = self.DEFAULT_DUMP_DIR
         self._doUpload = True
@@ -865,7 +865,7 @@ def main():
     verbosity_arggroup2.add_argument("-d", "--debug",
                                      action="store_true",
                                      help="show internal activity (implies verbose)")
-    verbosity_arggroup2.add_argument("-s", "--silent",
+    verbosity_arggroup2.add_argument("-q", "--quiet",
                                      action="store_true",
                                      help="only show errors and summary (default)")
     force_arggroup = argparser.add_argument_group("force synchronization control")
@@ -901,7 +901,7 @@ def main():
     cmdlineargs = argparser.parse_args()
 
     # Basic logging configuration.
-    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s')
 
     # If an alternative config filename was provided then use it.
     if cmdlineargs.rcconfigname:
@@ -925,7 +925,7 @@ def main():
         config.logLevel = 'verbose'
     elif cmdlineargs.debug:
         config.logLevel = 'debug'
-    elif cmdlineargs.silent:
+    elif cmdlineargs.quiet:
         config.logLevel = 'default'
 
     # Includes
@@ -958,7 +958,7 @@ def main():
     elif cmdlineargs.force:
         config.forceSync = True
 
-    logging.basicConfig(level=config.logLevel)
+    logger.setLevel(config.logLevel)
 
     try:
         total, success, skipped = syncAllTrackers(config)
