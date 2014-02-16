@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     import distribute_setup
     distribute_setup.use_setuptools()
@@ -36,10 +36,10 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    py_modules=['galileo'],
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'galileo = galileo:main'
+            'galileo = galileo.main:main'
         ],
     },
 )
