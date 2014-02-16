@@ -639,40 +639,27 @@ class Config(object):
         parameters are changed by the load operation.
 
         Arguments:
-        - `filename`: The name of the fiie to load parameters from.
+        - `filename`: The name of the file to load parameters from.
 
         """
-        config = yaml.load(open(filename, 'rt'))
+        with open(filename, 'rt') as f:
+            config = yaml.load(f)
 
         # Pick the settings out of the loaded configuration.
-        try:
+        if 'keep-dumps' in config:
             self.keepDumps = config['keep-dumps']
-        except KeyError:
-            pass
-        try:
+        if 'do-upload' in config:
             self.doUpload = config['do-upload']
-        except KeyError:
-            pass
-        try:
+        if 'dump-dir' in config:
             self.dumpDir = config['dump-dir']
-        except KeyError:
-            pass
-        try:
+        if 'logging' in config:
             self.logLevel = config['logging']
-        except KeyError:
-            pass
-        try:
+        if 'force-sync' in config:
             self.forceSync = config['force-sync']
-        except KeyError:
-            pass
-        try:
+        if 'include-trackers' in config:
             self.includeTrackers = config['include-trackers']
-        except KeyError:
-            pass
-        try:
+        if 'exclude-trackers' in config:
             self.excludeTrackers = config['exclude-trackers']
-        except KeyError:
-            pass
 
     def shouldSkipTracker(self, trackerid):
         """Method to check, based on the configuration, whether a particular
