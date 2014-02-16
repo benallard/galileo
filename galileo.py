@@ -28,6 +28,8 @@ import base64
 
 import argparse
 
+import yaml
+
 import logging
 
 import time
@@ -45,6 +47,8 @@ __version__ = '0.4dev'
 
 MICRODUMP = 3
 MEGADUMP = 13
+
+DEFAULT_RCFILE_NAME = "~/.galileorc"
 
 
 def a2x(a, delim=' ', shorten=False):
@@ -383,7 +387,8 @@ class FitbitClient(object):
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
             tracker = Tracker(trackerId, addrType, attributes, sUUID)
             if not tracker.syncedRecently and (serviceUUID != sUUID):
-                logger.error("Error in communication, cannot acknowledge the serviceUUID: %s vs %s", a2x(serviceUUID, ':'), a2x(sUUID, ':'))
+                logger.error("Error in communication to tracker %s, cannot acknowledge the serviceUUID: %s vs %s",
+                             a2x(trackerId, delim=""), a2x(serviceUUID, ':'), a2x(sUUID, ':'))
             logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'))
             if RSSI < -80:
                 logger.info("Tracker %s has low signal power (%ddBm), higher"
@@ -600,7 +605,198 @@ class GalileoClient(object):
         return s2a(base64.b64decode(d))
 
 
-def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, upload=True):
+class Config(object):
+    """Class holding the configuration to be applied during synchronization.
+    The configuration can be loaded from a file in which case the defaults
+    can be overridden; loading from multiple files allows the settings from
+    later files to override those defined in earlier files. Finally, each
+    configuration option can also be set directly, which is used to allow
+    overriding of file-based configuration settings with those explicitly
+    specified on the command line.
+    """
+
+    DEFAULT_DUMP_DIR = "~/.galileo"
+
+    def __init__(self):
+        self.__logLevelMap = { 'default': logging.WARNING,
+                               'verbose': logging.INFO,
+                               'debug': logging.DEBUG }
+        self.__logLevelMapReverse = {}
+        for key, value in self.__logLevelMap.iteritems():
+            self.__logLevelMapReverse[value] = key
+        self.__logLevel = logging.WARNING
+        self._includeTrackers = None
+        self._excludeTrackers = []
+        self._keepDumps = True
+        self._dumpDir = self.DEFAULT_DUMP_DIR
+        self._doUpload = True
+        self._forceSync = False
+
+    # Property accessors and definitions
+    @property
+    def logLevel(self):
+        """Logging level. Values are as defined in Logging.setLevel() and can
+        be set as an integer or string.
+
+        """
+        return self.__logLevel
+
+    @logLevel.setter
+    def logLevel(self, value):
+        if isinstance(value, basestring):
+            self.__logLevel = self.__logLevelMap[str(value).lower()]
+        else:
+            self.__logLevel = value
+
+    @property
+    def keepDumps(self):
+        """Flag indicate data from tracker should be saved."""
+        return self._keepDumps
+
+    @keepDumps.setter
+    def keepDumps(self, value): self._keepDumps = value
+
+    @property
+    def includeTrackers(self):
+        """List of trackers to synchronize, or None for to synchronize all.
+        Can be set via a comma-separated list string or from a list.
+
+        """
+        return self._includeTrackers
+
+    @includeTrackers.setter
+    def includeTrackers(self, value):
+        if isinstance(value, basestring):
+            self._includeTrackers = value.split(',')
+        else:
+            self._includeTrackers = value
+        # Now make sure the list of trackers is all in upper-case to
+        # make comparisons easier later.
+        if self._includeTrackers is not None:
+            self._includeTrackers = [str(x).upper() for x in self._includeTrackers]
+
+    @property
+    def excludeTrackers(self):
+        """List of trackers to avoid synchronizing. Can be set via a
+        comma-separated list string or from a list.
+
+        """
+        return self._excludeTrackers
+
+    @excludeTrackers.setter
+    def excludeTrackers(self, value):
+        if isinstance(value, basestring):
+            self._excludeTrackers = value.split(',')
+        else:
+            self._excludeTrackers = value
+        # Now make sure the list of trackers is all in upper-case to
+        # make comparisons easier later.
+        if self._excludeTrackers is not None:
+            self._excludeTrackers = [str(x).upper() for x in self._excludeTrackers]
+
+    @property
+    def dumpDir(self):
+        """Directory where tracker data should be saved."""
+        return self._dumpDir
+
+    @dumpDir.setter
+    def dumpDir(self, value): self._dumpDir = value
+
+    @property
+    def doUpload(self):
+        """Flag indicating whether data from trackers should be uploaded."""
+        return self._doUpload
+
+    @doUpload.setter
+    def doUpload(self, value): self._doUpload = value
+
+    @property
+    def forceSync(self):
+        """Flag indicating whether trackers should be synchronized even if
+        recently synchronized.
+
+        """
+        return self._forceSync
+
+    @forceSync.setter
+    def forceSync(self, value): self._forceSync = value
+
+    def load(self, filename):
+        """Load configuration settings from the named YAML-format
+        configuration file. This configuration file can include a
+        subset of possible parameters in which case only those
+        parameters are changed by the load operation.
+
+        Arguments:
+        - `filename`: The name of the file to load parameters from.
+
+        """
+        with open(filename, 'rt') as f:
+            config = yaml.load(f)
+
+        # Pick the settings out of the loaded configuration.
+        if 'keep-dumps' in config:
+            self.keepDumps = config['keep-dumps']
+        if 'do-upload' in config:
+            self.doUpload = config['do-upload']
+        if 'dump-dir' in config:
+            self.dumpDir = config['dump-dir']
+        if 'logging' in config:
+            self.logLevel = config['logging']
+        if 'force-sync' in config:
+            self.forceSync = config['force-sync']
+        if 'include-trackers' in config:
+            self.includeTrackers = config['include-trackers']
+        if 'exclude-trackers' in config:
+            self.excludeTrackers = config['exclude-trackers']
+
+    def shouldSkipTracker(self, trackerid):
+        """Method to check, based on the configuration, whether a particular
+        tracker should be skipped and not synchronized. The
+        includeTrackers and excludeTrackers properties are checked to
+        determine this.
+
+        Arguments:
+        - `trackerid`: Tracker ID (hexadecimal string), to check.
+
+        """
+
+        shouldSkip = False
+
+        # Make sure the tracker ID is in upper-case so that string
+        # comparisons with our lists of tracker IDs work.
+        trackerid = str(trackerid).upper()
+
+        # If a list of trackers to sync is configured then was
+        # provided then ignore this tracker if it's not in that list.
+        if (self._includeTrackers is not None) and (trackerid not in self._includeTrackers):
+            shouldSkip = True
+
+        # If a list of trackers to avoid syncing is configured then
+        # ignore this tracker if it is in that list.
+        if trackerid in self._excludeTrackers:
+            shouldSkip = True
+
+        return shouldSkip
+
+    def __str__(self):
+        return ("Config: logLevel = %s, " +
+                "keepDumps = %s, " +
+                "includeTrackers = %s, " +
+                "excludeTrackers = %s, " +
+                "dumpDir = %s, " +
+                "doUpload = %s, " +
+                "forceSync = %s") % (
+                    self.__logLevelMapReverse[self.__logLevel],
+                    self._keepDumps,
+                    self._includeTrackers,
+                    self._excludeTrackers,
+                    self._dumpDir,
+                    self._doUpload,
+                    self._forceSync)
+
+
+def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
     try:
@@ -635,21 +831,13 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
 
         trackerid = a2x(tracker.id, delim="")
 
-        # If a list of trackers to sync was provided then ignore this
-        # tracker if it's not in that list.
-        if (include is not None) and (trackerid not in include):
-            logger.info('Tracker %s is not in the include list; skipping', trackerid)
+        # Skip this tracker based on include/exclude lists.
+        if config.shouldSkipTracker(trackerid):
+            logger.info('Tracker %s is to be skipped due to configuration; skipping', trackerid)
             trackersskipped += 1
             continue
 
-        # If a list of trackers to avoid syncing was provided then
-        # ignore this tracker if it is in that list.
-        if trackerid in exclude:
-            logger.info('Tracker %s is in the exclude list; skipping', trackerid)
-            trackersskipped += 1
-            continue
-
-        if tracker.syncedRecently and force:
+        if tracker.syncedRecently and config.forceSync:
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
         elif tracker.syncedRecently:
             logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
@@ -680,11 +868,11 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
         logger.info('Getting data from tracker')
         dump = fitbit.getDump()
 
-        if dumptofile:
+        if config.keepDumps:
             # Write the dump somewhere for archiving ...
-            dirname = os.path.expanduser(os.path.join('~', '.galileo', trackerid))
+            dirname = os.path.expanduser(os.path.join(config.dumpDir, trackerid))
             if not os.path.exists(dirname):
-                logger.debug("Creating non-existent directory %s", dirname)
+                logger.debug("Creating non-existent directory for dumps %s", dirname)
                 os.makedirs(dirname)
 
             filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
@@ -695,14 +883,14 @@ def syncAllTrackers(include=None, exclude=[], force=False, dumptofile=True, uplo
         else:
             logger.debug("Not dumping anything to disk")
 
-        if not upload:
+        if not config.doUpload:
             logger.info("Not uploading, as asked ...")
         else:
             try:
                 logger.info('Sending tracker data to Fitbit')
                 response = galileo.sync(fitbit, trackerid, dump)
 
-                if dumptofile:
+                if config.keepDumps:
                     logger.debug("Appending answer from server to %s", filename)
                     with open(filename, 'at') as dumpfile:
                         dumpfile.write('\n')
@@ -766,46 +954,121 @@ def main():
     argparser.add_argument("-V", "--version",
                            action="store_true", dest='version',
                            help="show version and exit")
+    argparser.add_argument("-c", "--config",
+                            nargs=1, metavar="FILE", dest="rcconfigname",
+                            help="use alternative configuration file (defaults to '%s')" % DEFAULT_RCFILE_NAME)
+    argparser.add_argument("--dump-dir",
+                            nargs=1, metavar="DIR", dest="dump_dir",
+                            help="directory for storing dumps (defaults to '%s')" % Config.DEFAULT_DUMP_DIR)
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
     verbosity_arggroup2.add_argument("-v", "--verbose",
-                                     action="store_const", const=logging.INFO, dest="log_level",
+                                     action="store_true",
                                      help="display synchronization progress")
     verbosity_arggroup2.add_argument("-d", "--debug",
-                                     action="store_const", const=logging.DEBUG, dest="log_level",
+                                     action="store_true",
                                      help="show internal activity (implies verbose)")
-    argparser.add_argument("-f", "--force",
-                           action="store_true",
-                           help="synchronize even if tracker reports a recent sync")
-    argparser.add_argument("--no-dump",
-                           action="store_false", dest="dump",
-                           help="disable saving of the megadump to file")
-    argparser.add_argument("--no-upload",
-                           action="store_false", dest="upload",
-                           help="do not upload the dump to the server")
+    verbosity_arggroup2.add_argument("-q", "--quiet",
+                                     action="store_true",
+                                     help="only show errors and summary (default)")
+    force_arggroup = argparser.add_argument_group("force synchronization control")
+    force_arggroup2 = force_arggroup.add_mutually_exclusive_group()
+    force_arggroup2.add_argument("--force",
+                                 action="store_true",
+                                 help="synchronize even if tracker reports a recent sync")
+    force_arggroup2.add_argument("--no-force",
+                                 action="store_true", dest="no_force",
+                                 help="do not synchronize if tracker reports a recent sync (default)")
+    dump_arggroup = argparser.add_argument_group("dump control")
+    dump_arggroup2 = dump_arggroup.add_mutually_exclusive_group()
+    dump_arggroup2.add_argument("--dump",
+                                action="store_true",
+                                help="enable saving of the megadump to file (default)")
+    dump_arggroup2.add_argument("--no-dump",
+                                action="store_true", dest="no_dump",
+                                help="disable saving of the megadump to file")
+    upload_arggroup = argparser.add_argument_group("upload control")
+    upload_arggroup2 = upload_arggroup.add_mutually_exclusive_group()
+    upload_arggroup2.add_argument("--upload",
+                                  action="store_true",
+                                  help="upload the dump to the server (default)")
+    upload_arggroup2.add_argument("--no-upload",
+                                  action="store_true", dest="no_upload",
+                                  help="do not upload the dump to the server")
     argparser.add_argument("-I", "--include",
-                           nargs="+", metavar="ID", default=None,
+                           nargs="+", metavar="ID",
                            help="list of tracker IDs to sync (all if not specified)")
-    argparser.add_argument("-X", "--exclude", default=[],
+    argparser.add_argument("-X", "--exclude",
                            nargs="+", metavar="ID",
                            help="list of tracker IDs to not sync")
     cmdlineargs = argparser.parse_args()
 
+    # Basic logging configuration.
+    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s')
+
+    # If an alternative config filename was provided then use it.
+    if cmdlineargs.rcconfigname:
+        rcconfigname = os.path.expanduser(cmdlineargs.rcconfigname[0])
+    else:
+        rcconfigname = os.path.expanduser(DEFAULT_RCFILE_NAME)
+
+    # Load the configuration.
+    config = Config()
+    if os.path.exists(rcconfigname) or cmdlineargs.rcconfigname:
+        try:
+            logger.debug("Trying to load config file: %s", rcconfigname)
+            config.load(rcconfigname)
+        except IOError:
+            logger.warning('Unable to load configuration file: %s', rcconfigname)
+
+    # Override rcfile-provided values with those on the command-line.
+
+    # Logging
+    if cmdlineargs.verbose:
+        config.logLevel = 'verbose'
+    elif cmdlineargs.debug:
+        config.logLevel = 'debug'
+    elif cmdlineargs.quiet:
+        config.logLevel = 'default'
+
+    # Includes
+    if cmdlineargs.include:
+        config.includeTrackers = cmdlineargs.include
+
+    # Excludes
+    if cmdlineargs.exclude:
+        config.excludeTrackers = cmdlineargs.exclude
+
+    # Keep dumps (or not)
+    if cmdlineargs.no_dump:
+        config.keepDumps = False
+    elif cmdlineargs.dump:
+        config.keepDumps = True
+
+    # Dump directory
+    if cmdlineargs.dump_dir:
+        config.dumpDir = cmdlineargs.dump_dir
+
+    # Upload data (or not)
+    if cmdlineargs.no_upload:
+        config.doUpload = False
+    elif cmdlineargs.upload:
+        config.doUpload = True
+
+    # Force (or not)
+    if cmdlineargs.no_force:
+        config.forceSync = False
+    elif cmdlineargs.force:
+        config.forceSync = True
+
+    logger.setLevel(config.logLevel)
+
     if cmdlineargs.version:
-        print version(cmdlineargs.log_level == logging.INFO)
+        print version(config.logLevel in (logging.INFO, logging.DEBUG))
         return
 
-    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
-
-    # Make sure the tracker IDs in the include/exclude lists are all
-    # in upper-case to ease comparisons later.
-    include = cmdlineargs.include
-    if include is not None:
-        include = [x.upper() for x in include]
-    exclude = [x.upper() for x in cmdlineargs.exclude]
-
     try:
-        total, success, skipped = syncAllTrackers(include, exclude, cmdlineargs.force, cmdlineargs.dump, cmdlineargs.upload)
+        total, success, skipped = syncAllTrackers(config)
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return
