@@ -796,6 +796,13 @@ def main():
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return
+    except:
+        print "# A serious error happened, which is probably due to a"
+        print "# programming error. Please open a new issue with the following"
+        print "# information on the galileo bug tracker:"
+        print "#    https://bitbucket.org/benallard/galileo/issues/new"
+        print '#', version(True, '\n# ')
+        raise
 
     print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
 
