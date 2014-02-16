@@ -6,7 +6,19 @@ Copyright (C) 2013-2014 Benoit Allard
 Copyright (C) 2014 Stuart Hickinbottom
 """
 
-import usb.core
+try:
+    import usb.core
+except ImportError, ie:
+    # if ``usb`` is there, but not ``usb.core``, a pre-1.0 version of pyusb
+    # is installed.
+    try:
+        import usb
+        print "You have an older pyusb version installed. This utility needs"
+        print "at least version 1.0.0a2 to work properly."
+        print "Please upgrade your system to a newer version."
+    except ImportError:
+        pass
+    raise ie
 
 import xml.etree.ElementTree as ET
 
