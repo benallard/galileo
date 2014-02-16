@@ -732,13 +732,26 @@ The dongle must then be removed and reinserted to receive the new permissions.""
     'VID': FitBitDongle.VID, 'PID': FitBitDongle.PID}
 
 
+def version(verbose, delim='\n'):
+    s = []
+    if verbose:
+        import usb
+        import platform
+        # To get it on one line
+        s.append('Python: %s' % ' '.join(sys.version.split()))
+        s.append('Platform: %s' % ' '.join(platform.uname()))
+        s.append('pyusb: %s' % usb.__version__)
+        s.append('requests: %s' % requests.__version__)
+    s.append('%s: %s' % (sys.argv[0], __version__))
+    return delim.join(s)
+
 def main():
     """ This is the entry point """
     # Define and parse command-line arguments.
     argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                         epilog="""Access your synchronized data at http://www.fitbit.com.""")
     argparser.add_argument("-V", "--version",
-                           action="version", version="%(prog)s " + __version__,
+                           action="store_true", dest='version',
                            help="show version and exit")
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
@@ -764,6 +777,10 @@ def main():
                            nargs="+", metavar="ID",
                            help="list of tracker IDs to not sync")
     cmdlineargs = argparser.parse_args()
+
+    if cmdlineargs.version:
+        print version(cmdlineargs.log_level == logging.INFO)
+        return
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s', level=cmdlineargs.log_level)
 
