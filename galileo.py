@@ -757,6 +757,7 @@ def version(verbose, delim='\n'):
     s.append('%s: %s' % (sys.argv[0], __version__))
     return delim.join(s)
 
+
 def main():
     """ This is the entry point """
     # Define and parse command-line arguments.

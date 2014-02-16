@@ -14,7 +14,8 @@ with open('README.txt') as file:
 setup(
     name="galileo",
     version='0.4dev',
-    description="Utility to securely synchronize a Fitbit tracker with the Fitbit server",
+    description="Utility to securely synchronize a Fitbit tracker with the"
+                " Fitbit server",
     long_description=long_description,
     author="Benoît Allard",
     author_email="benoit.allard@gmx.de",
@@ -22,10 +23,13 @@ setup(
     platforms='any',
     keywords=['fitbit', 'synchronize', 'health', 'tracker'],
     license="LGPL",
-    install_requires=["requests", "pyusb"],
+    install_requires=[
+        "requests",
+        "pyusb>=1a"],  # version 1a doesn't exists, but is smaller than 1.0.0a2
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 or'
+        ' later (LGPLv3+)',
         'Environment :: Console',
         'Topic :: Utilities',
         'Topic :: Internet',
