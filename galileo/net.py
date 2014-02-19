@@ -105,7 +105,7 @@ class GalileoClient(object):
     def sync(self, dongle, trackerId, megadump):
         server = self.post('sync', dongle, (
             'tracker', {'tracker-id': trackerId}, (
-                'data', {}, [], base64.b64encode(a2s(megadump, False)))))
+                'data', {}, [], megadump.toBase64())))
 
         tracker = None
         for elem in server:

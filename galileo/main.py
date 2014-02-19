@@ -101,10 +101,7 @@ def syncAllTrackers(config):
                 os.makedirs(dirname)
 
             filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
-            logger.debug("Dumping megadump to %s", filename)
-            with open(filename, 'wt') as dumpfile:
-                for i in range(0, len(dump), 20):
-                    dumpfile.write(a2x(dump[i:i + 20]) + '\n')
+            dump.toFile(filename)
         else:
             logger.debug("Not dumping anything to disk")
 

@@ -4,23 +4,13 @@ from ctypes import c_byte
 import logging
 logger = logging.getLogger(__name__)
 
-from .crc import CRC16
 from .dongle import TimeoutError, DM
-from .utils import a2x, i2lsba, a2lsbi
+from .dump import Dump
+from .utils import a2x, i2lsba
 
 MICRODUMP = 3
 MEGADUMP = 13
 
-def unSLIP1(data):
-    """ The protocol uses a particular version of SLIP (RFC 1055) applied
-    only on the first byte of the data"""
-    END = 0300
-    ESC = 0333
-    ESC_ = {0334: END,
-            0335: ESC}
-    if data[0] == ESC:
-        return [ESC_[data[1]]] + data[2:]
-    return data
 
 class Tracker(object):
     def __init__(self, Id, addrType, attributes, serviceUUID=None):
@@ -131,34 +121,17 @@ class FitbitClient(object):
         r = self.dongle.data_read()
         assert r.data == [0xc0, 0x41, dumptype], r.data
 
-        dump = []
-        crc = CRC16()
-        # megadump body
+        dump = Dump(dumptype)
+        # Retrieve the dump
         d = self.dongle.data_read()
-        dump.extend(d.data)
-        crc.update(d.data)
+        dump.add(d.data)
         while d.data[0] != 0xc0:
             d = self.dongle.data_read()
-            dump.extend(unSLIP1(d.data))
-            if d.data[0] != 0xc0:
-                crc.update(unSLIP1(d.data))
-        # megadump footer
-        dataType = d.data[2]
-        assert dataType == dumptype, "%x != %x" % (dataType, dumptype)
-        nbBytes = a2lsbi(d.data[5:7])
-        transportCRC = a2lsbi(d.data[3:5])
-        esc1 = d.data[7]
-        esc2 = d.data[8]
-        dumpLen = len(dump) - d.len
-        if dumpLen != nbBytes:
-            logger.error("Error in communication, Expected length: %d bytes,"
-                         " received %d bytes", nbBytes, dumpLen)
-        crcVal = crc.final()
-        if transportCRC != crcVal:
-            logger.error("error in communication, Expected CRC: 0x%04X,"
-                         " received 0x%04X", crcVal, transportCRC)
-        logger.debug('Dump done, length %d', nbBytes)
-        logger.debug('transportCRC=0x%04x, esc1=0x%02x, esc2=0x%02x', transportCRC, esc1, esc2)
+            dump.add(d.data)
+        # Analyse the dump
+        if not dump.isValid():
+            logger.error('Dump not valid')
+        logger.debug('Dump done, length %d, transportCRC=0x%04x, esc1=0x%02x, esc2=0x%02x', dump.len, dump.crc.final(), dump.esc[0], dump.esc[1])
         return dump
 
     def uploadResponse(self, response):
