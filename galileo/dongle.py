@@ -19,6 +19,7 @@ except ImportError, ie:
 
 from .utils import a2x, a2s
 
+
 class USBDevice(object):
     def __init__(self, vid, pid):
         self.vid = vid
@@ -59,6 +60,7 @@ class DataMessage(object):
 
 DM = DataMessage
 
+
 def isATimeout(excpt):
     if excpt.errno == errno.ETIMEDOUT:
         return True
@@ -98,7 +100,8 @@ class FitBitDongle(USBDevice):
                 self.dev.detach_kernel_driver(1)
         except usb.core.USBError, ue:
             if ue.errno == errno.EACCES:
-                logger.error('Insufficient permissions to access the Fitbit dongle')
+                logger.error('Insufficient permissions to access the Fitbit'
+                             ' dongle')
                 raise PermissionDeniedException
             raise
 
@@ -109,14 +112,15 @@ class FitBitDongle(USBDevice):
 
     def ctrl_write(self, data, timeout=2000):
         logger.debug('--> %s', a2x(data))
-        l = self.dev.write(0x02, data, self.CtrlIF.bInterfaceNumber, timeout=timeout)
+        l = self.dev.write(0x02, data, self.CtrlIF.bInterfaceNumber, timeout)
         if l != len(data):
             logger.error('Bug, sent %d, had %d', l, len(data))
             raise DongleWriteException
 
     def ctrl_read(self, timeout=2000, length=32):
         try:
-            data = self.dev.read(0x82, length, self.CtrlIF.bInterfaceNumber, timeout=timeout)
+            data = self.dev.read(0x82, length, self.CtrlIF.bInterfaceNumber,
+                                 timeout)
         except usb.core.USBError, ue:
             if isATimeout(ue):
                 raise TimeoutError
@@ -129,14 +133,16 @@ class FitBitDongle(USBDevice):
 
     def data_write(self, msg, timeout=2000):
         logger.debug('==> %s', msg)
-        l = self.dev.write(0x01, msg.asList(), self.DataIF.bInterfaceNumber, timeout=timeout)
+        l = self.dev.write(0x01, msg.asList(), self.DataIF.bInterfaceNumber,
+                           timeout)
         if l != 32:
             logger.error('Bug, sent %d, had 32', l)
             raise DongleWriteException
 
     def data_read(self, timeout=2000):
         try:
-            data = self.dev.read(0x81, 32, self.DataIF.bInterfaceNumber, timeout=timeout)
+            data = self.dev.read(0x81, 32, self.DataIF.bInterfaceNumber,
+                                 timeout)
         except usb.core.USBError, ue:
             if isATimeout(ue):
                 raise TimeoutError
@@ -144,4 +150,3 @@ class FitBitDongle(USBDevice):
         msg = DM(data, out=False)
         logger.debug('<== %s', msg)
         return msg
-
