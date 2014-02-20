@@ -7,7 +7,7 @@ import base64
 
 
 def readlog(f):
-    """ input is from stdin in the format of lines of long string starting
+    """ input is from f in the format of lines of long string starting
     with a tab ('\t') representing the hexadcimal representation of the data
     (megadump)"""
     d = []
@@ -151,7 +151,9 @@ def daily(data):
         index += 12
 
 
-def remainder(data):
+def footer(data):
+    assert len(data) == 9, data
+    print 'Dump size: %d bytes' % a2lsbi(data[5:7])
     print a2x(data)
 
 ESC = 0xdb
@@ -202,9 +204,9 @@ def analyse(data):
 
     display = [onscreen] * 20
 
-    analyses_ZIP = [header, first_field(9), minutely(3), daily] + display
+    analyses_ZIP = [header, first_field(9), minutely(3), daily, footer]
 
-    analyses_ONE = [header, first_field(11), minutely(4), stairs, daily, skip, onscreen, skip, onscreen, onscreen]
+    analyses_ONE = [header, first_field(11), minutely(4), stairs, daily, skip, onscreen, skip, footer]
 
     analyses = {
         0x26: analyses_ONE,

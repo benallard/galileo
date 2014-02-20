@@ -34,6 +34,7 @@ class Config(object):
         self._dumpDir = self.DEFAULT_DUMP_DIR
         self._doUpload = True
         self._forceSync = False
+        self.retryPeriod = 15000  # 15 sec.
 
     # Property accessors and definitions
     @property

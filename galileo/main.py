@@ -181,7 +181,15 @@ def sync(config):
 
 
 def daemon(config):
-    pass
+    goOn = True
+    while goOn:
+        try:
+            # TODO: Extract the initialization part, and do it once for all
+            syncAllTrackers(config)
+            time.sleep(config.retryPeriod / 1000)
+        except KeyboardInterrupt:
+            logger.info("Ctrl-C, caught, stopping ...")
+            goOn = False
 
 
 def main():
