@@ -178,10 +178,10 @@ def main():
                            action="store_true", dest='version',
                            help="show version and exit")
     argparser.add_argument("-c", "--config",
-                            nargs=1, metavar="FILE", dest="rcconfigname",
-                            help="use alternative configuration file (defaults to '%s')" % DEFAULT_RCFILE_NAME)
+                           metavar="FILE", dest="rcconfigname",
+                           help="use alternative configuration file (defaults to '%s')" % DEFAULT_RCFILE_NAME)
     argparser.add_argument("--dump-dir",
-                           nargs=1, metavar="DIR", dest="dump_dir",
+                           metavar="DIR", dest="dump_dir",
                            help="directory for storing dumps (defaults to '%s')" % Config.DEFAULT_DUMP_DIR)
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
@@ -229,13 +229,13 @@ def main():
 
     # If an alternative config filename was provided then use it.
     if cmdlineargs.rcconfigname:
-        rcconfigname = os.path.expanduser(cmdlineargs.rcconfigname[0])
+        rcconfigname = os.path.expanduser(cmdlineargs.rcconfigname)
     else:
         rcconfigname = os.path.expanduser(DEFAULT_RCFILE_NAME)
 
     # Load the configuration.
     config = Config()
-    if os.path.exists(rcconfigname) or cmdlineargs.rcconfigname:
+    if os.path.exists(rcconfigname):
         try:
             logger.debug("Trying to load config file: %s", rcconfigname)
             config.load(rcconfigname)
