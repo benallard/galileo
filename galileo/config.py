@@ -2,7 +2,11 @@
 import logging
 logger = logging.getLogger(__name__)
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    # TODO: set ``yaml`` to our own parser here
+    yaml = None
 
 class Config(object):
     """Class holding the configuration to be applied during synchronization.
@@ -130,6 +134,9 @@ class Config(object):
         - `filename`: The name of the file to load parameters from.
 
         """
+        if yaml is None:
+            logger.warning("yaml package not found, not parsing %s", filename)
+            return
         with open(filename, 'rt') as f:
             config = yaml.load(f)
 
