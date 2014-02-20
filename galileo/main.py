@@ -8,18 +8,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 import requests
-        
+
 from . import __version__
 from .config import Config
-from .net import GalileoClient, SyncError
-from .tracker import FitbitClient
 from .dongle import (
     FitBitDongle, TimeoutError, NoDongleException, PermissionDeniedException
 )
-from galileo.utils import a2x
+from .net import GalileoClient, SyncError
+from .tracker import FitbitClient
+from .utils import a2x
 
 
 DEFAULT_RCFILE_NAME = "~/.galileorc"
+
 
 def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
@@ -169,6 +170,20 @@ def version(verbose, delim='\n'):
     return delim.join(s)
 
 
+def sync(config):
+    try:
+        total, success, skipped = syncAllTrackers(config)
+    except PermissionDeniedException:
+        print PERMISSION_DENIED_HELP
+        return
+    print '%d trackers found, %d skipped, %d successfully synchronized' % (
+        total, skipped, success)
+
+
+def daemon(config):
+    pass
+
+
 def main():
     """ This is the entry point """
     # Define and parse command-line arguments.
@@ -224,8 +239,10 @@ def main():
     argparser.add_argument("-X", "--exclude",
                            nargs="+", metavar="ID",
                            help="list of tracker IDs to not sync")
+    argparser.add_argument('mode', default='sync', nargs='?',
+                           choices=['sync', 'daemon'], metavar="MODE",
+                           help="The mode to run (default to 'sync')")
     cmdlineargs = argparser.parse_args()
-
 
     # If an alternative config filename was provided then use it.
     if cmdlineargs.rcconfigname:
@@ -255,7 +272,9 @@ def main():
     # Basic logging configuration.
     logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s',
                         level=config.logLevel)
+    # --- All logger actions from now on will be effective ---
 
+    logger.info("Running in mode: %s", cmdlineargs.mode)
     # Includes
     if cmdlineargs.include:
         config.includeTrackers = cmdlineargs.include
@@ -291,10 +310,10 @@ def main():
         return
 
     try:
-        total, success, skipped = syncAllTrackers(config)
-    except PermissionDeniedException:
-        print PERMISSION_DENIED_HELP
-        return
+        {
+            'sync': sync,
+            'daemon': daemon,
+        }[cmdlineargs.mode](config)
     except:
         print "# A serious error happened, which is probably due to a"
         print "# programming error. Please open a new issue with the following"
@@ -302,5 +321,3 @@ def main():
         print "#    https://bitbucket.org/benallard/galileo/issues/new"
         print '#', version(True, '\n# ')
         raise
-
-    print '%d trackers found, %d skipped, %d successfully synchronized' % (total, skipped, success)
