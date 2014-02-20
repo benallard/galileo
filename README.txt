@@ -35,6 +35,14 @@ platforms.
 
 .. _libfitbit: https://github.com/openyou/libfitbit
 
+Main features
+-------------
+
+- Synchronize your fitbit tracker with the fitbit server using the provided
+  dongle.
+- Always communicate securely (using HTTPS) with the fitbit server.
+- Saved all your dumps locally for possible later analyse.
+
 Installation
 ------------
 
@@ -59,12 +67,11 @@ The easy way
 The more complicated way
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-First, you need to clone this repository locally, (or download the
-``galileo.py`` script to you local machine), and install the required
+First, you need to clone this repository locally, and install the required
 dependencies:
 
-- pyusb (tested with 1.0.0b1)
-- requests (tested with 2.0.1)
+- pyusb (need at least a 1.0 version, 0.4 and earlier are not compatible)
+- requests.
 
 You should copy the file ``99-fitbit.rules`` to the directory
 ``/etc/udev/rules.d`` in order to be able to run the utility as a
@@ -75,7 +82,7 @@ Don't forget to:
 - restart the udev service: ``sudo service udev restart``
 - unplug and re-insert the dongle to activate the new rule.
 
-Then simply run ``galileo.py``.
+Then simply run the ``run`` script located at the root of this repository.
 
 Documentation
 -------------
@@ -88,14 +95,6 @@ the goal is to integrate it into the project documentation. So head-on there,
 and start sharing your findings !
 
 .. _wiki: https://bitbucket.org/benallard/galileo/wiki
-
-Example
--------
-
-An example trace can be found in the file ``trace.txt``.
-
-Run the utility with the ``--help`` argument to see a list of available options
-to control the synchronization behavior.
 
 Acknowledgements
 ----------------
