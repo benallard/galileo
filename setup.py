@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+
 try:
     from setuptools import setup, find_packages
 except ImportError:
@@ -10,6 +12,10 @@ except ImportError:
 
 with open('README.txt') as file:
     long_description = file.read()
+
+extra = {}
+if sys.version_info >= (3,):
+    extra['use_2to3'] = True
 
 setup(
     name="galileo",
@@ -43,4 +49,5 @@ setup(
             'galileo = galileo.main:main'
         ],
     },
+    **extra
 )
