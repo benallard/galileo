@@ -84,6 +84,16 @@ Don't forget to:
 
 Then simply run the ``run`` script located at the root of this repository.
 
+Distribution packages
+~~~~~~~~~~~~~~~~~~~~~
+
+The following packaged versions of the utility are available for Linux distributions:
+
+- Gentoo. The utility is packaged as ``app-misc/galileo`` within the
+  [squeezebox](http://git.overlays.gentoo.org/gitweb/?p=user/squeezebox.git)
+  overlay. See https://wiki.gentoo.org/wiki/Layman for details of how
+  to use Gentoo overlays.
+
 Documentation
 -------------
 
