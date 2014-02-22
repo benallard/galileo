@@ -52,7 +52,7 @@ def unJSONize(s):
         return s
 
 
-def load(s):
+def loads(s):
     res = None
     current_key = None
     prev_ident = ''
@@ -78,6 +78,10 @@ def load(s):
                    res[current_key] = []
                res[current_key].append(unJSONize(line[2:]))
     return res
+
+
+def load(f):
+    return loads(f.read())
 
 if __name__ == "__main__":
     import sys
