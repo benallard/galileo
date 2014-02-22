@@ -22,7 +22,7 @@ force-sync: false
 include-trackers:
   - 123456789ABC
   - 9876543210AB
-  - 112233445566
+  - '112233445566' # tracker id composed of only numbers need to be quoted
 
 # exclude
 exclude-trackers:
