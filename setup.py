@@ -26,6 +26,7 @@ setup(
     install_requires=[
         "requests",
         "pyusb>=1a"],  # version 1a doesn't exists, but is smaller than 1.0.0a2
+    test_suite="tests",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or'
