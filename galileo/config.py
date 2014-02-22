@@ -5,8 +5,7 @@ logger = logging.getLogger(__name__)
 try:
     import yaml
 except ImportError:
-    # TODO: set ``yaml`` to our own parser here
-    yaml = None
+    from . import parser as yaml
 
 class Config(object):
     """Class holding the configuration to be applied during synchronization.
