@@ -18,6 +18,7 @@ class Config(object):
     """
 
     DEFAULT_DUMP_DIR = "~/.galileo"
+    DEFAULT_DAEMON_PERIOD = 15000 # 15 seconds
 
     def __init__(self):
         self.__logLevelMap = { 'default': logging.WARNING,
@@ -33,7 +34,7 @@ class Config(object):
         self._dumpDir = self.DEFAULT_DUMP_DIR
         self._doUpload = True
         self._forceSync = False
-        self.retryPeriod = 15000  # 15 sec.
+        self._daemonPeriod = self.DEFAULT_DAEMON_PERIOD
 
     # Property accessors and definitions
     @property
@@ -124,6 +125,17 @@ class Config(object):
     @forceSync.setter
     def forceSync(self, value): self._forceSync = value
 
+    @property
+    def daemonPeriod(self):
+        """Delay between successive synchronizations when running in daemon
+        mode. Delay is specified in milliseconds (e.g. 15000=15s).
+
+        """
+        return self._daemonPeriod
+
+    @daemonPeriod.setter
+    def daemonPeriod(self, value): self._daemonPeriod = value
+
     def load(self, filename):
         """Load configuration settings from the named YAML-format
         configuration file. This configuration file can include a
@@ -155,6 +167,8 @@ class Config(object):
             self.includeTrackers = config['include-trackers']
         if 'exclude-trackers' in config:
             self.excludeTrackers = config['exclude-trackers']
+        if 'daemon-period' in config:
+            self.daemonPeriod = config['daemon-period']
 
     def shouldSkipTracker(self, trackerid):
         """Method to check, based on the configuration, whether a particular
@@ -192,12 +206,13 @@ class Config(object):
                 "excludeTrackers = %s, " +
                 "dumpDir = %s, " +
                 "doUpload = %s, " +
-                "forceSync = %s") % (
+                "forceSync = %s, " +
+                "daemonPeriod = %d") % (
                     self.__logLevelMapReverse[self.__logLevel],
                     self._keepDumps,
                     self._includeTrackers,
                     self._excludeTrackers,
                     self._dumpDir,
                     self._doUpload,
-                    self._forceSync)
-
+                    self._forceSync,
+                    self._daemonPeriod)

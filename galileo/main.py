@@ -207,7 +207,8 @@ def daemon(config):
                                " waiting for a bit longer.")
                 time.sleep(boe.getAValue())
             else:
-                time.sleep(config.retryPeriod / 1000.)
+                logger.info("Sleeping for %d seconds before next sync", config.daemonPeriod / 1000)
+                time.sleep(config.daemonPeriod / 1000.)
         except KeyboardInterrupt:
             logger.info("Ctrl-C, caught, stopping ...")
             goOn = False
@@ -227,6 +228,10 @@ def main():
     argparser.add_argument("--dump-dir",
                            metavar="DIR", dest="dump_dir",
                            help="directory for storing dumps (defaults to '%s')" % Config.DEFAULT_DUMP_DIR)
+    argparser.add_argument("--daemon-period",
+                           metavar="PERIOD", dest="daemon_period", type=int,
+                           help="sleep time in msec between sync runs when in daemon mode (defaults to '%d')" %
+                           (Config.DEFAULT_DAEMON_PERIOD))
     verbosity_arggroup = argparser.add_argument_group("progress reporting control")
     verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
     verbosity_arggroup2.add_argument("-v", "--verbose",
@@ -283,6 +288,7 @@ def main():
     config = Config()
     if os.path.exists(rcconfigname):
         logger.debug("Trying to load config file: %s", rcconfigname)
+        logger.debug("Config before load = %s", config)
         try:
             config.load(rcconfigname)
         except IOError:
@@ -304,6 +310,12 @@ def main():
     # --- All logger actions from now on will be effective ---
 
     logger.info("Running in mode: %s", cmdlineargs.mode)
+    logger.debug("Config after load before cmdline overrides = %s", config)
+
+    # Sleep time when in daemon mode
+    if cmdlineargs.daemon_period:
+        config.daemonPeriod = cmdlineargs.daemon_period
+
     # Includes
     if cmdlineargs.include:
         config.includeTrackers = cmdlineargs.include
@@ -333,6 +345,8 @@ def main():
         config.forceSync = False
     elif cmdlineargs.force:
         config.forceSync = True
+
+    logger.debug("Config after cmdline ovverides = %s", config)
 
     if cmdlineargs.version:
         print version(config.logLevel in (logging.INFO, logging.DEBUG))
