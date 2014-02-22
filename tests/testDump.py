@@ -1,0 +1,73 @@
+import unittest
+
+from galileo.dump import Dump
+
+class testDump(unittest.TestCase):
+
+    def testEmptyNonValid(self):
+        d = Dump(6)
+        self.assertFalse(d.isValid())
+
+    def testAddIncreasesLen(self):
+        d = Dump(5)
+        self.assertEqual(d.len, 0)
+        d.add(range(10))
+        self.assertEqual(d.len, 10)
+
+    def testFooterIsSet(self):
+        d = Dump(0)
+        self.assertEqual(d.footer, [])
+        d.add([0xc0] + range(5))
+        self.assertEqual(d.len, 0)
+        self.assertEqual(d.footer, [0xc0] + range(5))
+
+    def testOnlyFooterInvalid(self):
+        d = Dump(0)
+        d.add([0xc0] + range(5))
+        self.assertFalse(d.isValid())
+
+    def testEsc1(self):
+        d = Dump(0)
+        self.assertEqual(d.esc[0], 0)
+        d.add([0333, 0334])
+        self.assertEqual(d.len, 1)
+        self.assertEqual(d.esc[0], 1)
+        self.assertEqual(d.data, [0300])
+
+    def testEsc2(self):
+        d = Dump(0)
+        self.assertEqual(d.esc[1], 0)
+        d.add([0333, 0335])
+        self.assertEqual(d.len, 1)
+        self.assertEqual(d.esc[1], 1)
+        self.assertEqual(d.data, [0333])
+
+    def testToBase64(self):
+        d = Dump(0)
+        d.add(range(10))
+        d.add([0xc0]+range(8))
+        self.assertEqual(d.toBase64(), 'AAECAwQFBgcICcAAAQIDBAUGBw==')
+
+    def testNonValidDataType(self):
+        d = Dump(0)
+        d.add(range(10))
+        d.add([0xc0]+[0, 3])
+        self.assertFalse(d.isValid())
+
+    def testNonValidCRC(self):
+        d = Dump(0)
+        d.add(range(10))
+        d.add([0xc0]+[0, 0, 0, 0])
+        self.assertFalse(d.isValid())
+        
+    def testNonValidLen(self):
+        d = Dump(0)
+        d.add(range(10))
+        d.add([0xc0]+[0, 0, 0x78, 0x23, 0, 0])
+        self.assertFalse(d.isValid())
+
+    def testValid(self):
+        d = Dump(0)
+        d.add(range(10))
+        d.add([0xc0]+[0, 0, 0x78, 0x23, 10, 0])
+        self.assertTrue(d.isValid())

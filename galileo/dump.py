@@ -105,21 +105,23 @@ class Dump(object):
         return len(self.data)
 
     def isValid(self):
+        if not self.footer:
+            return False
         dataType = self.footer[2]
         if dataType != self._type:
             logger.error('Dump is not of requested type: %x != %x',
                          dataType, self._type)
             return False
-        nbBytes = a2lsbi(self.footer[5:7])
-        transportCRC = a2lsbi(self.footer[3:5])
-        if self.len != nbBytes:
-            logger.error("Error in communication, Expected length: %d bytes,"
-                         " received %d bytes", nbBytes, self.len)
-            return False
         crcVal = self.crc.final()
+        transportCRC = a2lsbi(self.footer[3:5])
         if transportCRC != crcVal:
             logger.error("Error in communication, Expected CRC: 0x%04X,"
                          " received 0x%04X", crcVal, transportCRC)
+            return False
+        nbBytes = a2lsbi(self.footer[5:7])
+        if self.len != nbBytes:
+            logger.error("Error in communication, Expected length: %d bytes,"
+                         " received %d bytes", nbBytes, self.len)
             return False
         return True
 
