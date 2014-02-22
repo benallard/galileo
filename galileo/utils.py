@@ -14,11 +14,6 @@ def a2x(a, delim=' ', shorten=False):
     return delim.join('%02X' % x for x in a) + s
 
 
-def s2x(s):
-    """ string to string of hexa """
-    return ' '.join('%02X' % ord(c) for c in s)
-
-
 def a2s(a, toPrint=True):
     """ array to string
     toPrint indicates that the resulting string is to be printed (stop at the
