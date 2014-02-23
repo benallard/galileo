@@ -5,13 +5,17 @@ def a2x(a, delim=' ', shorten=False):
     """
     shortened = 0
     if shorten:
-        while a[-1] == 0:
+        while (len(a) != 0) and (a[-1] == 0):
             shortened += 1
             del a[-1]
-    s = ''
+    s = delim.join('%02X' % x for x in a)
     if shortened:
-        s = ' 00 (%d times)' % shortened
-    return delim.join('%02X' % x for x in a) + s
+        shortened = '00 (%d times)' % shortened
+        if s:
+            s = delim.join([s, shortened])
+        else:
+            s = shortened
+    return s
 
 
 def a2s(a, toPrint=True):
