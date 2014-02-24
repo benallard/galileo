@@ -1,5 +1,6 @@
 
 import base64
+import random
 import StringIO
 
 import xml.etree.ElementTree as ET
@@ -16,6 +17,13 @@ class SyncError(Exception):
     def __init__(self, errorstring='Undefined'):
         self.errorstring = errorstring
 
+
+class BackOffException(Exception):
+    def __init__(self, min, max):
+        self.min = min
+        self.max = max
+    def getAValue(self):
+        return random.randint(self.min, self.max)
 
 def toXML(name, attrs={}, childs=[], body=None):
     elem = ET.Element(name, attrib=attrs)
@@ -93,9 +101,19 @@ class GalileoClient(object):
                          attrib['version'])
 
         for child in childs:
-            stag, _, _, sbody = child
+            stag, _, schilds, sbody = child
             if stag == 'error':
                 raise SyncError(sbody)
+            elif stag == 'back-off':
+                min=0
+                max=0
+                for schild in schilds:
+                    sstag, _, _, ssbody = schild
+                    if sstag == 'min':
+                        min = int(ssbody)
+                    elif sstag == 'max':
+                        max = int(ssbody)
+                raise BackOffException(min, max)
 
         return childs
 

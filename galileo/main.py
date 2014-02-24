@@ -1,5 +1,6 @@
 
 import argparse
+import datetime
 import os
 import sys
 import time
@@ -14,7 +15,7 @@ from .config import Config
 from .dongle import (
     FitBitDongle, TimeoutError, NoDongleException, PermissionDeniedException
 )
-from .net import GalileoClient, SyncError
+from .net import GalileoClient, SyncError, BackOffException
 from .tracker import FitbitClient
 from .utils import a2x
 
@@ -181,6 +182,13 @@ def version(verbose, delim='\n'):
 def sync(config):
     try:
         total, success, skipped = syncAllTrackers(config)
+    except BackOffException, boe:
+        print "The server requested that we come back between %d and %d"\
+            " minutes." % (boe.min / 60*1000, boe.max / 60*1000)
+        later = datetime.datetime.now() + datetime.timedelta(
+            microseconds=boe.getAValue()*1000)
+        print "I suggest waiting until %s" % later
+        return
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return
@@ -193,8 +201,14 @@ def daemon(config):
     while goOn:
         try:
             # TODO: Extract the initialization part, and do it once for all
-            syncAllTrackers(config)
-            time.sleep(config.retryPeriod / 1000)
+            try:
+                syncAllTrackers(config)
+            except BackOffException, boe:
+                logger.warning("Received a back-off notice from the server,"
+                               " waiting for a bit longer.")
+                time.sleep(boe.getAValue())
+            else:
+                time.sleep(config.retryPeriod / 1000.)
         except KeyboardInterrupt:
             logger.info("Ctrl-C, caught, stopping ...")
             goOn = False

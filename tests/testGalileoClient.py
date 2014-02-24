@@ -3,13 +3,11 @@ import unittest
 from galileo import __version__
 
 import galileo.net
-from galileo.net import GalileoClient, SyncError
+from galileo.net import GalileoClient, SyncError, BackOffException
 
 class requestResponse(object):
-    def __init__(self, text):
-        self.text = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><galileo-server version="2.0"><server-version>
-
-</server-version>%s</galileo-server>""" % text
+    def __init__(self, text, server_version='<server-version>\n\n</server-version>'):
+        self.text = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><galileo-server version="2.0">%s%s</galileo-server>""" % (server_version, text)
     def raise_for_status(self): pass
 
 class testStatus(unittest.TestCase):
@@ -43,6 +41,37 @@ class testStatus(unittest.TestCase):
         galileo.net.requests.post = mypost
         gc = GalileoClient(URL)
         self.assertRaises(SyncError, gc.requestStatus)
+
+    def testBackOff(self):
+        URL = 'some_back_off_url'
+        def mypost(url, data, headers):
+            self.assertEqual(url, URL)
+            self.assertEqual(data, """\
+<?xml version='1.0' encoding='UTF-8'?>
+<galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
+    'id': GalileoClient.ID,
+    'version': __version__})
+            self.assertEqual(headers['Content-Type'], 'text/xml')
+            return requestResponse("""
+    <back-off>
+        <min>1800000</min>
+        <max>3600000</max>
+    </back-off>
+    <ui-request action="login">
+        <client-display height="450" width="650" minDisplayTimeMs="20000" containsForm="false">
+            Server is in maintenance mode. We'll be back soon!
+        </client-display>
+    </ui-request>""", '')
+
+        galileo.net.requests.post = mypost
+        gc = GalileoClient(URL)
+        with self.assertRaises(BackOffException) as cm:
+            gc.requestStatus()
+        e = cm.exception
+        self.assertEqual(e.min, 1800000)
+        self.assertEqual(e.max, 3600000)
+        val = e.getAValue()
+        self.assertTrue(e.min <= val <= e.max)
 
 class MyDongle(object):
     def __init__(self, M, m): self.major=M; self.minor=m
