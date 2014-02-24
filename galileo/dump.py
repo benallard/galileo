@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 
 from .utils import a2x, a2lsbi, a2s
 
+
 class CRC16(object):
     """ A rather generic CRC16 class """
     def __init__(self, poly=0x1021, Invert=True, IV=0x0000, FV=0x0000):

@@ -8,12 +8,11 @@ parser. This parser should be adapted to allow the correct configuration.
 
 Known limitations:
 - Only spaces, no tabs
-- The returned dictionnaly supports only one level
+- The returned dictionary supports only one level
 """
 
 import json
 
-class ParserError(Exception): pass
 
 def _stripcomment(line):
     s = []
@@ -24,6 +23,7 @@ def _stripcomment(line):
     # And we strip the trailing spaces
     return ''.join(s).rstrip()
 
+
 def _getident(line):
     i = 0
     for c in line:
@@ -31,6 +31,7 @@ def _getident(line):
             break
         i += 1
     return i
+
 
 def _addKey(d, key):
     if d is None and key:
@@ -55,28 +56,27 @@ def unJSONize(s):
 def loads(s):
     res = None
     current_key = None
-    prev_ident = ''
     for line in s.split('\n'):
-       line = _stripcomment(line)
-       if not line: continue
-       if _getident(line) == 0:
-           current_key = None
-           k, v = line.split(':')
-           res = _addKey(res, k)
-           if not v:
-               current_key = k
-           else:
-               res[k] = unJSONize(v)
-       else:
-           assert current_key is not None
-           # value indented
-           line = line.lstrip()
-           if not line.startswith('- '):
-               res[current_key] = unJSONize(line)
-           else:
-               if res[current_key] is None:
-                   res[current_key] = []
-               res[current_key].append(unJSONize(line[2:]))
+        line = _stripcomment(line)
+        if not line: continue
+        if _getident(line) == 0:
+            current_key = None
+            k, v = line.split(':')
+            res = _addKey(res, k)
+            if not v:
+                current_key = k
+            else:
+                res[k] = unJSONize(v)
+        else:
+            assert current_key is not None
+            # value indented
+            line = line.lstrip()
+            if not line.startswith('- '):
+                res[current_key] = unJSONize(line)
+            else:
+                if res[current_key] is None:
+                    res[current_key] = []
+                res[current_key].append(unJSONize(line[2:]))
     return res
 
 
