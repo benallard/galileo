@@ -122,10 +122,12 @@ class GalileoClient(object):
         if a['type'] != 'megadumpresponse':
             logger.error('Not a megadumpresponse: %s', a['type'])
 
+        if not c:
+            raise SyncError('no data')
         if len(c) != 1:
             logger.error("Unexpected childs length: %d", len(c))
         t, _, _, d = c[0]
         if t != 'data':
-            raise SyncError('no data')
+            raise SyncError('not data: %s' % t)
 
         return s2a(base64.b64decode(d))
