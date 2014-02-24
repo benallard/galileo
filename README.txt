@@ -64,6 +64,17 @@ The easy way
 
 .. _virtualenv: http://www.virtualenv.org
 
+Distribution packages
+~~~~~~~~~~~~~~~~~~~~~
+
+The following Linux distributions have packages available for installation:
+
+**Gentoo**:
+  The utility is packaged as ``app-misc/galileo`` within the
+  `squeezebox <http://git.overlays.gentoo.org/gitweb/?p=user/squeezebox.git>`_
+  overlay. See https://wiki.gentoo.org/wiki/Layman for details of how
+  to use Gentoo overlays.
+
 The more complicated way
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -83,16 +94,6 @@ Don't forget to:
 - unplug and re-insert the dongle to activate the new rule.
 
 Then simply run the ``run`` script located at the root of this repository.
-
-Distribution packages
-~~~~~~~~~~~~~~~~~~~~~
-
-The following packaged versions of the utility are available for Linux distributions:
-
-- Gentoo. The utility is packaged as ``app-misc/galileo`` within the
-  ``squeezebox`` (http://git.overlays.gentoo.org/gitweb/?p=user/squeezebox.git)
-  overlay. See https://wiki.gentoo.org/wiki/Layman for details of how
-  to use Gentoo overlays.
 
 Documentation
 -------------
