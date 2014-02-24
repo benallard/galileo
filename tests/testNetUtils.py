@@ -10,7 +10,7 @@ class testtoXML(unittest.TestCase):
     def _testEqual(self, xml, xmlStr):
         f = StringIO.StringIO()
         tree = ET.ElementTree(xml)
-        tree.write(f, xml_declaration=False)
+        tree.write(f)
         self.assertEqual(f.getvalue(), xmlStr)
     
     def testSimple(self):

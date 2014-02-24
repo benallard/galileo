@@ -1,4 +1,5 @@
 import unittest
+import sys
 
 from galileo import __version__
 
@@ -43,6 +44,8 @@ class testStatus(unittest.TestCase):
         self.assertRaises(SyncError, gc.requestStatus)
 
     def testBackOff(self):
+        # no support for ``with assertRaises`` in python 2.6
+        if sys.version_info < (2,7): return
         URL = 'some_back_off_url'
         def mypost(url, data, headers):
             self.assertEqual(url, URL)

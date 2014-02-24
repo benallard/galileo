@@ -31,7 +31,8 @@ class BackOffException(Exception):
 def toXML(name, attrs={}, childs=[], body=None):
     elem = ET.Element(name, attrib=attrs)
     if childs:
-        elem.extend(tuplesToXML(childs))
+        for XMLElem in tuplesToXML(childs):
+            elem.append(XMLElem)
     if body is not None:
         elem.text = body
     return elem
@@ -79,12 +80,13 @@ class GalileoClient(object):
                  'minor': str(dongle.minor)}))
         client.append(info)
         if data is not None:
-            client.extend(tuplesToXML(data))
+            for XMLElem in tuplesToXML(data):
+                client.append(XMLElem)
 
         f = StringIO.StringIO()
 
         tree = ET.ElementTree(client)
-        tree.write(f, xml_declaration=True, encoding="UTF-8")
+        tree.write(f, "UTF-8")
 
         logger.debug('HTTP POST=%s', f.getvalue())
         r = requests.post(self.url,
