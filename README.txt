@@ -64,6 +64,17 @@ The easy way
 
 .. _virtualenv: http://www.virtualenv.org
 
+Distribution packages
+~~~~~~~~~~~~~~~~~~~~~
+
+The following Linux distributions have packages available for installation:
+
+**Gentoo**:
+  The utility is packaged as ``app-misc/galileo`` within the
+  `squeezebox <http://git.overlays.gentoo.org/gitweb/?p=user/squeezebox.git>`_
+  overlay. See https://wiki.gentoo.org/wiki/Layman for details of how
+  to use Gentoo overlays.
+
 The more complicated way
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
