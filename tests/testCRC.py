@@ -1,6 +1,6 @@
 import unittest
 
-from galileo.dump import CRC16, CRC_CCITT
+from galileo.dump import CRC16
 
 class testCRC(unittest.TestCase):
     """ CRC unit tests """
