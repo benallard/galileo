@@ -7,6 +7,8 @@ try:
 except ImportError:
     from . import parser as yaml
 
+from .utils import a2x
+
 class Config(object):
     """Class holding the configuration to be applied during synchronization.
     The configuration can be loaded from a file in which case the defaults
@@ -28,7 +30,7 @@ class Config(object):
             self.__logLevelMapReverse[value] = key
         self.__logLevel = logging.WARNING
         self._includeTrackers = None
-        self._excludeTrackers = []
+        self._excludeTrackers = set()
         self._keepDumps = True
         self._dumpDir = self.DEFAULT_DUMP_DIR
         self._doUpload = True
@@ -69,14 +71,14 @@ class Config(object):
 
     @includeTrackers.setter
     def includeTrackers(self, value):
+        if self._includeTrackers is None:
+            self._includeTrackers = set()
         if isinstance(value, basestring):
-            self._includeTrackers = value.split(',')
-        else:
-            self._includeTrackers = value
+            value = value.split(',')
         # Now make sure the list of trackers is all in upper-case to
         # make comparisons easier later.
-        if self._includeTrackers is not None:
-            self._includeTrackers = [str(x).upper() for x in self._includeTrackers]
+        value = [x.upper() for x in value]
+        self._includeTrackers.update(value)
 
     @property
     def excludeTrackers(self):
@@ -89,13 +91,11 @@ class Config(object):
     @excludeTrackers.setter
     def excludeTrackers(self, value):
         if isinstance(value, basestring):
-            self._excludeTrackers = value.split(',')
-        else:
-            self._excludeTrackers = value
+            value = value.split(',')
         # Now make sure the list of trackers is all in upper-case to
         # make comparisons easier later.
-        if self._excludeTrackers is not None:
-            self._excludeTrackers = [str(x).upper() for x in self._excludeTrackers]
+        value = [x.upper() for x in value]
+        self._excludeTrackers.update(value)
 
     @property
     def dumpDir(self):
@@ -156,34 +156,38 @@ class Config(object):
         if 'exclude-trackers' in config:
             self.excludeTrackers = config['exclude-trackers']
 
-    def shouldSkipTracker(self, trackerid):
+    def shouldSkip(self, tracker):
         """Method to check, based on the configuration, whether a particular
         tracker should be skipped and not synchronized. The
         includeTrackers and excludeTrackers properties are checked to
         determine this.
 
         Arguments:
-        - `trackerid`: Tracker ID (hexadecimal string), to check.
+        - `tracker`: Tracker (object), to check.
 
         """
-
-        shouldSkip = False
-
-        # Make sure the tracker ID is in upper-case so that string
-        # comparisons with our lists of tracker IDs work.
-        trackerid = str(trackerid).upper()
+        trackerid = a2x(tracker.id, delim='')
 
         # If a list of trackers to sync is configured then was
         # provided then ignore this tracker if it's not in that list.
         if (self._includeTrackers is not None) and (trackerid not in self._includeTrackers):
-            shouldSkip = True
+            logger.info("Include list not empty, and tracker %s not there, skipping.", trackerid)
+            return True
 
         # If a list of trackers to avoid syncing is configured then
         # ignore this tracker if it is in that list.
         if trackerid in self._excludeTrackers:
-            shouldSkip = True
+            logger.info("Tracker %s in exclude list, skipping.", trackerid)
+            return True
 
-        return shouldSkip
+        if tracker.syncedRecently:
+            if not self.forceSync:
+                logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
+                print 'not force'
+                return True
+            logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
+        
+        return False
 
     def __str__(self):
         return ("Config: logLevel = %s, " +
