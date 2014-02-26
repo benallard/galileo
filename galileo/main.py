@@ -59,15 +59,8 @@ def syncAllTrackers(config):
         trackerid = a2x(tracker.id, delim="")
 
         # Skip this tracker based on include/exclude lists.
-        if config.shouldSkipTracker(trackerid):
+        if config.shouldSkip(tracker):
             logger.info('Tracker %s is to be skipped due to configuration; skipping', trackerid)
-            trackersskipped += 1
-            continue
-
-        if tracker.syncedRecently and config.forceSync:
-            logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
-        elif tracker.syncedRecently:
-            logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
             trackersskipped += 1
             continue
 
