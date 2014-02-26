@@ -1,17 +1,24 @@
 galileo 0.4 (????-??-??)
 ------------------------
 
-Plan for this release:
-- File based configuration
-- Enhanced stability
-- More configuration options
-- Some breakthrough in the analyse of the dumps (even for Flex/Force ?)
+This is the fourth release of galileo, a free utility to securely
+synchronize fitbit bluetooth trackers with the fitbit web-service.
+
+This release introduce a `daemon` mode that synchronize periodically the
+available trackers, making it easier for integration as a service. As well as
+enhance the configurability by introducing more options, and also allowing
+them to be read from a configuration file.
+
+Contributors to this release: Stuart Hickinbottom, and Alexander Voronin.
 
 Main changes since 0.3.1:
+- Add a `daemon` mode (issue#30)
+- Read the configuration from files (issue#18, PR #5)
 - Validation of the CRC value of the dumps (issue#15)
 - Add --include and --exclude to control which trackers to synchronize (PR #4)
 - Add a --no-upload command line parameter to prevent the uploading of the
   dump to the server
+- Code cleanup and reorganisation.
 
 
 galileo 0.3.1 (2014-02-01)
