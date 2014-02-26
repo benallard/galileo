@@ -40,8 +40,8 @@ def syncAllTrackers(config):
 
     fitbit.getDongleInfo()
 
+    logger.info('Discovering trackers to synchronize')
     try:
-        logger.info('Discovering trackers to synchronize')
         trackers = [t for t in fitbit.discover()]
     except TimeoutError:
         logger.debug('Timeout trying to discover trackers')
@@ -73,16 +73,16 @@ def syncAllTrackers(config):
 
         logger.info('Attempting to synchronize tracker %s', trackerid)
 
+        logger.debug('Connecting to Fitbit server and requesting status')
         try:
-            logger.debug('Connecting to Fitbit server and requesting status')
             galileo.requestStatus()
         except requests.exceptions.ConnectionError:
             # No internet connection or fitbit server down
             logger.error('Not able to connect to the Fitbit server. Check your internet connection')
             return
 
+        logger.debug('Establishing link with tracker')
         try:
-            logger.debug('Establishing link with tracker')
             fitbit.establishLink(tracker)
             fitbit.enableTxPipe()
             fitbit.initializeAirlink()
@@ -90,7 +90,6 @@ def syncAllTrackers(config):
             trackersskipped += 1
             logger.debug('Timeout while trying to establish link with tracker')
             logger.warning('Unable to establish link with tracker %s. Skipping it.', trackerid)
-            # tracker was known, but disappeared in the meantime
             continue
 
         logger.info('Getting data from tracker')
@@ -111,8 +110,8 @@ def syncAllTrackers(config):
         if not config.doUpload:
             logger.info("Not uploading, as asked ...")
         else:
+            logger.info('Sending tracker data to Fitbit')
             try:
-                logger.info('Sending tracker data to Fitbit')
                 response = galileo.sync(fitbit, trackerid, dump)
 
                 if config.keepDumps:
@@ -127,8 +126,8 @@ def syncAllTrackers(config):
                 trackerssyncd += 1
                 logger.info('Successfully sent tracker data to Fitbit')
 
+                logger.info('Passing Fitbit response to tracker')
                 try:
-                    logger.info('Passing Fitbit response to tracker')
                     fitbit.uploadResponse(response)
                 except TimeoutError:
                     logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
@@ -136,8 +135,8 @@ def syncAllTrackers(config):
             except SyncError, e:
                 logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
 
+        logger.debug('Disconnecting from tracker')
         try:
-            logger.debug('Disconnecting from tracker')
             fitbit.disableTxPipe()
             fitbit.terminateAirlink()
         except TimeoutError:
@@ -283,8 +282,8 @@ def main():
     # Load the configuration.
     config = Config()
     if os.path.exists(rcconfigname):
+        logger.debug("Trying to load config file: %s", rcconfigname)
         try:
-            logger.debug("Trying to load config file: %s", rcconfigname)
             config.load(rcconfigname)
         except IOError:
             logger.warning('Unable to load configuration file: %s', rcconfigname)
