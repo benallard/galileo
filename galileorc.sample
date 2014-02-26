@@ -3,6 +3,10 @@
 # Default settings for galileo.py. Settings may be changed here or
 # overridden using command-line switches to galileo.py.
 
+# if in daemon mode, delay between sync runs
+# specified in milliseconds
+daemon-period: 15000
+
 # keep dump files
 keep-dumps: true
 
