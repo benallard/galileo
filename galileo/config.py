@@ -7,6 +7,7 @@ try:
 except ImportError:
     from . import parser as yaml
 
+
 class Config(object):
     """Class holding the configuration to be applied during synchronization.
     The configuration can be loaded from a file in which case the defaults
@@ -18,12 +19,12 @@ class Config(object):
     """
 
     DEFAULT_DUMP_DIR = "~/.galileo"
-    DEFAULT_DAEMON_PERIOD = 15000 # 15 seconds
+    DEFAULT_DAEMON_PERIOD = 15000  # 15 seconds
 
     def __init__(self):
-        self.__logLevelMap = { 'default': logging.WARNING,
-                               'verbose': logging.INFO,
-                               'debug': logging.DEBUG }
+        self.__logLevelMap = {'default': logging.WARNING,
+                              'verbose': logging.INFO,
+                              'debug': logging.DEBUG}
         self.__logLevelMapReverse = {}
         for key, value in self.__logLevelMap.iteritems():
             self.__logLevelMapReverse[value] = key
