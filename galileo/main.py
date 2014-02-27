@@ -203,7 +203,7 @@ def daemon(config):
                 logger.info("Sleeping for %d seconds before next sync", config.daemonPeriod / 1000)
                 time.sleep(config.daemonPeriod / 1000.)
         except KeyboardInterrupt:
-            logger.info("Ctrl-C, caught, stopping ...")
+            print "Ctrl-C, caught, stopping ..."
             goOn = False
 
 
