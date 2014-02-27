@@ -198,7 +198,6 @@ class Config(object):
         if tracker.syncedRecently:
             if not self.forceSync:
                 logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
-                print 'not force'
                 return True
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
 
