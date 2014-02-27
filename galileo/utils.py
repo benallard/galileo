@@ -3,6 +3,7 @@ def a2x(a, delim=' ', shorten=False):
     delim is the delimiter between the hexa
     shorten don't print the trailing zeros
     """
+    a = a[:]
     shortened = 0
     if shorten:
         while (len(a) != 0) and (a[-1] == 0):

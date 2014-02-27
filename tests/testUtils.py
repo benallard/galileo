@@ -20,6 +20,12 @@ class testa2x(unittest.TestCase):
         self.assertEqual(a2x(range(190, 196) + [0] * 3, '|', shorten=True),
                          'BE|BF|C0|C1|C2|C3|00 (3 times)')
 
+    def testDataRemainsUnchanged(self):
+        d = range(3) + [0] * 3
+        self.assertEqual(len(d), 6)
+        self.assertEqual(a2x(d, shorten=True), "00 01 02 00 (3 times)")
+        self.assertEqual(len(d), 6)
+
 class testa2s(unittest.TestCase):
 
     def testSimple(self):
