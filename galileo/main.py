@@ -306,7 +306,7 @@ def main():
     logger.debug("Config after load before cmdline overrides = %s", config)
 
     # Sleep time when in daemon mode
-    if cmdlineargs.daemon_period:
+    if cmdlineargs.daemon_period is not None:
         config.daemonPeriod = cmdlineargs.daemon_period
 
     # Includes
