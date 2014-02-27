@@ -66,8 +66,14 @@ class FitbitClient(object):
                                 0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
                                 0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb] +
                                 i2lsba(minDuration, 2))
-        self.dongle.ctrl_read()  # StartDiscovery
-        d = self.dongle.ctrl_read(minDuration)
+        d = self.dongle.ctrl_read()  # StartDiscovery
+        # Sometimes, the dongle immediately answers 'no trackers'
+        # (that's a mistake from our side)
+        if list(d[:3]) == [3, 2, 0]:
+            self.dongle.ctrl_read()
+            logger.critical('Discovery went wrong')
+        else:
+            d = self.dongle.ctrl_read(minDuration)
         while d[0] != 3:
             trackerId = list(d[2:8])
             addrType = d[8]
