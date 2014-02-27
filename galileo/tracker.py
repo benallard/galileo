@@ -65,7 +65,7 @@ class FitbitClient(object):
         self.dongle.ctrl_write([0x1a, 4, 0xba, 0x56, 0x89, 0xa6, 0xfa, 0xbf,
                                 0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
                                 0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb] +
-                               i2lsba(minDuration, 2) + [0, 0xd3, 0, 0, 0, 0])
+                                i2lsba(minDuration, 2))
         self.dongle.ctrl_read()  # StartDiscovery
         d = self.dongle.ctrl_read(minDuration)
         while d[0] != 3:
