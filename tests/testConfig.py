@@ -26,9 +26,15 @@ class testShouldSkip(unittest.TestCase):
         c = Config()
         c.includeTrackers = ['42']
         self.assertFalse(c.shouldSkip(t))
+    def testIncludeNoneExclude(self):
+        t = MyTracker([0x42], False)
+        c = Config()
+        c.excludeTrackers = ['42']
+        self.assertTrue(c.shouldSkip(t))
     def testNotIncludeExclude(self):
         t = MyTracker([0x42], False)
         c = Config()
+        c.includeTrackers = ['21']
         c.excludeTrackers = ['42']
         self.assertTrue(c.shouldSkip(t))
     def testIncludeExclude(self):
@@ -37,7 +43,12 @@ class testShouldSkip(unittest.TestCase):
         c.includeTrackers = ['42']
         c.excludeTrackers = ['42']
         self.assertTrue(c.shouldSkip(t))
-    def testNotIncludeNotExclude(self):
+    def testIncludeNoneNotExclude(self):
         t = MyTracker([0x42], False)
         c = Config()
         self.assertFalse(c.shouldSkip(t))
+    def testNotIncludeNotExclude(self):
+        t = MyTracker([0x42], False)
+        c = Config()
+        c.includeTrackers = ['21']
+        self.assertTrue(c.shouldSkip(t))
