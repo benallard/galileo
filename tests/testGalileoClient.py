@@ -15,7 +15,7 @@ class testStatus(unittest.TestCase):
 
     def testOk(self):
         def mypost(url, data, headers):
-            self.assertEqual(url, 'someurl')
+            self.assertEqual(url, 'scheme://host:8888/path/to/stuff')
             self.assertEqual(data, """\
 <?xml version='1.0' encoding='UTF-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
@@ -24,13 +24,12 @@ class testStatus(unittest.TestCase):
             return requestResponse('')
 
         galileo.net.requests.post = mypost
-        gc = GalileoClient('someurl')
+        gc = GalileoClient('scheme', 'host', 'path/to/stuff', 8888)
         gc.requestStatus()
 
     def testError(self):
-        URL = 'someurl'
         def mypost(url, data, headers):
-            self.assertEqual(url, URL)
+            self.assertEqual(url, 'h://c:8/p')
             self.assertEqual(data, """\
 <?xml version='1.0' encoding='UTF-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
@@ -40,15 +39,14 @@ class testStatus(unittest.TestCase):
             return requestResponse('<error>Something is Wrong</error>')
 
         galileo.net.requests.post = mypost
-        gc = GalileoClient(URL)
+        gc = GalileoClient('h', 'c', 'p', 8)
         self.assertRaises(SyncError, gc.requestStatus)
 
     def testBackOff(self):
         # no support for ``with assertRaises`` in python 2.6
         if sys.version_info < (2,7): return
-        URL = 'some_back_off_url'
         def mypost(url, data, headers):
-            self.assertEqual(url, URL)
+            self.assertEqual(url, 'h://c:4/p')
             self.assertEqual(data, """\
 <?xml version='1.0' encoding='UTF-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
@@ -67,7 +65,7 @@ class testStatus(unittest.TestCase):
     </ui-request>""", '')
 
         galileo.net.requests.post = mypost
-        gc = GalileoClient(URL)
+        gc = GalileoClient('h', 'c', 'p', 4)
         with self.assertRaises(BackOffException) as cm:
             gc.requestStatus()
         e = cm.exception
@@ -85,12 +83,11 @@ class MyMegaDump(object):
 class testSync(unittest.TestCase):
 
     def testOk(self):
-        URL = 'some_url'
         T_ID = 'abcd'
         D = MyDongle(0, 0)
         d = MyMegaDump('YWJjZA==')
         def mypost(url, data, headers):
-            self.assertEqual(url, URL)
+            self.assertEqual(url, 'a://b:0/c')
             self.assertEqual(data, """\
 <?xml version='1.0' encoding='UTF-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>sync</client-mode><dongle-version major="%(M)d" minor="%(m)d" /></client-info><tracker tracker-id="%(t_id)s"><data>%(b64dump)s</data></tracker></galileo-client>""" % {
@@ -104,17 +101,16 @@ class testSync(unittest.TestCase):
             return requestResponse('<tracker tracker-id="abcd" type="megadumpresponse"><data>ZWZnaA==</data></tracker>')
 
         galileo.net.requests.post = mypost
-        gc = GalileoClient(URL)
+        gc = GalileoClient('a', 'b', 'c', 0)
         self.assertEqual(gc.sync(D, T_ID, d),
                          [101, 102, 103, 104])
 
     def testNoTracker(self):
-        URL = 'some_url'
         T_ID = 'aaaabbbb'
         D = MyDongle(34, 88)
         d = MyMegaDump('base64Dump')
         def mypost(url, data, headers):
-            self.assertEqual(url, URL)
+            self.assertEqual(url, 'z://y:42/u')
             self.assertEqual(data, """\
 <?xml version='1.0' encoding='UTF-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>sync</client-mode><dongle-version major="%(M)d" minor="%(m)d" /></client-info><tracker tracker-id="%(t_id)s"><data>%(b64dump)s</data></tracker></galileo-client>""" % {
@@ -128,16 +124,15 @@ class testSync(unittest.TestCase):
             return requestResponse('')
 
         galileo.net.requests.post = mypost
-        gc = GalileoClient(URL)
+        gc = GalileoClient('z', 'y', 'u', 42)
         self.assertRaises(SyncError, gc.sync, D, T_ID, d)
 
     def testNoData(self):
-        URL = 'some_url'
         T_ID = 'aaaa'
         D = MyDongle(-2, 42)
         d = MyMegaDump('base64Dump')
         def mypost(url, data, headers):
-            self.assertEqual(url, URL)
+            self.assertEqual(url, 'y://t:8000/v')
             self.assertEqual(data, """\
 <?xml version='1.0' encoding='UTF-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>sync</client-mode><dongle-version major="%(M)d" minor="%(m)d" /></client-info><tracker tracker-id="%(t_id)s"><data>%(b64dump)s</data></tracker></galileo-client>""" % {
@@ -151,16 +146,15 @@ class testSync(unittest.TestCase):
             return requestResponse('<tracker tracker-id="abcd" type="megadumpresponse"></tracker>')
 
         galileo.net.requests.post = mypost
-        gc = GalileoClient(URL)
+        gc = GalileoClient('y', 't', 'v', 8000)
         self.assertRaises(SyncError, gc.sync, D, T_ID, d)
 
     def testNotData(self):
-        URL = 'some_other_url'
         T_ID = 'aaaabbbbccccdddd'
         D = MyDongle(-2, 42)
         d = MyMegaDump('base64Dump')
         def mypost(url, data, headers):
-            self.assertEqual(url, URL)
+            self.assertEqual(url, 'rsync://ssh:22/a/b/c')
             self.assertEqual(data, """\
 <?xml version='1.0' encoding='UTF-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>sync</client-mode><dongle-version major="%(M)d" minor="%(m)d" /></client-info><tracker tracker-id="%(t_id)s"><data>%(b64dump)s</data></tracker></galileo-client>""" % {
@@ -174,5 +168,5 @@ class testSync(unittest.TestCase):
             return requestResponse('<tracker tracker-id="abcd" type="megadumpresponse"><not_data /></tracker>')
 
         galileo.net.requests.post = mypost
-        gc = GalileoClient(URL)
+        gc = GalileoClient('rsync', 'ssh', 'a/b/c', 22)
         self.assertRaises(SyncError, gc.sync, D, T_ID, d)
