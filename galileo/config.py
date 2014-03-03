@@ -39,6 +39,7 @@ class Config(object):
         self._doUpload = True
         self._forceSync = False
         self._daemonPeriod = self.DEFAULT_DAEMON_PERIOD
+        self._httpsOnly = True
 
     # Property accessors and definitions
     @property
@@ -138,6 +139,10 @@ class Config(object):
     @daemonPeriod.setter
     def daemonPeriod(self, value): self._daemonPeriod = value
 
+    @property
+    def httpsOnly(self):
+        return self._httpsonly
+
     def load(self, filename):
         """Load configuration settings from the named YAML-format
         configuration file. This configuration file can include a
@@ -171,6 +176,8 @@ class Config(object):
             self.excludeTrackers = config['exclude-trackers']
         if 'daemon-period' in config:
             self.daemonPeriod = config['daemon-period']
+        if 'https-only' in config:
+            self.httpsOnly = config['https-only']
 
     def parse_args(self):
         # Define and parse command-line arguments.
@@ -224,6 +231,14 @@ class Config(object):
         upload_arggroup2.add_argument("--no-upload",
                                       action="store_true", dest="no_upload",
                                       help="do not upload the dump to the server")
+        https_arggroup = argparser.add_argument_group("https control")
+        https_arggroup2 = https_arggroup.add_mutually_exclusive_group()
+        https_arggroup2.add_argument("--https-only",
+                                      action="store_true", dest="https_only",
+                                      help="Use only https (default)")
+        https_arggroup2.add_argument("--no-https-only",
+                                      action="store_true", dest="no_https_only",
+                                      help="Use http if https is not available")
         argparser.add_argument("-I", "--include",
                                nargs="+", metavar="ID",
                                help="list of tracker IDs to sync (all if not specified)")
@@ -288,6 +303,12 @@ class Config(object):
         elif cmdlineargs.force:
             self.forceSync = True
 
+        # HTTPS (or not)
+        if cmdlineargs.no_https_only:
+            self.httpsOnly = False
+        elif cmdlineargs.https_only:
+            self.httpsOnly = True
+
         logger.debug("Config after cmdline ovverides = %s", self)
 
     def shouldSkip(self, tracker):
@@ -330,6 +351,7 @@ class Config(object):
                 "dumpDir = %s, " +
                 "doUpload = %s, " +
                 "forceSync = %s, " +
+                "httpsOnly = %s, " +
                 "daemonPeriod = %d") % (
                     self.__logLevelMapReverse[self.__logLevel],
                     self._keepDumps,
@@ -338,4 +360,5 @@ class Config(object):
                     self._dumpDir,
                     self._doUpload,
                     self._forceSync,
+                    self._httpsOnly,
                     self._daemonPeriod)
