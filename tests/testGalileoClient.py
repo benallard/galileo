@@ -170,3 +170,24 @@ class testSync(unittest.TestCase):
         galileo.net.requests.post = mypost
         gc = GalileoClient('rsync', 'ssh', 'a/b/c', 22)
         self.assertRaises(SyncError, gc.sync, D, T_ID, d)
+
+class testURL(unittest.TestCase):
+
+    def testWithPort(self):
+        gc = GalileoClient('scheme', 'host', 'path/to/stuff', 8000)
+        self.assertEqual(gc.url, 'scheme://host:8000/path/to/stuff')
+
+    def testHTTPPort(self):
+        gc = GalileoClient('http', 'h', 'a/b/c')
+        self.assertEqual(gc.url, 'http://h:80/a/b/c')
+
+    def testHTTPSPort(self):
+        gc = GalileoClient('https', 'h', 'a/b/c')
+        self.assertEqual(gc.url, 'https://h:443/a/b/c')
+
+    def testUnknownPort(self):
+        # no support for ``with assertRaises`` in python 2.6
+        if sys.version_info < (2,7): return
+        gc = GalileoClient('blah', 'h', 'a')
+        with self.assertRaises(KeyError):
+            gc.url
