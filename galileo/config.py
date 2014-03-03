@@ -1,4 +1,4 @@
-
+import argparse
 import logging
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ class Config(object):
     specified on the command line.
     """
 
+    DEFAULT_RCFILE_NAME = "~/.galileorc"
     DEFAULT_DUMP_DIR = "~/.galileo"
     DEFAULT_DAEMON_PERIOD = 15000  # 15 seconds
 
@@ -170,6 +171,124 @@ class Config(object):
             self.excludeTrackers = config['exclude-trackers']
         if 'daemon-period' in config:
             self.daemonPeriod = config['daemon-period']
+
+    def parse_args(self):
+        # Define and parse command-line arguments.
+        argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
+                                            epilog="""Access your synchronized data at http://www.fitbit.com.""")
+        argparser.add_argument("-V", "--version",
+                               action="store_true", dest='version',
+                               help="show version and exit")
+        argparser.add_argument("-c", "--config",
+                               metavar="FILE", dest="rcconfigname",
+                               help="use alternative configuration file (defaults to '%s')" % self.DEFAULT_RCFILE_NAME)
+        argparser.add_argument("--dump-dir",
+                               metavar="DIR", dest="dump_dir",
+                               help="directory for storing dumps (defaults to '%s')" % Config.DEFAULT_DUMP_DIR)
+        argparser.add_argument("--daemon-period",
+                               metavar="PERIOD", dest="daemon_period", type=int,
+                               help="sleep time in msec between sync runs when in daemon mode (defaults to '%d')" %
+                               (Config.DEFAULT_DAEMON_PERIOD))
+        verbosity_arggroup = argparser.add_argument_group("progress reporting control")
+        verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
+        verbosity_arggroup2.add_argument("-v", "--verbose",
+                                         action="store_true",
+                                         help="display synchronization progress")
+        verbosity_arggroup2.add_argument("-d", "--debug",
+                                         action="store_true",
+                                         help="show internal activity (implies verbose)")
+        verbosity_arggroup2.add_argument("-q", "--quiet",
+                                         action="store_true",
+                                         help="only show errors and summary (default)")
+        force_arggroup = argparser.add_argument_group("force synchronization control")
+        force_arggroup2 = force_arggroup.add_mutually_exclusive_group()
+        force_arggroup2.add_argument("--force",
+                                     action="store_true",
+                                     help="synchronize even if tracker reports a recent sync")
+        force_arggroup2.add_argument("--no-force",
+                                     action="store_true", dest="no_force",
+                                     help="do not synchronize if tracker reports a recent sync (default)")
+        dump_arggroup = argparser.add_argument_group("dump control")
+        dump_arggroup2 = dump_arggroup.add_mutually_exclusive_group()
+        dump_arggroup2.add_argument("--dump",
+                                    action="store_true",
+                                    help="enable saving of the megadump to file (default)")
+        dump_arggroup2.add_argument("--no-dump",
+                                    action="store_true", dest="no_dump",
+                                    help="disable saving of the megadump to file")
+        upload_arggroup = argparser.add_argument_group("upload control")
+        upload_arggroup2 = upload_arggroup.add_mutually_exclusive_group()
+        upload_arggroup2.add_argument("--upload",
+                                      action="store_true",
+                                      help="upload the dump to the server (default)")
+        upload_arggroup2.add_argument("--no-upload",
+                                      action="store_true", dest="no_upload",
+                                      help="do not upload the dump to the server")
+        argparser.add_argument("-I", "--include",
+                               nargs="+", metavar="ID",
+                               help="list of tracker IDs to sync (all if not specified)")
+        argparser.add_argument("-X", "--exclude",
+                               nargs="+", metavar="ID",
+                               help="list of tracker IDs to not sync")
+        argparser.add_argument('mode', default='sync', nargs='?',
+                               choices=['sync', 'daemon'], metavar="MODE",
+                               help="The mode to run (default to 'sync')")
+        return argparser.parse_args()
+
+    def apply_cmdlineargs(self, cmdlineargs):
+        """ Override rcfile-provided values with those on the command-line. """
+
+        # Logging
+        if cmdlineargs.verbose:
+            self.logLevel = 'verbose'
+        elif cmdlineargs.debug:
+            self.logLevel = 'debug'
+        elif cmdlineargs.quiet:
+            self.logLevel = 'default'
+
+        # Basic logging configuration.
+        logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s',
+                            level=self.logLevel)
+        # --- All logger actions from now on will be effective ---
+
+        logger.info("Running in mode: %s", cmdlineargs.mode)
+        logger.debug("Config after load before cmdline overrides = %s", self)
+
+        # Sleep time when in daemon mode
+        if cmdlineargs.daemon_period is not None:
+            self.daemonPeriod = cmdlineargs.daemon_period
+
+        # Includes
+        if cmdlineargs.include:
+            self.includeTrackers = cmdlineargs.include
+
+        # Excludes
+        if cmdlineargs.exclude:
+            self.excludeTrackers = cmdlineargs.exclude
+
+        # Keep dumps (or not)
+        if cmdlineargs.no_dump:
+            self.keepDumps = False
+        elif cmdlineargs.dump:
+            self.keepDumps = True
+
+        # Dump directory
+        if cmdlineargs.dump_dir:
+            self.dumpDir = cmdlineargs.dump_dir
+
+        # Upload data (or not)
+        if cmdlineargs.no_upload:
+            self.doUpload = False
+        elif cmdlineargs.upload:
+            self.doUpload = True
+
+        # Force (or not)
+        if cmdlineargs.no_force:
+            self.forceSync = False
+        elif cmdlineargs.force:
+            self.forceSync = True
+
+        logger.debug("Config after cmdline ovverides = %s", self)
 
     def shouldSkip(self, tracker):
         """Method to check, based on the configuration, whether a particular
