@@ -64,8 +64,25 @@ def XMLToTuple(elem):
 class GalileoClient(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
 
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, scheme, host, path, port=None):
+        self.scheme = scheme
+        self.host = host
+        self.path = path
+        self._port = port
+
+    @property
+    def port(self):
+        if self._port is None:
+            return {'http': 80, 'https': 443}[self.scheme]
+        return self._port
+
+    @property
+    def url(self):
+        return "%(scheme)s://%(host)s:%(port)d/%(path)s" % {
+            'scheme': self.scheme,
+            'host': self.host,
+            'port': self.port,
+            'path': self.path}
 
     def post(self, mode, dongle=None, data=None):
         client = toXML('galileo-client', {'version': "2.0"})
