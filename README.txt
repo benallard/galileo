@@ -13,7 +13,7 @@ Galileo
 Introduction
 ------------
 
-This is a Python utility to securely synchronize a Fitbit device with the
+Galileo is a Python utility to securely synchronize a Fitbit device with the
 Fitbit web service. It allows you to browse your data on their website, and
 their apps.
 
@@ -22,7 +22,7 @@ All Bluetooth-based trackers are supported. Those are:
 - Fitbit One
 - Fitbit Zip
 - Fitbit Flex
-- Fitbit Force
+- (Fitbit Force)
 
 .. note:: The Fitbit Ultra tracker is **not supported** as it communicates
           using the ANT protocol. To synchronize it, please use libfitbit_.
@@ -40,8 +40,8 @@ Main features
 
 - Synchronize your fitbit tracker with the fitbit server using the provided
   dongle.
-- Always communicate securely (using HTTPS) with the fitbit server.
-- Saved all your dumps locally for possible later analyse.
+- Securely communicate (using HTTPS) with the fitbit server.
+- Save all your dumps locally for possible later analyse.
 
 Installation
 ------------
@@ -51,7 +51,7 @@ The easy way
 
 .. warning:: If you want to run the utility as a non-root user, you will have
              to install the udev rules manually (See `The more complicated
-             way`_ or follow the instructions given when it fails).
+             way`_, or follow the instructions given when it fails).
 
 ::
 
@@ -82,7 +82,7 @@ First, you need to clone this repository locally, and install the required
 dependencies:
 
 - pyusb (need at least a 1.0 version, 0.4 and earlier are not compatible)
-- requests.
+- requests (version 2 preferred, although version 1 should work)
 
 You should copy the file ``99-fitbit.rules`` to the directory
 ``/etc/udev/rules.d`` in order to be able to run the utility as a
