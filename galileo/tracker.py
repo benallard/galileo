@@ -1,4 +1,3 @@
-
 from ctypes import c_byte
 
 import logging
@@ -61,10 +60,17 @@ class FitbitClient(object):
             logger.error('Failed to get connected Fitbit dongle information')
             raise
 
-    def discover(self, uuid, minDuration=4000):
-        self.dongle.ctrl_write([0x1a, 4] + i2lsba(uuid.int, 16) +
-                               [ 0, 0xfb, 1, 0xfb, 2, 0xfb] +
-                               i2lsba(minDuration, 2))
+    def discover(self, uuid, services=[0xfb00, 0xfb01, 0xfb02],
+                 minDuration=4000):
+        # I'm actually not sure the third parameter should be called that way.
+        logger.debug('Discovering for UUID %s and services %s', uuid,
+             ', '.join(hex(s) for s in services))
+        cmd = [0x1a, 4]
+        cmd += i2lsba(uuid.int, 16)
+        for s in services:
+            cmd += i2lsba(s, 2)
+        cmd += i2lsba(minDuration, 2)
+        self.dongle.ctrl_write(cmd)
         d = self.dongle.ctrl_read()  # StartDiscovery
         # Sometimes, the dongle immediately answers 'no trackers'
         # (that's a mistake from our side)
