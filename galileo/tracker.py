@@ -61,11 +61,10 @@ class FitbitClient(object):
             logger.error('Failed to get connected Fitbit dongle information')
             raise
 
-    def discover(self, minDuration=4000):
-        self.dongle.ctrl_write([0x1a, 4, 0xba, 0x56, 0x89, 0xa6, 0xfa, 0xbf,
-                                0xa2, 0xbd, 1, 0x46, 0x7d, 0x6e, 0, 0,
-                                0xab, 0xad, 0, 0xfb, 1, 0xfb, 2, 0xfb] +
-                                i2lsba(minDuration, 2))
+    def discover(self, uuid, minDuration=4000):
+        self.dongle.ctrl_write([0x1a, 4] + i2lsba(uuid.int, 16) +
+                               [ 0, 0xfb, 1, 0xfb, 2, 0xfb] +
+                               i2lsba(minDuration, 2))
         d = self.dongle.ctrl_read()  # StartDiscovery
         # Sometimes, the dongle immediately answers 'no trackers'
         # (that's a mistake from our side)

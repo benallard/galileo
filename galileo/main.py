@@ -2,6 +2,7 @@ import datetime
 import os
 import sys
 import time
+import uuid
 
 import logging
 logger = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ from .net import GalileoClient, SyncError, BackOffException
 from .tracker import FitbitClient
 from .utils import a2x
 
+FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
 
 def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
@@ -38,7 +40,7 @@ def syncAllTrackers(config):
 
     logger.info('Discovering trackers to synchronize')
     try:
-        trackers = [t for t in fitbit.discover()]
+        trackers = [t for t in fitbit.discover(FitBitUUID)]
     except TimeoutError:
         logger.debug('Timeout trying to discover trackers')
         trackers = []
