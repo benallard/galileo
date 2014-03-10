@@ -243,7 +243,7 @@ class Config(object):
                                nargs="+", metavar="ID",
                                help="list of tracker IDs to not sync")
         argparser.add_argument('mode', default='sync', nargs='?',
-                               choices=['sync', 'daemon'], metavar="MODE",
+                               choices=['version', 'sync', 'daemon'], metavar="MODE",
                                help="The mode to run (default to 'sync')")
         return argparser.parse_args()
 
