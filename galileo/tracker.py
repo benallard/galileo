@@ -124,7 +124,9 @@ class FitbitClient(object):
         self.dongle.data_read(5000)
 
     def initializeAirlink(self):
-        self.dongle.data_write(DM([0xc0, 0xa, 0xa, 0, 6, 0, 6, 0, 0, 0, 0xc8, 0]))
+        data = [0xa, 0, 6, 0, 6, 0, 0, 0, 0xc8, 0]
+        #data = [1, 0, 8, 0, 0x10, 0, 0, 0, 0xc8, 0, 1]
+        self.dongle.data_write(DM([0xc0, 0xa] + data))
         self.dongle.ctrl_read(10000)
         self.dongle.data_read()
 
@@ -150,7 +152,7 @@ class FitbitClient(object):
         return dump
 
     def uploadResponse(self, response):
-        self.dongle.data_write(DM([0xc0, 0x24, 4] + i2lsba(len(response), 2) + [0, 0, 0, 0]))
+        self.dongle.data_write(DM([0xc0, 0x24, 4] + i2lsba(len(response), 6)))
         self.dongle.data_read()
 
         for i in range(0, len(response), 20):
