@@ -183,9 +183,6 @@ class Config(object):
         # Define and parse command-line arguments.
         argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                             epilog="""Access your synchronized data at http://www.fitbit.com.""")
-        argparser.add_argument("-V", "--version",
-                               action="store_true", dest='version',
-                               help="show version and exit")
         argparser.add_argument("-c", "--config",
                                metavar="FILE", dest="rcconfigname",
                                help="use alternative configuration file (defaults to '%s')" % self.DEFAULT_RCFILE_NAME)

@@ -182,6 +182,10 @@ def version(verbose, delim='\n'):
     return delim.join(s)
 
 
+def version_mode(config):
+    print version(config.logLevel in (logging.INFO, logging.DEBUG))
+
+
 def sync(config):
     try:
         total, success, skipped = syncAllTrackers(config)
@@ -241,12 +245,9 @@ def main():
 
     config.apply_cmdlineargs(cmdlineargs)
 
-    if cmdlineargs.version:
-        print version(config.logLevel in (logging.INFO, logging.DEBUG))
-        return
-
     try:
         {
+            'version': version_mode,
             'sync': sync,
             'daemon': daemon,
         }[cmdlineargs.mode](config)
