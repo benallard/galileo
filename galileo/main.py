@@ -224,33 +224,34 @@ def daemon(config):
 
 def main():
     """ This is the entry point """
+    logger.addHandler(logging.NullHandler())
+
     config = Config()
 
-    cmdlineargs = config.parse_args()
+    # This gives us the config file name
+    config.parse_args()
 
-    # If an alternative config filename was provided then use it.
-    if cmdlineargs.rcconfigname:
-        rcconfigname = os.path.expanduser(cmdlineargs.rcconfigname)
-    else:
-        rcconfigname = os.path.expanduser(config.DEFAULT_RCFILE_NAME)
+    # Here, we could load an /etc config file
+    # Or take its path from an env. variable ...
+    config.load(config.rcConfigName)
 
-    # Load the configuration.
-    if os.path.exists(rcconfigname):
-        logger.debug("Trying to load config file: %s", rcconfigname)
-        logger.debug("Config before load = %s", config)
-        try:
-            config.load(rcconfigname)
-        except IOError:
-            logger.warning('Unable to load configuration file: %s', rcconfigname)
+    config.parse_args(False)
 
-    config.apply_cmdlineargs(cmdlineargs)
+    # --- All logging actions before this line are not active ---
+    # This means that the whole Config parsing is not logged because we don't
+    # know which logLevel we should use.
+    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s',
+                        level=config.logLevel)
+    # --- All logger actions from now on will be effective ---
+
+    logger.debug("Configuration: %s", config)
 
     try:
         {
             'version': version_mode,
             'sync': sync,
             'daemon': daemon,
-        }[cmdlineargs.mode](config)
+        }[config.mode](config)
     except:
         print "# A serious error happened, which is probably due to a"
         print "# programming error. Please open a new issue with the following"

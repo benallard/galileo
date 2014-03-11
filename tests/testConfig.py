@@ -7,48 +7,61 @@ class MyTracker(object):
         self.id = id
         self.syncedRecently = syncedRecently
 
+class MyParam(object):
+    def __init__(self, name, value):
+        self.name = name
+        self.default = value
+P=MyParam
+
 class testShouldSkip(unittest.TestCase):
 
     def testRecentForce(self):
         t = MyTracker([42], True)
-        c = Config()
-        c.forceSync = True
+        c = Config([P('forceSync', True),
+                    P('includeTrackers', None),
+                    P('excludeTrackers', set())])
         self.assertFalse(c.shouldSkip(t))
 
     def testRecentNotForce(self):
         t = MyTracker([42], True)
-        c = Config()
-        c.forceSync = False
+        c = Config([P('forceSync', False),
+                    P('includeTrackers', None),
+                    P('excludeTrackers', set())])
         self.assertTrue(c.shouldSkip(t))
 
     def testIncludeNotExclude(self):
         t = MyTracker([0x42], False)
-        c = Config()
-        c.includeTrackers = ['42']
+        c = Config([P('forceSync', False),
+                    P('includeTrackers', set(['42'])),
+                    P('excludeTrackers', set())])
         self.assertFalse(c.shouldSkip(t))
     def testIncludeNoneExclude(self):
         t = MyTracker([0x42], False)
-        c = Config()
-        c.excludeTrackers = ['42']
+        c = Config([P('forceSync', False),
+                    P('includeTrackers', None),
+                    P('excludeTrackers', set(['42']))])
         self.assertTrue(c.shouldSkip(t))
     def testNotIncludeExclude(self):
         t = MyTracker([0x42], False)
-        c = Config()
-        c.includeTrackers = ['21']
-        c.excludeTrackers = ['42']
+        c = Config([P('forceSync', False),
+                    P('includeTrackers', set(['21'])),
+                    P('excludeTrackers', set(['42']))])
         self.assertTrue(c.shouldSkip(t))
     def testIncludeExclude(self):
         t = MyTracker([0x42], False)
-        c = Config()
-        c.includeTrackers = ['42']
-        c.excludeTrackers = ['42']
+        c = Config([P('forceSync', False),
+                    P('includeTrackers', set(['42'])),
+                    P('excludeTrackers', set(['42']))])
         self.assertTrue(c.shouldSkip(t))
     def testIncludeNoneNotExclude(self):
         t = MyTracker([0x42], False)
-        c = Config()
+        c = Config([P('forceSync', False),
+                    P('includeTrackers', None),
+                    P('excludeTrackers', set())])
         self.assertFalse(c.shouldSkip(t))
     def testNotIncludeNotExclude(self):
         t = MyTracker([0x42], False)
-        c = Config()
-        c.includeTrackers = ['21']
+        c = Config([P('forceSync', False),
+                    P('includeTrackers', set(['21'])),
+                    P('excludeTrackers', set())])
         self.assertTrue(c.shouldSkip(t))
