@@ -9,7 +9,7 @@ class MyTracker(object):
 
 class MyParam(object):
     def __init__(self, name, value):
-        self.name = name
+        self.varName = name
         self.default = value
 P=MyParam
 
