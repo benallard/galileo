@@ -97,6 +97,9 @@ Don't forget to:
 
 Then simply run the ``run`` script located at the root of this repository.
 
+If your system uses systemd then there is an example unit file in the
+``contrib`` directory that you may wish to customize.
+
 Documentation
 -------------
 
