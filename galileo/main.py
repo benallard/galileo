@@ -65,25 +65,8 @@ def syncAllTrackers(config):
         logger.info('Attempting to synchronize tracker %s', trackerid)
 
         logger.debug('Connecting to Fitbit server and requesting status')
-        try:
-            galileo.requestStatus()
-        except requests.exceptions.ConnectionError, ce:
-            error_msg = ce.args[0].reason.strerror
-            # No internet connection or fitbit server down
-            logger.error('Not able to connect to the Fitbit server using HTTPS (%s).', error_msg)
-            if not config.httpsOnly:
-                logger.info('Trying http as a backup.')
-                galileo.scheme = 'http'
-                try:
-                    galileo.requestStatus()
-                except requests.exceptions.ConnectionError, ce:
-                    error_msg = ce.args[0].reason.strerror
-                    # No internet connection or fitbit server down
-                    logger.error('Not able to connect to the Fitbit server using either HTTP or HTTPS (%s). Check your internet connection', error_msg)
-                    break
-            else:
-                logger.info('Config forbid the usage of HTTP, quitting.')
-                break
+        if not galileo.requestStatus(not config.httpsOnly):
+            break
 
         logger.debug('Establishing link with tracker')
         try:
