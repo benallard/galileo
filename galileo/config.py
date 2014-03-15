@@ -230,21 +230,19 @@ class Config(object):
         for param in self.__opts:
             param.fromFile(config, self.__optdict)
 
-    def parse_args(self, beforeFile=True):
-        """ We parse them in two pass, first the one that are only in the command line args
-        Then, the one that could override some settings from the configuration files """
-
-        if beforeFile:
-            argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
+    def parse_args(self):
+        argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                             epilog="""Access your synchronized data at http://www.fitbit.com.""")
-            for param in self.__opts:
-                param.toArgParse(argparser)
-
-            self.cmdlineargs = argparser.parse_args()
-
         for param in self.__opts:
-#            if beforeFile and not param.paramOnly:
-#                continue
+            param.toArgParse(argparser)
+
+        self.cmdlineargs = argparser.parse_args()
+
+        # And we apply them immediatly
+        self.apply_args()
+
+    def apply_args(self):
+        for param in self.__opts:
             param.fromArgs(self.cmdlineargs, self.__optdict)
 
     def shouldSkip(self, tracker):

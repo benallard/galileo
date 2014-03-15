@@ -235,7 +235,7 @@ def main():
     # Or take its path from an env. variable ...
     config.load(config.rcConfigName)
 
-    config.parse_args(False)
+    config.apply_args()
 
     # --- All logging actions before this line are not active ---
     # This means that the whole Config parsing is not logged because we don't
