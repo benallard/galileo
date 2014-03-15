@@ -228,14 +228,16 @@ def main():
 
     config = Config()
 
+    config.parseSystemConfig()
+    config.parseUserConfig()
+
     # This gives us the config file name
-    config.parse_args()
+    config.parseArgs()
 
-    # Here, we could load an /etc config file
-    # Or take its path from an env. variable ...
-    config.load(config.rcConfigName)
-
-    config.apply_args()
+    if config.rcConfigName:
+        config.load(config.rcConfigName)
+        # We need to apply our arguments as last
+        config.applyArgs()
 
     # --- All logging actions before this line are not active ---
     # This means that the whole Config parsing is not logged because we don't

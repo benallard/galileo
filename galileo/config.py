@@ -180,7 +180,7 @@ class Config(object):
     def __init__(self, opts=None):
         if opts is None:
             opts = [
-                StrParameter('rcConfigName', 'rcconfigname', ('-c', '--config'), "~/.galileorc", True, "use alternative configuration file"),
+                StrParameter('rcConfigName', 'rcconfigname', ('-c', '--config'), None, True, "use alternative configuration file"),
                 StrParameter('dumpDir', 'dump-dir', ('--dump-dir',), "~/.galileo", False, "directory for storing dumps"),
                 IntParameter('daemonPeriod', 'daemon-period', ('--daemon-period',), 15000, False, "sleep time in msec between sync runs when in daemon mode"),
                 SetParameter('includeTrackers', 'include', ('-I', '--include'), None, False, "list of tracker IDs to sync (all if not specified)"),
@@ -206,6 +206,17 @@ class Config(object):
             raise AttributeError(name)
         return self.__optdict[name]
 
+    def parseSystemConfig(self):
+        """ Load the system-wide configuration file """
+        self.load('/etc/galileo/config')
+
+    def parseUserConfig(self):
+        """ Load the user based configuration file """
+        if 'XDG_CONFIG_HOME' in os.environ:
+            self.load(os.path.join(os.environ['XDG_CONFIG_HOME'], 'galileo', 'config'))
+        else:
+            self.load('~/.galileorc')
+
     def load(self, filename):
         """Load configuration settings from the named YAML-format
         configuration file. This configuration file can include a
@@ -230,7 +241,7 @@ class Config(object):
         for param in self.__opts:
             param.fromFile(config, self.__optdict)
 
-    def parse_args(self):
+    def parseArgs(self):
         argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",
                                             epilog="""Access your synchronized data at http://www.fitbit.com.""")
         for param in self.__opts:
@@ -239,9 +250,9 @@ class Config(object):
         self.cmdlineargs = argparser.parse_args()
 
         # And we apply them immediatly
-        self.apply_args()
+        self.applyArgs()
 
-    def apply_args(self):
+    def applyArgs(self):
         for param in self.__opts:
             param.fromArgs(self.cmdlineargs, self.__optdict)
 
