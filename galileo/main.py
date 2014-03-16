@@ -71,7 +71,7 @@ def syncAllTrackers(config):
         logger.debug('Establishing link with tracker')
         try:
             fitbit.establishLink(tracker)
-            fitbit.enableTxPipe()
+            fitbit.toggleTxPipe(True)
             fitbit.initializeAirlink()
         except TimeoutError:
             trackersskipped += 1
@@ -124,7 +124,7 @@ def syncAllTrackers(config):
 
         logger.debug('Disconnecting from tracker')
         try:
-            fitbit.disableTxPipe()
+            fitbit.toggleTxPipe(False)
             fitbit.terminateAirlink()
         except TimeoutError:
             logger.warning('Timeout while trying to disconnect from tracker %s', trackerid)
