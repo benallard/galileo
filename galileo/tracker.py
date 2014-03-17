@@ -77,9 +77,7 @@ class FitbitClient(object):
         self.dongle.ctrl_write(cmd)
         while True:
             d = self.dongle.ctrl_read(minDuration)
-            if d[:2] == [0x20, 1]:
-                print d[:2]
-                continue
+            if d[:2] == [0x20, 1]: continue
             elif d[0] == 3: break
             trackerId = d[2:8]
             addrType = d[8]
