@@ -87,8 +87,8 @@ class FitbitClient(object):
             trackerId = list(d[2:8])
             addrType = d[8]
             RSSI = c_byte(d[9]).value
-            attributes = list(d[11:13])
-            sUUID = list(d[17:19])
+            attributes = d[11:13]
+            sUUID = d[17:19]
             serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
             tracker = Tracker(trackerId, addrType, attributes, sUUID)

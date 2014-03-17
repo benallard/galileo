@@ -15,7 +15,7 @@ class MyDongle(object):
         self.idx += 1
         if len(response) == 0:
             raise TimeoutError
-        return response
+        return list(response)
     def ctrl_write(self, *args): pass
     ctrl_read = read
     def data_read(self, *args):
@@ -46,7 +46,7 @@ class testClient(unittest.TestCase):
                       (8, 6, 6, 0, 0, 0, 0xc8, 0),
                       (0xc0, 0x14, 0xc, 1, 0, 0, 0,0,0,0,0,0),
                       # getDump
-                      [0xc0, 0x41, 0xd],
+                      (0xc0, 0x41, 0xd),
                       (0x26, 2, 0, 0, 0, 0, 0),
                       (0xc0, 0,0,0,0,0),
                       #response
