@@ -134,6 +134,12 @@ class FitbitClient(object):
         self.dongle.ctrl_read(10000)
         self.dongle.data_read()
 
+    def displayCode(self):
+        logger.debug('Displaying code on tracker')
+        self.dongle.data_write(DM([0xc0, 6]))
+        r = self.dongle.data_read()
+        return r.data == [0xc0, 2]
+
     def getDump(self, dumptype=MEGADUMP):
         logger.debug('Getting dump type %d', dumptype)
 
