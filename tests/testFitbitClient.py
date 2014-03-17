@@ -13,21 +13,20 @@ class MyDongle(object):
     def read(self, *args):
         response = self.responses[self.idx]
         self.idx += 1
-        if len(response) == 0:
+        if not response:
             raise TimeoutError
         return list(response)
     def ctrl_write(self, *args): pass
     ctrl_read = read
     def data_read(self, *args):
-        d = self.read()
-        return MyDM(d)
+        return MyDM(self.read())
     def data_write(self, *args): pass
 
 class MyUUID(object):
     @property
     def int(self): return 0
 
-class testClient(unittest.TestCase):
+class testScenarii(unittest.TestCase):
 
     def testOk(self):
         d = MyDongle([(0x20, 1), # CancelDiscovery
