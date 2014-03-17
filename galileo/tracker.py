@@ -75,16 +75,13 @@ class FitbitClient(object):
         for i in (service1, write, read, minDuration):
             cmd += i2lsba(i, 2)
         self.dongle.ctrl_write(cmd)
-        d = self.dongle.ctrl_read()  # StartDiscovery
-        # Sometimes, the dongle immediately answers 'no trackers'
-        # (that's a mistake from our side)
-        if list(d[:3]) == [3, 2, 0]:
-            self.dongle.ctrl_read()
-            logger.critical('Discovery went wrong')
-        else:
+        while True:
             d = self.dongle.ctrl_read(minDuration)
-        while d[0] != 3:
-            trackerId = list(d[2:8])
+            if d[:2] == [0x20, 1]:
+                print d[:2]
+                continue
+            elif d[0] == 3: break
+            trackerId = d[2:8]
             addrType = d[8]
             RSSI = c_byte(d[9]).value
             attributes = d[11:13]
@@ -103,7 +100,6 @@ class FitbitClient(object):
             if not tracker.syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
             yield tracker
-            d = self.dongle.ctrl_read(minDuration)
 
         # tracker found, cancel discovery
         self.dongle.ctrl_write([2, 5])
