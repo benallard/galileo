@@ -13,21 +13,20 @@ class MyDongle(object):
     def read(self, *args):
         response = self.responses[self.idx]
         self.idx += 1
-        if len(response) == 0:
+        if not response:
             raise TimeoutError
-        return response
+        return list(response)
     def ctrl_write(self, *args): pass
     ctrl_read = read
     def data_read(self, *args):
-        d = self.read()
-        return MyDM(d)
+        return MyDM(self.read())
     def data_write(self, *args): pass
 
 class MyUUID(object):
     @property
     def int(self): return 0
 
-class testClient(unittest.TestCase):
+class testScenarii(unittest.TestCase):
 
     def testOk(self):
         d = MyDongle([(0x20, 1), # CancelDiscovery
@@ -46,7 +45,7 @@ class testClient(unittest.TestCase):
                       (8, 6, 6, 0, 0, 0, 0xc8, 0),
                       (0xc0, 0x14, 0xc, 1, 0, 0, 0,0,0,0,0,0),
                       # getDump
-                      [0xc0, 0x41, 0xd],
+                      (0xc0, 0x41, 0xd),
                       (0x26, 2, 0, 0, 0, 0, 0),
                       (0xc0, 0,0,0,0,0),
                       #response
@@ -68,10 +67,70 @@ class testClient(unittest.TestCase):
         self.assertEqual(1, len(ts))
         self.assertEqual(ts[0].id, [0,0,42,0,0,0])
         c.establishLink(ts[0]),
-        c.enableTxPipe()
+        c.toggleTxPipe(True)
         c.initializeAirlink()
         dump = c.getDump()
         self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
         c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
-        c.disableTxPipe()
+        c.toggleTxPipe(False)
         c.terminateAirlink()
+
+class testDiscover(unittest.TestCase):
+
+    def testNoTracker(self):
+        d = MyDongle([(0x20, 1 ), # StartDiscovery
+                      (3, 2, 0),
+                      (0x20, 1, ) # CancelDiscovery
+                     ])
+        c = FitbitClient(d)
+        ts = [t for t in c.discover(MyUUID())]
+        self.assertEqual(len(ts), 0)
+
+    def testOnetracker(self):
+        d = MyDongle([(0x20, 1 ), # StartDiscovery
+                      (0x13, 3, 0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,1,-30, 2,6,4, 3,
+                       0x2c, 0x31, 0xf6, 0xd8, 0x58),
+                      (3, 2, 1),
+                      (0x20, 1, ) # CancelDiscovery
+                     ])
+        c = FitbitClient(d)
+        ts = [t for t in c.discover(MyUUID())]
+        self.assertEqual(len(ts), 1)
+        t = ts[0]
+        self.assertEqual(t.id, [0xaa] * 6)
+
+    def testTwotracker(self):
+        d = MyDongle([(0x20, 1 ), # StartDiscovery
+                      (0x13, 3, 0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,1,-30, 2,6,4, 3,
+                       0x2c, 0x31, 0xf6, 0xd8, 0x58),
+                      (0x13, 3, 0xbb,0xbb,0xbb,0xbb,0xbb,0xbb,1,-30, 2,6,4, 3,
+                       0x2c, 0x31, 0xf6, 0xd8, 0x58),
+                      (3, 2, 2),
+                      (0x20, 1, ) # CancelDiscovery
+                     ])
+        c = FitbitClient(d)
+        ts = [t for t in c.discover(MyUUID())]
+        self.assertEqual(len(ts), 2)
+        t = ts[0]
+        self.assertEqual(t.id, [0xaa] * 6)
+        t = ts[1]
+        self.assertEqual(t.id, [0xbb] * 6)
+
+    def testTimeout(self):
+        d = MyDongle([(0x20, 1 ), # StartDiscovery
+                      (),
+                      ()])
+        c = FitbitClient(d)
+        with self.assertRaises(TimeoutError):
+            ts = [t for t in c.discover(MyUUID())]
+            self.assertEqual(len(ts), 0)
+
+    def testWrongParams(self):
+        # Sometime, we get the amount before the Status
+        d = MyDongle([(3, 2, 0),
+                      (0x20, 1 ), # StartDiscovery
+                      (0x20, 1, ) # CancelDiscovery
+                     ])
+        c = FitbitClient(d)
+        ts = [t for t in c.discover(MyUUID())]
+        self.assertEqual(len(ts), 0)

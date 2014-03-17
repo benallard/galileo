@@ -125,7 +125,8 @@ class FitBitDongle(USBDevice):
             if isATimeout(ue):
                 raise TimeoutError
             raise
-        if list(data[:2]) == [0x20, 1]:
+        data = list(data)
+        if data[:2] == [0x20, 1]:
             logger.debug('<-- %s %s', a2x(data[:2]), a2s(data[2:]))
         else:
             logger.debug('<-- %s', a2x(data, shorten=True))
