@@ -67,12 +67,12 @@ class testScenarii(unittest.TestCase):
         self.assertEqual(1, len(ts))
         self.assertEqual(ts[0].id, [0,0,42,0,0,0])
         c.establishLink(ts[0]),
-        c.enableTxPipe()
+        c.toggleTxPipe(True)
         c.initializeAirlink()
         dump = c.getDump()
         self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
         c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
-        c.disableTxPipe()
+        c.toggleTxPipe(False)
         c.terminateAirlink()
 
 class testDiscover(unittest.TestCase):
