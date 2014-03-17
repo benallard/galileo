@@ -114,10 +114,14 @@ class FitbitClient(object):
         self.dongle.ctrl_read(8000)  # GAP_LINK_ESTABLISHED_EVENT
         self.dongle.ctrl_read()
 
-    def enableTxPipe(self):
-        # enabling tx pipe
-        self.dongle.ctrl_write([3, 8, 1])
-        self.dongle.data_read(5000)
+    def toggleTxPipe(self, on):
+        """ `on` is a boolean that dictate the status of the pipe """
+        byte = 0
+        if on:
+            byte = 1
+        self.dongle.ctrl_write([3, 8, byte])
+        d = self.dongle.data_read(5000)
+        return d.data == [0xc0, 0xb]
 
     def initializeAirlink(self):
         data = [0xa, 0, 6, 0, 6, 0, 0, 0, 0xc8, 0]
@@ -125,6 +129,12 @@ class FitbitClient(object):
         self.dongle.data_write(DM([0xc0, 0xa] + data))
         self.dongle.ctrl_read(10000)
         self.dongle.data_read()
+
+    def displayCode(self):
+        logger.debug('Displaying code on tracker')
+        self.dongle.data_write(DM([0xc0, 6]))
+        r = self.dongle.data_read()
+        return r.data == [0xc0, 2]
 
     def getDump(self, dumptype=MEGADUMP):
         logger.debug('Getting dump type %d', dumptype)
@@ -159,10 +169,6 @@ class FitbitClient(object):
         self.dongle.data_read(60000)  # This one can be very long. He is probably erasing the memory there
         self.dongle.data_write(DM([0xc0, 1]))
         self.dongle.data_read()
-
-    def disableTxPipe(self):
-        self.dongle.ctrl_write([3, 8])
-        self.dongle.data_read(5000)
 
     def terminateAirlink(self):
         self.dongle.ctrl_write([2, 7])
