@@ -79,6 +79,9 @@ def syncAllTrackers(config):
             logger.warning('Unable to establish link with tracker %s. Skipping it.', trackerid)
             continue
 
+        #fitbit.displayCode()
+        #time.sleep(5)
+
         logger.info('Getting data from tracker')
         dump = fitbit.getDump()
 
