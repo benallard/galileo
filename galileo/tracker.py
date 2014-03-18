@@ -82,7 +82,7 @@ class FitbitClient(object):
         amount = 0
         while True:
             d = self.dongle.ctrl_read(minDuration)
-            if isStatus(d, 'StartDiscovery'): continue
+            if isStatus(d, 'StartDiscovery', False): continue
             elif d[0] == 3: break
             trackerId = d[2:8]
             addrType = d[8]
@@ -109,8 +109,7 @@ class FitbitClient(object):
             logger.error('%d trackers discovered, dongle says %d', amount, d[2])
         # tracker found, cancel discovery
         self.dongle.ctrl_write([2, 5])
-        if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
-            logger.error("Was especting 'CancelDiscovery', got something else")
+        isStatus(self.dongle.ctrl_read(), 'CancelDiscovery')
 
     def establishLink(self, tracker):
         self.dongle.ctrl_write([0xb, 6] + tracker.id + [tracker.addrType] + tracker.serviceUUID)
