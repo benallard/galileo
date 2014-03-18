@@ -3,7 +3,7 @@ from ctypes import c_byte
 import logging
 logger = logging.getLogger(__name__)
 
-from .dongle import TimeoutError, DM
+from .dongle import DM
 from .dump import Dump
 from .utils import a2x, i2lsba
 
@@ -37,28 +37,22 @@ class FitbitClient(object):
         self.dongle.ctrl_read()  # CancelDiscovery
         self.dongle.ctrl_read()  # TerminateLink
 
-        try:
-            # It is OK to have a timeout with the following ctrl_read as
-            # they are there to clean up any connection left open from
-            # the previous attempts.
-            self.dongle.ctrl_read()
-            self.dongle.ctrl_read()
-            self.dongle.ctrl_read()
-        except TimeoutError:
-            # assuming link terminated
-            pass
+        # We exhaust the pipe, then we know that we have a clean state
+        goOn = True
+        while goOn:
+            goOn = self.dongle.ctrl_read() is not None
 
     def getDongleInfo(self):
-        try:
-            self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
-            d = self.dongle.ctrl_read()
-            self.major = d[2]
-            self.minor = d[3]
-            logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
-                         self.minor)
-        except TimeoutError:
-            logger.error('Failed to get connected Fitbit dongle information')
-            raise
+        self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
+        d = self.dongle.ctrl_read()
+        if d is None:
+            logger.error('failed to get dongle Information')
+            return False
+        self.major = d[2]
+        self.minor = d[3]
+        logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
+                     self.minor)
+        return True
 
     def discover(self, uuid, service1=0xfb00, write=0xfb01, read=0xfb02,
                  minDuration=4000):
@@ -77,7 +71,8 @@ class FitbitClient(object):
         self.dongle.ctrl_write(cmd)
         while True:
             d = self.dongle.ctrl_read(minDuration)
-            if d[:2] == [0x20, 1]: continue
+            if d is None: break
+            elif d[:2] == [0x20, 1]: continue
             elif d[0] == 3: break
             trackerId = d[2:8]
             addrType = d[8]

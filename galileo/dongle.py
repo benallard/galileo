@@ -118,15 +118,18 @@ class FitBitDongle(USBDevice):
             raise DongleWriteException
 
     def ctrl_read(self, timeout=2000, length=32):
+        data = None
         try:
             data = self.dev.read(0x82, length, self.CtrlIF.bInterfaceNumber,
                                  timeout)
         except usb.core.USBError, ue:
-            if isATimeout(ue):
-                raise TimeoutError
-            raise
-        data = list(data)
-        if data[:2] == [0x20, 1]:
+            if not isATimeout(ue):
+                raise
+        else:
+            data = list(data)
+        if data is None:
+            logger.debug('<-- ...')
+        elif data[:2] == [0x20, 1]:
             logger.debug('<-- %s %s', a2x(data[:2]), a2s(data[2:]))
         else:
             logger.debug('<-- %s', a2x(data, shorten=True))
@@ -141,13 +144,14 @@ class FitBitDongle(USBDevice):
             raise DongleWriteException
 
     def data_read(self, timeout=2000):
+        msg = None
         try:
             data = self.dev.read(0x81, 32, self.DataIF.bInterfaceNumber,
                                  timeout)
         except usb.core.USBError, ue:
-            if isATimeout(ue):
-                raise TimeoutError
-            raise
-        msg = DM(data, out=False)
-        logger.debug('<== %s', msg)
+            if not isATimeout(ue):
+                raise
+        else:
+            msg = DM(data, out=False)
+        logger.debug('<== %s', msg or '...')
         return msg

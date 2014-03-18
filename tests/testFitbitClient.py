@@ -1,6 +1,7 @@
 import unittest
 
-from galileo.tracker import FitbitClient, TimeoutError
+
+from galileo.tracker import FitbitClient
 
 class MyDM(object):
     def __init__(self, data):
@@ -14,7 +15,7 @@ class MyDongle(object):
         response = self.responses[self.idx]
         self.idx += 1
         if not response:
-            raise TimeoutError
+            return None
         return list(response)
     def ctrl_write(self, *args): pass
     ctrl_read = read
@@ -121,9 +122,8 @@ class testDiscover(unittest.TestCase):
                       (),
                       ()])
         c = FitbitClient(d)
-        with self.assertRaises(TimeoutError):
-            ts = [t for t in c.discover(MyUUID())]
-            self.assertEqual(len(ts), 0)
+        ts = [t for t in c.discover(MyUUID())]
+        self.assertEqual(len(ts), 0)
 
     def testWrongParams(self):
         # Sometime, we get the amount before the Status
