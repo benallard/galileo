@@ -10,11 +10,12 @@ except ImportError, ie:
     # is installed.
     try:
         import usb
+    except ImportError:
+        pass
+    else:
         print "You have an older pyusb version installed. This utility needs"
         print "at least version 1.0.0a2 to work properly."
         print "Please upgrade your system to a newer version."
-    except ImportError:
-        pass
     raise ie
 
 from .utils import a2x, a2s
@@ -81,6 +82,14 @@ class DongleWriteException(Exception): pass
 
 class PermissionDeniedException(Exception): pass
 
+def isStatus(data, msg=None):
+    if data is None:
+        return False
+    if data[:2] != [0x20, 1]:
+        return False
+    if msg is None:
+        return True
+    return a2s(data[2:]) == msg
 
 class FitBitDongle(USBDevice):
     VID = 0x2687
@@ -129,7 +138,7 @@ class FitBitDongle(USBDevice):
             data = list(data)
         if data is None:
             logger.debug('<-- ...')
-        elif data[:2] == [0x20, 1]:
+        elif isStatus(data):
             logger.debug('<-- %s %s', a2x(data[:2]), a2s(data[2:]))
         else:
             logger.debug('<-- %s', a2x(data, shorten=True))
