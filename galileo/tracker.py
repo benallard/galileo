@@ -3,7 +3,7 @@ from ctypes import c_byte
 import logging
 logger = logging.getLogger(__name__)
 
-from .dongle import TimeoutError, DM
+from .dongle import TimeoutError, DM, isStatus
 from .dump import Dump
 from .utils import a2x, i2lsba
 
@@ -77,7 +77,7 @@ class FitbitClient(object):
         self.dongle.ctrl_write(cmd)
         while True:
             d = self.dongle.ctrl_read(minDuration)
-            if d[:2] == [0x20, 1]: continue
+            if isStatus(d, 'StartDiscovery'): continue
             elif d[0] == 3: break
             trackerId = d[2:8]
             addrType = d[8]
