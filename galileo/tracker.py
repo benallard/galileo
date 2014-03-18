@@ -116,13 +116,15 @@ class FitbitClient(object):
         self.dongle.ctrl_write([0xb, 6] + tracker.id + [tracker.addrType] + tracker.serviceUUID)
         if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
             return False
-        self.dongle.ctrl_read(5000)
+        if self.dongle.ctrl_read(5000)[:2] != [3, 4]:
+            return False
         # established, waiting for service discovery
         # - This one takes long
         if not isStatus(self.dongle.ctrl_read(8000),
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
-        self.dongle.ctrl_read()
+        if self.dongle.ctrl_read()[:2] != [2, 7]:
+            return False
         return True
 
     def toggleTxPipe(self, on):
@@ -186,10 +188,12 @@ class FitbitClient(object):
         if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
             return False
 
-        self.dongle.ctrl_read()
+        if self.dongle.ctrl_read()[:2] != [3, 5]:
+            # Payload can be either 0x16 or 0x08
+            return False
         if not isStatus(self.dongle.ctrl_read(), 'GAP_LINK_TERMINATED_EVENT'):
             return False
         if not isStatus(self.dongle.ctrl_read()):
-            # This one don't always return '22'
+            # This one doesn't always return '22'
             return False
         return True
