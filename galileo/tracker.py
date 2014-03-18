@@ -34,8 +34,10 @@ class FitbitClient(object):
         logger.info('Disconnecting from any connected trackers')
 
         self.dongle.ctrl_write([2, 2])
-        self.dongle.ctrl_read()  # CancelDiscovery
-        self.dongle.ctrl_read()  # TerminateLink
+        if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
+            return False
+        if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
+            return False
 
         try:
             # It is OK to have a timeout with the following ctrl_read as
@@ -47,6 +49,8 @@ class FitbitClient(object):
         except TimeoutError:
             # assuming link terminated
             pass
+
+        return True
 
     def getDongleInfo(self):
         try:
@@ -110,12 +114,16 @@ class FitbitClient(object):
 
     def establishLink(self, tracker):
         self.dongle.ctrl_write([0xb, 6] + tracker.id + [tracker.addrType] + tracker.serviceUUID)
-        self.dongle.ctrl_read()  # EstablishLink
+        if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
+            return False
         self.dongle.ctrl_read(5000)
         # established, waiting for service discovery
         # - This one takes long
-        self.dongle.ctrl_read(8000)  # GAP_LINK_ESTABLISHED_EVENT
+        if not isStatus(self.dongle.ctrl_read(8000),
+                        'GAP_LINK_ESTABLISHED_EVENT'):
+            return False
         self.dongle.ctrl_read()
+        return True
 
     def toggleTxPipe(self, on):
         """ `on` is a boolean that dictate the status of the pipe """
@@ -175,8 +183,13 @@ class FitbitClient(object):
 
     def terminateAirlink(self):
         self.dongle.ctrl_write([2, 7])
-        self.dongle.ctrl_read()  # TerminateLink
+        if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
+            return False
 
         self.dongle.ctrl_read()
-        self.dongle.ctrl_read()  # GAP_LINK_TERMINATED_EVENT
-        self.dongle.ctrl_read()  # 22
+        if not isStatus(self.dongle.ctrl_read(), 'GAP_LINK_TERMINATED_EVENT'):
+            return False
+        if not isStatus(self.dongle.ctrl_read()):
+            # This one don't always return '22'
+            return False
+        return True
