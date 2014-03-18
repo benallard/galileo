@@ -34,8 +34,10 @@ class FitbitClient(object):
         logger.info('Disconnecting from any connected trackers')
 
         self.dongle.ctrl_write([2, 2])
-        self.dongle.ctrl_read()  # CancelDiscovery
-        self.dongle.ctrl_read()  # TerminateLink
+        if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
+            return False
+        if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
+            return False
 
         # We exhaust the pipe, then we know that we have a clean state
         goOn = True
@@ -73,7 +75,7 @@ class FitbitClient(object):
         while True:
             d = self.dongle.ctrl_read(minDuration)
             if d is None: continue
-            elif isStatus(d, 'StartDiscovery'): continue
+            elif isStatus(d, 'StartDiscovery', False): continue
             elif d[0] == 3: break
             trackerId = d[2:8]
             addrType = d[8]
@@ -100,17 +102,22 @@ class FitbitClient(object):
             logger.error('%d trackers discovered, dongle says %d', amount, d[2])
         # tracker found, cancel discovery
         self.dongle.ctrl_write([2, 5])
-        if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
-            logger.error("Was especting 'CancelDiscovery', got something else")
+        isStatus(self.dongle.ctrl_read(), 'CancelDiscovery')
 
     def establishLink(self, tracker):
         self.dongle.ctrl_write([0xb, 6] + tracker.id + [tracker.addrType] + tracker.serviceUUID)
-        self.dongle.ctrl_read()  # EstablishLink
-        self.dongle.ctrl_read(5000)
+        if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
+            return False
+        if self.dongle.ctrl_read(5000)[:2] != [3, 4]:
+            return False
         # established, waiting for service discovery
         # - This one takes long
-        self.dongle.ctrl_read(8000)  # GAP_LINK_ESTABLISHED_EVENT
-        self.dongle.ctrl_read()
+        if not isStatus(self.dongle.ctrl_read(8000),
+                        'GAP_LINK_ESTABLISHED_EVENT'):
+            return False
+        if self.dongle.ctrl_read()[:2] != [2, 7]:
+            return False
+        return True
 
     def toggleTxPipe(self, on):
         """ `on` is a boolean that dictate the status of the pipe """
@@ -170,8 +177,15 @@ class FitbitClient(object):
 
     def terminateAirlink(self):
         self.dongle.ctrl_write([2, 7])
-        self.dongle.ctrl_read()  # TerminateLink
+        if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
+            return False
 
-        self.dongle.ctrl_read()
-        self.dongle.ctrl_read()  # GAP_LINK_TERMINATED_EVENT
-        self.dongle.ctrl_read()  # 22
+        if self.dongle.ctrl_read()[:2] != [3, 5]:
+            # Payload can be either 0x16 or 0x08
+            return False
+        if not isStatus(self.dongle.ctrl_read(), 'GAP_LINK_TERMINATED_EVENT'):
+            return False
+        if not isStatus(self.dongle.ctrl_read()):
+            # This one doesn't always return '22'
+            return False
+        return True

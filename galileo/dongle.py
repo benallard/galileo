@@ -82,14 +82,22 @@ class DongleWriteException(Exception): pass
 
 class PermissionDeniedException(Exception): pass
 
-def isStatus(data, msg=None):
+def isStatus(data, msg=None, logError=true):
     if data is None:
         return False
     if data[:2] != [0x20, 1]:
+        if logError:
+            logging.warning("Message is not a status message: %s",
+                            a2s(data[:2]))
         return False
     if msg is None:
         return True
-    return a2s(data[2:]) == msg
+    message = a2s(data[2:])
+    if message != msg:
+        logging.warning("Message %s (received) is not %s (expected)", message,
+                        msg)
+        return False
+    return True
 
 class FitBitDongle(USBDevice):
     VID = 0x2687
@@ -138,7 +146,7 @@ class FitBitDongle(USBDevice):
             data = list(data)
         if data is None:
             logger.debug('<-- ...')
-        elif isStatus(data):
+        elif isStatus(data, logError=False):
             logger.debug('<-- %s %s', a2x(data[:2]), a2s(data[2:]))
         else:
             logger.debug('<-- %s', a2x(data, shorten=True))
