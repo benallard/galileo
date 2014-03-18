@@ -82,7 +82,7 @@ class DongleWriteException(Exception): pass
 
 class PermissionDeniedException(Exception): pass
 
-def isStatus(data, msg=None, logError=true):
+def isStatus(data, msg=None, logError=True):
     if data is None:
         return False
     if data[:2] != [0x20, 1]:
