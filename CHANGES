@@ -12,13 +12,15 @@ them to be read from a configuration file.
 Contributors to this release: Stuart Hickinbottom, and Alexander Voronin.
 
 Main changes since 0.3.1:
+- Add a lots of tests (issue#32)
 - Add a `daemon` mode (issue#30)
+- Detect when Fitbit server is in 'maintenance mode' (issue#29)
 - Read the configuration from files (issue#18, PR #5)
 - Validation of the CRC value of the dumps (issue#15)
 - Add --include and --exclude to control which trackers to synchronize (PR #4)
 - Add a --no-upload command line parameter to prevent the uploading of the
   dump to the server
-- Code cleanup and reorganisation.
+- Major code reorganisation.
 
 
 galileo 0.3.1 (2014-02-01)
