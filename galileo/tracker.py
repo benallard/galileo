@@ -75,6 +75,7 @@ class FitbitClient(object):
         for i in (service1, write, read, minDuration):
             cmd += i2lsba(i, 2)
         self.dongle.ctrl_write(cmd)
+        amount = 0
         while True:
             d = self.dongle.ctrl_read(minDuration)
             if isStatus(d, 'StartDiscovery'): continue
@@ -97,11 +98,15 @@ class FitbitClient(object):
                             a2x(trackerId, delim=""), RSSI)
             if not tracker.syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
+            amount += 1
             yield tracker
 
+        if amount != d[2]:
+            logger.error('%d trackers discovered, dongle says %d', amount, d[2])
         # tracker found, cancel discovery
         self.dongle.ctrl_write([2, 5])
-        self.dongle.ctrl_read()  # CancelDiscovery
+        if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
+            logger.error("Was especting 'CancelDiscovery', got something else")
 
     def establishLink(self, tracker):
         self.dongle.ctrl_write([0xb, 6] + tracker.id + [tracker.addrType] + tracker.serviceUUID)
