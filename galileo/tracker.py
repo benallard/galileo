@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 from .dongle import TimeoutError, DM, isStatus
 from .dump import Dump
-from .utils import a2x, i2lsba
+from .utils import a2x, i2lsba, a2lsbi
 
 MICRODUMP = 3
 MEGADUMP = 13
@@ -136,11 +136,20 @@ class FitbitClient(object):
         return d.data == [0xc0, 0xb]
 
     def initializeAirlink(self):
-        data = [0xa, 0, 6, 0, 6, 0, 0, 0, 0xc8, 0]
-        #data = [1, 0, 8, 0, 0x10, 0, 0, 0, 0xc8, 0, 1]
+        nums = [0xa, 6, 6, 0, 200]
+        #nums = [1, 8, 16, 0, 200]
+        data = []
+        for n in nums:
+            data.extend(i2lsba(n, 2))
+        #data = data + [1]
         self.dongle.data_write(DM([0xc0, 0xa] + data))
-        self.dongle.ctrl_read(10000)
+        d = self.dongle.ctrl_read(10000)
+        if d[:2] != [8, 6]:
+            return False
+        if [a2lsbi(d[2:4]), a2lsbi(d[4:6]), a2lsbi(d[6:8])] != nums[-3:]:
+            return False
         self.dongle.data_read()
+        return True
 
     def displayCode(self):
         logger.debug('Displaying code on tracker')
