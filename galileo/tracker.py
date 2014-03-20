@@ -93,7 +93,7 @@ class FitbitClient(object):
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
             tracker = Tracker(trackerId, addrType, attributes, sUUID)
             if not tracker.syncedRecently and (serviceUUID != sUUID):
-                logger.error("Error in communication to tracker %s, cannot acknowledge the serviceUUID: %s vs %s",
+                logger.debug("Error in communication to tracker %s, cannot acknowledge the serviceUUID: %s vs %s",
                              a2x(trackerId, delim=""), a2x(serviceUUID, ':'), a2x(sUUID, ':'))
             logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'))
             if RSSI < -80:
