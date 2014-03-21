@@ -91,7 +91,7 @@ def isStatus(data, msg=None, logError=True):
     if msg is None:
         return True
     message = a2s(data[2:])
-    if message.startswith(msg):
+    if not message.startswith(msg):
         logging.warning("Message '%s' (received) is not '%s' (expected)", message,
                         msg)
         return False
