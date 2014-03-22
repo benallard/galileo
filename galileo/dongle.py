@@ -38,23 +38,24 @@ class USBDevice(object):
 
 
 class DataMessage(object):
-    length = 32
+    """ A message that get communicated over the data link """
+    LENGTH = 32
 
     def __init__(self, data, out=True):
         if out:  # outgoing
-            if len(data) > 31:
+            if len(data) > (self.LENGTH - 1):
                 raise ValueError('data %s (%d) too big' % (data, len(data)))
             self.data = data
             self.len = len(data)
         else:  # incoming
-            if len(data) != 32:
+            if len(data) != self.LENGTH:
                 raise ValueError('data %s with wrong length' % data)
             # last byte is length
             self.len = data[-1]
             self.data = list(data[:self.len])
 
     def asList(self):
-        return self.data + [0] * (31 - self.len) + [self.len]
+        return self.data + [0] * (self.LENGTH - 1 - self.len) + [self.len]
 
     def __str__(self):
         return ' '.join(['[', a2x(self.data), ']', '-', str(self.len)])
@@ -151,13 +152,13 @@ class FitBitDongle(USBDevice):
         logger.debug('==> %s', msg)
         l = self.dev.write(0x01, msg.asList(), self.DataIF.bInterfaceNumber,
                            timeout)
-        if l != 32:
-            logger.error('Bug, sent %d, had 32', l)
+        if l != msg.LENGTH:
+            logger.error('Bug, sent %d, had %d', l, msg.LENGTH)
             raise DongleWriteException
 
     def data_read(self, timeout=2000):
         try:
-            data = self.dev.read(0x81, 32, self.DataIF.bInterfaceNumber,
+            data = self.dev.read(0x81, DM.LENGTH, self.DataIF.bInterfaceNumber,
                                  timeout)
         except usb.core.USBError, ue:
             if isATimeout(ue):
