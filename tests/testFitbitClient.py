@@ -6,6 +6,12 @@ class MyDM(object):
     def __init__(self, data):
         self.data = data
 
+class MyCM(object):
+    def __init__(self, data):
+        self.len = data[0]
+        self.INS = data[1]
+        self.payload = data[2:]
+
 class MyDongle(object):
     def __init__(self, responses):
         self.responses = responses
@@ -17,7 +23,8 @@ class MyDongle(object):
             raise TimeoutError
         return list(response)
     def ctrl_write(self, *args): pass
-    ctrl_read = read
+    def ctrl_read(self, *args):
+        return MyCM(self.read())
     def data_read(self, *args):
         return MyDM(self.read())
     def data_write(self, *args): pass

@@ -3,7 +3,7 @@ from ctypes import c_byte
 import logging
 logger = logging.getLogger(__name__)
 
-from .dongle import TimeoutError, DM, isStatus
+from .dongle import TimeoutError, CM, DM, isStatus
 from .dump import Dump
 from .utils import a2x, i2lsba, a2lsbi
 
@@ -33,7 +33,7 @@ class FitbitClient(object):
     def disconnect(self):
         logger.info('Disconnecting from any connected trackers')
 
-        self.dongle.ctrl_write([2, 2])
+        self.dongle.ctrl_write(CM(2))
         if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
             return False
         if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
@@ -54,10 +54,10 @@ class FitbitClient(object):
 
     def getDongleInfo(self):
         try:
-            self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
+            self.dongle.ctrl_write(CM(1))
             d = self.dongle.ctrl_read()
-            self.major = d[2]
-            self.minor = d[3]
+            self.major = d.payload[0]
+            self.minor = d.payload[1]
             logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
                          self.minor)
         except TimeoutError:
@@ -74,21 +74,20 @@ class FitbitClient(object):
         """
         logger.debug('Discovering for UUID %s: %s', uuid,
              ', '.join(hex(s) for s in (service1, write, read)))
-        cmd = [0x1a, 4]
-        cmd += i2lsba(uuid.int, 16)
+        data = i2lsba(uuid.int, 16)
         for i in (service1, write, read, minDuration):
-            cmd += i2lsba(i, 2)
-        self.dongle.ctrl_write(cmd)
+            data += i2lsba(i, 2)
+        self.dongle.ctrl_write(CM(4, data))
         amount = 0
         while True:
             d = self.dongle.ctrl_read(minDuration)
             if isStatus(d, 'StartDiscovery', False): continue
-            elif d[0] == 3: break
-            trackerId = d[2:8]
-            addrType = d[8]
-            RSSI = c_byte(d[9]).value
-            attributes = d[11:13]
-            sUUID = d[17:19]
+            elif d.INS == 2: break
+            trackerId = d.payload[:6]
+            addrType = d.payload[6]
+            RSSI = c_byte(d.payload[7]).value
+            attributes = d.payload[9:11]
+            sUUID = d.payload[15:17]
             serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
             tracker = Tracker(trackerId, addrType, attributes, sUUID)
@@ -105,24 +104,24 @@ class FitbitClient(object):
             amount += 1
             yield tracker
 
-        if amount != d[2]:
-            logger.error('%d trackers discovered, dongle says %d', amount, d[2])
+        if amount != d.payload[0]:
+            logger.error('%d trackers discovered, dongle says %d', amount, d.payload[0])
         # tracker found, cancel discovery
-        self.dongle.ctrl_write([2, 5])
+        self.dongle.ctrl_write(CM(5))
         isStatus(self.dongle.ctrl_read(), 'CancelDiscovery')
 
     def establishLink(self, tracker):
-        self.dongle.ctrl_write([0xb, 6] + tracker.id + [tracker.addrType] + tracker.serviceUUID)
+        self.dongle.ctrl_write(CM(6, tracker.id + [tracker.addrType] + tracker.serviceUUID))
         if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
             return False
-        if self.dongle.ctrl_read(5000)[:2] != [3, 4]:
+        if self.dongle.ctrl_read(5000).INS != 4:
             return False
         # established, waiting for service discovery
         # - This one takes long
         if not isStatus(self.dongle.ctrl_read(8000),
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
-        if self.dongle.ctrl_read()[:2] != [2, 7]:
+        if self.dongle.ctrl_read().INS != 7:
             return False
         return True
 
@@ -131,7 +130,7 @@ class FitbitClient(object):
         byte = 0
         if on:
             byte = 1
-        self.dongle.ctrl_write([3, 8, byte])
+        self.dongle.ctrl_write(CM(8, [byte]))
         d = self.dongle.data_read(5000)
         return d.data == [0xc0, 0xb]
 
@@ -144,9 +143,9 @@ class FitbitClient(object):
         #data = data + [1]
         self.dongle.data_write(DM([0xc0, 0xa] + data))
         d = self.dongle.ctrl_read(10000)
-        if d[:2] != [8, 6]:
+        if d.INS != 6:
             return False
-        if [a2lsbi(d[2:4]), a2lsbi(d[4:6]), a2lsbi(d[6:8])] != nums[-3:]:
+        if [a2lsbi(d.payload[0:2]), a2lsbi(d.payload[2:4]), a2lsbi(d.payload[4:6])] != nums[-3:]:
             return False
         self.dongle.data_read()
         return True
@@ -192,11 +191,11 @@ class FitbitClient(object):
         self.dongle.data_read()
 
     def terminateAirlink(self):
-        self.dongle.ctrl_write([2, 7])
+        self.dongle.ctrl_write(CM(7))
         if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
             return False
 
-        if self.dongle.ctrl_read()[:2] != [3, 5]:
+        if self.dongle.ctrl_read().INS != 5:
             # Payload can be either 0x16 or 0x08
             return False
         if not isStatus(self.dongle.ctrl_read(), 'GAP_LINK_TERMINATED_EVENT'):
