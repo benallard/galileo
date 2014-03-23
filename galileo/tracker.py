@@ -20,7 +20,7 @@ class Tracker(object):
         else:
             self.serviceUUID = serviceUUID
         self.attributes = attributes
-        self.status = 'unknown' # If we happen to read it before anyone set it
+        self.status = 'unknown'  # If we happen to read it before anyone set it
 
     @property
     def syncedRecently(self):
@@ -74,7 +74,7 @@ class FitbitClient(object):
         transmission and reception.
         """
         logger.debug('Discovering for UUID %s: %s', uuid,
-             ', '.join(hex(s) for s in (service1, write, read)))
+                     ', '.join(hex(s) for s in (service1, write, read)))
         data = i2lsba(uuid.int, 16)
         for i in (service1, write, read, minDuration):
             data += i2lsba(i, 2)
@@ -93,26 +93,31 @@ class FitbitClient(object):
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
             tracker = Tracker(trackerId, addrType, attributes, sUUID)
             if not tracker.syncedRecently and (serviceUUID != sUUID):
-                logger.debug("Error in communication to tracker %s, cannot acknowledge the serviceUUID: %s vs %s",
-                             a2x(trackerId, delim=""), a2x(serviceUUID, ':'), a2x(sUUID, ':'))
-            logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'), addrType, RSSI, a2x(attributes, ':'))
+                logger.debug("Cannot acknowledge the serviceUUID: %s vs %s",
+                             a2x(trackerId, delim=""), a2x(serviceUUID, ':'),
+                             a2x(sUUID, ':'))
+            logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'),
+                         addrType, RSSI, a2x(attributes, ':'))
             if RSSI < -80:
                 logger.info("Tracker %s has low signal power (%ddBm), higher"
                             " chance of miscommunication",
                             a2x(trackerId, delim=""), RSSI)
             if not tracker.syncedRecently:
-                logger.debug('Tracker %s was not recently synchronized', a2x(trackerId, delim=""))
+                logger.debug('Tracker %s was not recently synchronized',
+                             a2x(trackerId, delim=""))
             amount += 1
             yield tracker
 
         if amount != d.payload[0]:
-            logger.error('%d trackers discovered, dongle says %d', amount, d.payload[0])
+            logger.error('%d trackers discovered, dongle says %d', amount,
+                         d.payload[0])
         # tracker found, cancel discovery
         self.dongle.ctrl_write(CM(5))
         isStatus(self.dongle.ctrl_read(), 'CancelDiscovery')
 
     def establishLink(self, tracker):
-        self.dongle.ctrl_write(CM(6, tracker.id + [tracker.addrType] + tracker.serviceUUID))
+        self.dongle.ctrl_write(CM(6, tracker.id + [tracker.addrType] +
+                                  tracker.serviceUUID))
         if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
             return False
         if self.dongle.ctrl_read(5000).INS != 4:
@@ -146,7 +151,8 @@ class FitbitClient(object):
         d = self.dongle.ctrl_read(10000)
         if d.INS != 6:
             return False
-        if [a2lsbi(d.payload[0:2]), a2lsbi(d.payload[2:4]), a2lsbi(d.payload[4:6])] != nums[-3:]:
+        if [a2lsbi(d.payload[0:2]), a2lsbi(d.payload[2:4]),
+                a2lsbi(d.payload[4:6])] != nums[-3:]:
             return False
         self.dongle.data_read()
         return True
@@ -175,7 +181,9 @@ class FitbitClient(object):
         # Analyse the dump
         if not dump.isValid():
             logger.error('Dump not valid')
-        logger.debug('Dump done, length %d, transportCRC=0x%04x, esc1=0x%02x, esc2=0x%02x', dump.len, dump.crc.final(), dump.esc[0], dump.esc[1])
+        logger.debug("Dump done, length %d, transportCRC=0x%04x, esc1=0x%02x,"
+                     " esc2=0x%02x", dump.len, dump.crc.final(), dump.esc[0],
+                     dump.esc[1])
         return dump
 
     def uploadResponse(self, response):
@@ -187,7 +195,8 @@ class FitbitClient(object):
             self.dongle.data_read()
 
         self.dongle.data_write(DM([0xc0, 2]))
-        self.dongle.data_read(60000)  # This one can be very long. He is probably erasing the memory there
+        # Next one can be very long. He is probably erasing the memory there
+        self.dongle.data_read(60000)
         self.dongle.data_write(DM([0xc0, 1]))
         self.dongle.data_read()
 
