@@ -104,11 +104,14 @@ Documentation
 -------------
 
 For the moment, this README (and the ``--help`` command line option) is the
-only documentation we have. The wiki_ is meant to gather technical
+main documentation we have. The wiki_ is meant to gather technical
 information about the project like the communication protocol, or the format
 of the dump. Once this information reached a suffficient level of maturation,
 the goal is to integrate it into the project documentation. So head-on there,
 and start sharing your findings !
+
+Manual pages for the galileo(1) utility and the galileorc(5)
+configuration file are provided within the ``doc`` directory.
 
 .. _wiki: https://bitbucket.org/benallard/galileo/wiki
 

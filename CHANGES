@@ -19,6 +19,7 @@ Main changes since 0.3.1:
 - Add a --no-upload command line parameter to prevent the uploading of the
   dump to the server
 - Code cleanup and reorganisation.
+- Manual pages added for galileo(1) and galileorc(5)
 
 
 galileo 0.3.1 (2014-02-01)
