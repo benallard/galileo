@@ -111,9 +111,14 @@ class GalileoClient(object):
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
-        logger.debug('HTTP response=%s', r.text)
+        try:
+            answer = r.text
+        except AttributeError:
+            answer = r.content
 
-        tag, attrib, childs, body = XMLToTuple(ET.fromstring(r.text))
+        logger.debug('HTTP response=%s', answer)
+
+        tag, attrib, childs, body = XMLToTuple(ET.fromstring(answer))
 
         if tag != 'galileo-server':
             logger.error("Unexpected root element: %s", tag)

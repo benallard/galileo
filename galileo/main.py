@@ -155,7 +155,10 @@ def version(verbose, delim='\n'):
         # To get it on one line
         s.append('Python: %s' % ' '.join(sys.version.split()))
         s.append('Platform: %s' % ' '.join(platform.uname()))
-        s.append('pyusb: %s' % usb.__version__)
+        if not hasattr(usb, '__version__'):
+            s.append('pyusb: < 1.0.0b1')
+        else:
+            s.append('pyusb: %s' % usb.__version__)
         s.append('requests: %s' % requests.__version__)
         if hasattr(yaml, '__with_libyaml__'):
             # Genuine PyYAML
