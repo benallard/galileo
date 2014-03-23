@@ -86,7 +86,13 @@ def syncAllTrackers(config):
         #time.sleep(5)
 
         logger.info('Getting data from tracker')
-        dump = fitbit.getDump()
+        try:
+            dump = fitbit.getDump()
+        except TimeoutError:
+            logger.error("Timeout downloading the dump from tracker")
+            tracker.status = "Failed to download the dump (timeout)"
+            yield tracker
+            continue
 
         if config.keepDumps:
             # Write the dump somewhere for archiving ...
