@@ -20,6 +20,7 @@ from .utils import a2x
 
 FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
 
+
 def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
     dongle = FitBitDongle()
@@ -48,7 +49,8 @@ def syncAllTrackers(config):
 
     logger.info('%d trackers discovered', len(trackers))
     for tracker in trackers:
-        logger.debug('Discovered tracker with ID %s', a2x(tracker.id, delim=""))
+        logger.debug('Discovered tracker with ID %s',
+                     a2x(tracker.id, delim=""))
 
     for tracker in trackers:
 
@@ -56,7 +58,7 @@ def syncAllTrackers(config):
 
         # Skip this tracker based on include/exclude lists.
         if config.shouldSkip(tracker):
-            logger.info('Tracker %s is to be skipped due to configuration; skipping', trackerid)
+            logger.info('Tracker %s skipped due to configuration', trackerid)
             yield tracker
             continue
 
@@ -74,7 +76,8 @@ def syncAllTrackers(config):
             fitbit.initializeAirlink()
         except TimeoutError:
             logger.debug('Timeout while trying to establish link with tracker')
-            logger.warning('Unable to establish link with tracker %s. Skipping it.', trackerid)
+            logger.warning('Unable to connect with tracker %s. Skipping',
+                           trackerid)
             tracker.status = 'Unable to establish a connection (timeout).'
             yield tracker
             continue
@@ -87,9 +90,11 @@ def syncAllTrackers(config):
 
         if config.keepDumps:
             # Write the dump somewhere for archiving ...
-            dirname = os.path.expanduser(os.path.join(config.dumpDir, trackerid))
+            dirname = os.path.expanduser(os.path.join(config.dumpDir,
+                                                      trackerid))
             if not os.path.exists(dirname):
-                logger.debug("Creating non-existent directory for dumps %s", dirname)
+                logger.debug("Creating non-existent directory for dumps %s",
+                             dirname)
                 os.makedirs(dirname)
 
             filename = os.path.join(dirname, 'dump-%d.txt' % int(time.time()))
@@ -105,7 +110,8 @@ def syncAllTrackers(config):
                 response = galileo.sync(fitbit, trackerid, dump)
 
                 if config.keepDumps:
-                    logger.debug("Appending answer from server to %s", filename)
+                    logger.debug("Appending answer from server to %s",
+                                 filename)
                     with open(filename, 'at') as dumpfile:
                         dumpfile.write('\n')
                         for i in range(0, len(response), 20):
@@ -120,11 +126,13 @@ def syncAllTrackers(config):
                 try:
                     fitbit.uploadResponse(response)
                 except TimeoutError:
-                    logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
+                    logger.warning("Timeout error while trying to give Fitbit"
+                                   " response to tracker %s", trackerid)
                 tracker.status = "Synchronisation sucessfull"
 
             except SyncError, e:
-                logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
+                logger.error("Fitbit server refused data from tracker %s,"
+                             " reason: %s", trackerid, e.errorstring)
                 tracker.status = "Synchronisation failed: %s" % e.errorstring
 
         logger.debug('Disconnecting from tracker')
@@ -132,7 +140,8 @@ def syncAllTrackers(config):
             fitbit.toggleTxPipe(False)
             fitbit.terminateAirlink()
         except TimeoutError:
-            logger.warning('Timeout while trying to disconnect from tracker %s', trackerid)
+            logger.warning('Timeout while disconnecting from tracker %s',
+                           trackerid)
             tracker.status += " (Error disconnecting)"
         yield tracker
 
@@ -181,7 +190,8 @@ def sync(config):
     statuses = []
     try:
         for tracker in syncAllTrackers(config):
-            statuses.append("Tracker: %s: %s" % (a2x(tracker.id, ''), tracker.status))
+            statuses.append("Tracker: %s: %s" % (a2x(tracker.id, ''),
+                                                 tracker.status))
     except BackOffException, boe:
         print "The server requested that we come back between %d and %d"\
             " minutes." % (boe.min / 60*1000, boe.max / 60*1000)
@@ -193,6 +203,7 @@ def sync(config):
         print PERMISSION_DENIED_HELP
         return
     print '\n'.join(statuses)
+
 
 def daemon(config):
     goOn = True
@@ -206,7 +217,8 @@ def daemon(config):
                                " waiting for a bit longer.")
                 time.sleep(boe.getAValue())
             else:
-                logger.info("Sleeping for %d seconds before next sync", config.daemonPeriod / 1000)
+                logger.info("Sleeping for %d seconds before next sync",
+                            config.daemonPeriod / 1000)
                 time.sleep(config.daemonPeriod / 1000.)
         except KeyboardInterrupt:
             print "Ctrl-C, caught, stopping ..."
