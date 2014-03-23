@@ -211,7 +211,9 @@ def daemon(config):
         try:
             # TODO: Extract the initialization part, and do it once for all
             try:
-                syncAllTrackers(config)
+                for tracker in syncAllTrackers(config):
+                    logger.info("Tracker: %s: %s" % (a2x(tracker.id, ''),
+                                                 tracker.status))
             except BackOffException, boe:
                 logger.warning("Received a back-off notice from the server,"
                                " waiting for a bit longer.")
