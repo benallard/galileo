@@ -272,17 +272,20 @@ class Config(object):
         # provided then ignore this tracker if it's not in that list.
         if (self.includeTrackers is not None) and (trackerid not in self.includeTrackers):
             logger.info("Include list not empty, and tracker %s not there, skipping.", trackerid)
+            tracker.status = "Skipped becaise not in include list"
             return True
 
         # If a list of trackers to avoid syncing is configured then
         # ignore this tracker if it is in that list.
         if trackerid in self.excludeTrackers:
             logger.info("Tracker %s in exclude list, skipping.", trackerid)
+            tracker.status = "Skipped because in exclude list"
             return True
 
         if tracker.syncedRecently:
             if not self.forceSync:
                 logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
+                tracker.status = "Skipped because recently synchronised"
                 return True
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
 

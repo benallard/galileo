@@ -27,7 +27,7 @@ def syncAllTrackers(config):
         dongle.setup()
     except NoDongleException:
         logger.error("No dongle connected, aborting")
-        return (0, 0, 0)
+        return
 
     fitbit = FitbitClient(dongle)
 
@@ -41,14 +41,12 @@ def syncAllTrackers(config):
     logger.info('Discovering trackers to synchronize')
     try:
         trackers = [t for t in fitbit.discover(FitBitUUID)]
+
     except TimeoutError:
         logger.debug('Timeout trying to discover trackers')
         trackers = []
 
-    trackerssyncd = 0
-    trackersskipped = 0
-    trackercount = len(trackers)
-    logger.info('%d trackers discovered', trackercount)
+    logger.info('%d trackers discovered', len(trackers))
     for tracker in trackers:
         logger.debug('Discovered tracker with ID %s', a2x(tracker.id, delim=""))
 
@@ -59,13 +57,14 @@ def syncAllTrackers(config):
         # Skip this tracker based on include/exclude lists.
         if config.shouldSkip(tracker):
             logger.info('Tracker %s is to be skipped due to configuration; skipping', trackerid)
-            trackersskipped += 1
+            yield tracker
             continue
 
         logger.info('Attempting to synchronize tracker %s', trackerid)
 
         logger.debug('Connecting to Fitbit server and requesting status')
         if not galileo.requestStatus(not config.httpsOnly):
+            yield tracker
             break
 
         logger.debug('Establishing link with tracker')
@@ -74,9 +73,10 @@ def syncAllTrackers(config):
             fitbit.toggleTxPipe(True)
             fitbit.initializeAirlink()
         except TimeoutError:
-            trackersskipped += 1
             logger.debug('Timeout while trying to establish link with tracker')
             logger.warning('Unable to establish link with tracker %s. Skipping it.', trackerid)
+            tracker.status = 'Unable to establish a connection (timeout).'
+            yield tracker
             continue
 
         #fitbit.displayCode()
@@ -113,7 +113,7 @@ def syncAllTrackers(config):
 
                 # Even though the next steps might fail, fitbit has accepted
                 # the data at this point.
-                trackerssyncd += 1
+                tracker.status = "Dump successfully uploaded"
                 logger.info('Successfully sent tracker data to Fitbit')
 
                 logger.info('Passing Fitbit response to tracker')
@@ -121,9 +121,11 @@ def syncAllTrackers(config):
                     fitbit.uploadResponse(response)
                 except TimeoutError:
                     logger.warning('Timeout error while trying to give Fitbit response to tracker %s', trackerid)
+                tracker.status = "Synchronisation sucessfull"
 
             except SyncError, e:
                 logger.error('Fitbit server refused data from tracker %s, reason: %s', trackerid, e.errorstring)
+                tracker.status = "Synchronisation failed: %s" % e.errorstring
 
         logger.debug('Disconnecting from tracker')
         try:
@@ -131,8 +133,8 @@ def syncAllTrackers(config):
             fitbit.terminateAirlink()
         except TimeoutError:
             logger.warning('Timeout while trying to disconnect from tracker %s', trackerid)
-
-    return (trackercount, trackerssyncd, trackersskipped)
+            tracker.status += " (Error disconnecting)"
+        yield tracker
 
 PERMISSION_DENIED_HELP = """
 To be able to run the fitbit utility as a non-privileged user, you first
@@ -176,8 +178,10 @@ def version_mode(config):
 
 
 def sync(config):
+    statuses = []
     try:
-        total, success, skipped = syncAllTrackers(config)
+        for tracker in syncAllTrackers(config):
+            statuses.append("Tracker: %s: %s" % (a2x(tracker.id, ''), tracker.status))
     except BackOffException, boe:
         print "The server requested that we come back between %d and %d"\
             " minutes." % (boe.min / 60*1000, boe.max / 60*1000)
@@ -188,9 +192,7 @@ def sync(config):
     except PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return
-    print '%d trackers found, %d skipped, %d successfully synchronized' % (
-        total, skipped, success)
-
+    print '\n'.join(statuses)
 
 def daemon(config):
     goOn = True

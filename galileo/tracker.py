@@ -20,6 +20,7 @@ class Tracker(object):
         else:
             self.serviceUUID = serviceUUID
         self.attributes = attributes
+        self.status = 'unknown' # If we happen to read it before anyone set it
 
     @property
     def syncedRecently(self):
