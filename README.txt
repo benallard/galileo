@@ -81,10 +81,12 @@ The more complicated way
 First, you need to clone this repository locally, and install the required
 dependencies:
 
-- **pyusb** (need at least a 1.0 version, 0.4 and earlier are not compatible.
+**pyusb**:
+  Need at least a 1.0 version, 0.4 and earlier are not compatible.
   Please use a tagged release as development version might contains bug or
-  interface breakage)
-- **requests** (version 2 preferred, although version 1 should work)
+  interface breakage.
+**requests**:
+  Newer versions (2.x) preferred, although older should also work.
 
 You should copy the file ``99-fitbit.rules`` to the directory
 ``/etc/udev/rules.d`` in order to be able to run the utility as a
