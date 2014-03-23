@@ -148,12 +148,14 @@ class GalileoClient(object):
         except requests.exceptions.ConnectionError, ce:
             error_msg = ce.args[0].reason.strerror
             # No internet connection or fitbit server down
-            logger.error('Not able to connect to the Fitbit server using %s: %s.', self.scheme.upper(), error_msg)
+            logger.error("Not able to connect to the Fitbit server using %s:"
+                         " %s.", self.scheme.upper(), error_msg)
         else:
             return True
 
         if self.scheme == 'https' and not allowHTTP:
-            logger.warning('Config disallow the fallback to HTTP, you might want to give it a try (--no-https-only)')
+            logger.warning('Config disallow the fallback to HTTP, you might'
+                           ' want to give it a try (--no-https-only)')
 
         if self.scheme == 'http' or not allowHTTP:
             return False
@@ -165,7 +167,9 @@ class GalileoClient(object):
         except requests.exceptions.ConnectionError, ce:
             error_msg = ce.args[0].reason.strerror
             # No internet connection or fitbit server down
-            logger.error('Not able to connect to the Fitbit server using either HTTP or HTTPS (%s). Check your internet connection', error_msg)
+            logger.error("Not able to connect to the Fitbit server using"
+                         " either HTTP or HTTPS (%s). Check your internet"
+                         " connection", error_msg)
         else:
             return True
 
@@ -187,8 +191,8 @@ class GalileoClient(object):
 
         _, a, c, _ = tracker
         if a['tracker-id'] != trackerId:
-            logger.error('Got the response for tracker %s, expected tracker %s',
-                         a['tracker-id'], trackerId)
+            logger.error("Got the response for tracker %s, expected tracker"
+                         " %s", a['tracker-id'], trackerId)
         if a['type'] != 'megadumpresponse':
             logger.error('Not a megadumpresponse: %s', a['type'])
 
