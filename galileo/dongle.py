@@ -36,14 +36,15 @@ class USBDevice(object):
     def __del__(self):
         pass
 
+
 class CtrlMessage(object):
     """ A message that get communicated over the ctrl link """
     def __init__(self, INS, data=[]):
-        if INS is None: # incoming
+        if INS is None:  # incoming
             self.len = data[0]
             self.INS = data[1]
             self.payload = data[2:self.len]
-        else: # outgoing
+        else:  # outgoing
             self.len = len(data) + 2
             self.INS = INS
             self.payload = data
@@ -58,6 +59,7 @@ class CtrlMessage(object):
         return ' '.join(['%02X' % self.INS] + d + ['-', str(self.len)])
 
 CM = CtrlMessage
+
 
 class DataMessage(object):
     """ A message that get communicated over the data link """
@@ -105,6 +107,7 @@ class DongleWriteException(Exception): pass
 
 class PermissionDeniedException(Exception): pass
 
+
 def isStatus(data, msg=None, logError=True):
     if data.INS != 1:
         if logError:
@@ -114,10 +117,11 @@ def isStatus(data, msg=None, logError=True):
         return True
     message = a2s(data.payload)
     if not message.startswith(msg):
-        logging.warning("Message '%s' (received) is not '%s' (expected)", message,
-                        msg)
+        logging.warning("Message '%s' (received) is not '%s' (expected)",
+                        message, msg)
         return False
     return True
+
 
 class FitBitDongle(USBDevice):
     VID = 0x2687
@@ -149,7 +153,8 @@ class FitBitDongle(USBDevice):
 
     def ctrl_write(self, msg, timeout=2000):
         logger.debug('--> %s', msg)
-        l = self.dev.write(0x02, msg.asList(), self.CtrlIF.bInterfaceNumber, timeout)
+        l = self.dev.write(0x02, msg.asList(), self.CtrlIF.bInterfaceNumber,
+                           timeout)
         if l != msg.len:
             logger.error('Bug, sent %d, had %d', l, msg.len)
             raise DongleWriteException
