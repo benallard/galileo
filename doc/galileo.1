@@ -4,70 +4,27 @@
 .\"   groff -man -Tascii galileo.1
 .\" or
 .\"   man ./galileo.1
-.TH GALILEO "1" "" "" "User Commands"
+.TH galileo "1" "April 2014" "" "User Commands"
 .SH "NAME"
-galileo \- synchronize Fitbit devices with Fitbit web service
+galileo \- synchronize Fitbit devices
 .SH "SYNOPSIS"
 .B galileo
 [\fIOPTIONS\fR]... [\fIMODE\fR]
 .SH "DESCRIPTION"
-The
-.B galileo
-utility will securely synchronize Fitbit wearable fitness tracker
-devices with the Fitbit web service. Once synchronized the data may be
-viewed using the Fitbit web service at <\fBhttps://www.fitbit.com\fR>,
-or with other Fitbit-compatible apps.
-.PP
-All Bluetooth-based trackers are supported:
-.TP "\w'\(bu'u+1n"
-\(bu
-Fitbit Flex
-.TP
-\(bu
-Fitbit Force
-.TP
-\(bu
-Fitbit One
-.TP
-\(bu
-Fitbit Zip
-.PP
-Note that the Fitbit Ultra tracker is not supported as it is not
-Bluetooth-based.
-.SH "FEATURES"
-.B galileo
-supports synchronization of multiple trackers with the Fitbit web
-service. Any tracker found by
-.B galileo
-will be synchronizied unless the \fB\-\-include\fR and/or
-\fB\-\-exclude\fR options are used to implement restrictions.
-.PP
-HTTPS is used to securely exchange data with the Fitbit web service.
-.PP
-.B galileo
-can optionally save the data retrieved from the tracker (the
-\fIdump\fR), as well as synchronize that data with the Fitbit web
-service.
-.SH "REQUIREMENTS"
-An original Fitbit Bluetooth-LE USB synchronization dongle is
-required.
-.PP
-The Fitbit tracker must already be registered to your Fitbit account
-(see the BUGS section).
+Synchronize Fitbit wearable fitness tracker devices with the Fitbit web service.
+Visit <\fBhttps://www.fitbit.com\fR>, or use a Fitbit-compatible app in order
+to browse your data.
 .SH "MODES"
-The following modes of operation are available. The mode is specified
-as the final command-line argument (e.g. \fBgalileo sync\fB).
 .TP
 \fBsync\fR
-Perform one synchronization of all found trackers, then exit. This is
+Perform the synchronization of all found trackers, then exit. This is
 the default mode if none is specified.
 .TP
 \fBdaemon\fR
 Periodically perform synchronization of all found trackers.
 .B galileo
-will continue to periodically perform synchronization until the daemon
-is killed. Use the \fB\-\-daemon\-period\fR option to control the
-frequency of synchronization.
+will periodically perform synchronization until the daemon is killed. The
+period can be controlled via the \fB\-\-daemon\-period\fR option.
 .TP
 \fBversion\fR
 Display the
@@ -79,8 +36,8 @@ version and exit.
 show command-line usage and exit.
 .TP
 \fB\-c\fR \fIRCCONFIGNAME\fR, \fB\-\-config\fR \fIRCCONFIGNAME\fR
-use an alternative configuration file (the configuration file defaults
-to \fB~/.galileorc\fR if not specified).
+use \fIRCCONFIGNAME\fR as extra configuration file in order to allow overriding
+of settings.
 .SS "Logging options:"
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR
@@ -97,8 +54,8 @@ if no other logging options are specified.
 .TP
 \fB\-I\fR \fIID\fR [\fIID\fR ...], \
 \fB\-\-include\fR \fIID\fR [\fIID\fR ...]
-list of tracker IDs to synchronize (all found trackers are
-synchronized by default).
+list of tracker IDs to synchronize (if not set, all found trackers are
+synchronized).
 .TP
 \fB\-X\fR \fIID\fR [\fIID\fR ...], \
 \fB\-\-exclude\fR \fIID\fR [\fIID\fR ...]
@@ -106,9 +63,8 @@ list of tracker IDs to avoid synchronizing (no trackers are excluded
 by default).
 .TP
 \fB\-\-force\fR
-normally a tracker will not be synchronized with the Fitbit web
-service if it reports that it was recently synchronized. This option
-will override that behavior.
+a tracker will not be synchronized with the Fitbit web service if it reports
+that it was recently synchronized. This option overrides that behavior.
 .TP
 \fB\-\-no\-force\fR
 if the configuration file includes the \fBforce\-sync\fR option to
@@ -117,21 +73,21 @@ behaviour.
 .TP
 \fB\-\-daemon\-period\fR \fIDAEMON\-PERIOD\fR
 set the time to wait between synchronizations when running in
-\fBdaemon\fR mode. The time is specified in milliseconds (the time
-defaults to 15000ms [15 seconds] if not specified).
+\fBdaemon\fR mode. The period is specified in milliseconds (it
+defaults to 15000 [15 seconds]).
 .SS "Tracker data saving options:"
 .TP
 \fB\-\-dump\fR
 save a copy of the tracker data. Tracker data is stored under a
 tracker-specific subdirectory of a directory that is set using the
-\fB\-\-dump\-dir\fR option. This option is enabled by default.
+\fB\-\-dump\-dir\fR option. This is the default behavior.
 .TP
 \fB\-\-no\-dump\fR
 disables the saving of tracker data.
 .TP
 \fB\-\-dump\-dir\fR \fIDUMP\-DIR\fR
-the directory used for storing tracker dumps when \fB\-\-dump\fR is
-used (the directory defaults to \fB~/.galileo\fR if not specified).
+the directory used to store the tracker dumps (defaults to
+\fB~/.galileo\fR).
 .SS "Data transfer options:"
 .TP
 \fB\-\-upload\fR
@@ -140,17 +96,23 @@ default.
 .TP
 \fB\-\-no\-upload\fR
 prevent the uploading of tracker data to the Fitbit web service. Data
-is not deleted from trackers until it is uploaded and so this will
-not result in data loss.
+is not deleted from trackers until it is acknowledged by the fitbit server
+ so this will not result in data loss.
 .TP
 \fB\-\-https\-only\fR
-data sent to the Fitbit web service will be encrypted during transfer
+data sent to the Fitbit web service will be transferred via a secure connection
 using HTTPS. This is the default.
 .TP
 \fB\-\-no\-https\-only\fR
-data sent to the Fitbit web service will \fInot\fR be encrypted. This
-should only be required if problems with HTTPS-related libraries
-prevent data transfer without this option.
+if HTTPS connection is not possible, this will allow the fallback to HTTP.
+This should only be required if problems with encryption libraries prevent
+data transfer without this option.
+.SH "REQUIREMENTS"
+An original Fitbit Bluetooth-LE USB synchronization dongle is
+required.
+.PP
+The Fitbit tracker must already be registered to your Fitbit account
+(see the BUGS section).
 .SH FILES
 .I ~/.galileorc
 .RS
