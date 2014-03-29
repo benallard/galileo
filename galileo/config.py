@@ -229,10 +229,10 @@ class Config(object):
 
     def parseUserConfig(self):
         """ Load the user based configuration file """
-        if 'XDG_CONFIG_HOME' in os.environ:
-            self.load(os.path.join(os.environ['XDG_CONFIG_HOME'], 'galileo', 'config'))
-        else:
-            self.load('~/.galileorc')
+        self.load(os.path.join(
+            os.environ.get('XDG_CONFIG_HOME', '~/.config'),
+            'galileo', 'config'))
+        self.load('~/.galileorc')
 
     def load(self, filename):
         """Load configuration settings from the named YAML-format
