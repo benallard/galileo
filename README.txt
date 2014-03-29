@@ -125,3 +125,11 @@ https://docs.google.com/file/d/0BwJmJQV9_KRcSE0ySGxkbG1PbVE/edit and
 
 .. _`issue 46`: https://github.com/openyou/libfitbit/issues/46
 .. _`Ingo Lütkebohle`: https://github.com/iluetkeb
+
+Disclaimer
+----------
+
+Fitbit is a registered trademark and service mark of Fitbit, Inc.  galileo is
+designed for use with the Fitbit platform.  This product is not put out by
+Fitbit, and Fitbit does not service or warrant the functionality of this
+product.
