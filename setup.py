@@ -10,6 +10,26 @@ except ImportError:
     distribute_setup.use_setuptools()
     from setuptools import setup
 
+from galileo import __version__
+
+def check_version():
+    import re
+    """ Check that the version in the docs is the correct one """
+    readme_re = re.compile(r'^:version:\s+' + __version__ + r'\s*$',
+                           re.MULTILINE | re.IGNORECASE)
+    man_re = re.compile(r'^\.TH.+[\s"]+' + __version__ + r'[\s"]+',
+                        re.MULTILINE | re.IGNORECASE)
+    for filename, regex in (
+            ('README.txt', readme_re),):
+#            ('doc/galileo.1', man_re),
+#            ('doc/galileorc.5', man_re)):
+        with open(filename) as f:
+            content = f.read()
+        if regex.search(content) is None:
+            raise ValueError('file %s mention the wrong version' % filename)
+
+check_version()
+
 with open('README.txt') as file:
     long_description = file.read()
 
@@ -19,7 +39,7 @@ if sys.version_info >= (3,):
 
 setup(
     name="galileo",
-    version='0.4dev',
+    version=__version__,
     description="Utility to securely synchronize a Fitbit tracker with the"
                 " Fitbit server",
     long_description=long_description,
