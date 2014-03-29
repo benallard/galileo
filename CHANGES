@@ -1,13 +1,13 @@
 galileo 0.4 (????-??-??)
 ------------------------
 
-This is the fourth release of galileo, a free utility to securely
+This is the next feature release of galileo, a free utility to securely
 synchronize fitbit bluetooth trackers with the fitbit web-service.
 
 This release introduce a `daemon` mode that synchronize periodically the
 available trackers, making it easier for integration as a service. As well as
 enhance the configurability by introducing more options, and also allowing
-them to be read from a configuration file.
+them to be read from configuration files. Man pages have also been added.
 
 Contributors to this release: Stuart Hickinbottom, and Alexander Voronin.
 
