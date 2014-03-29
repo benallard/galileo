@@ -74,6 +74,25 @@ class testStatus(unittest.TestCase):
         val = e.getAValue()
         self.assertTrue(e.min <= val <= e.max)
 
+
+    def testStatusRequests082(self):
+        """ Older versions of requests only have ``content`` and no ``text`` """
+        def mypost(url, data, headers):
+            self.assertEqual(url, 'scheme://host:8888/path/to/stuff')
+            self.assertEqual(data, """\
+<?xml version='1.0' encoding='UTF-8'?>
+<galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
+    'id': GalileoClient.ID, 'version': __version__})
+            self.assertEqual(headers['Content-Type'], 'text/xml')
+            res = requestResponse('')
+            res.content = res.text
+            delattr(res, 'text')
+            return res
+
+        galileo.net.requests.post = mypost
+        gc = GalileoClient('scheme', 'host', 'path/to/stuff', 8888)
+        gc.requestStatus()
+
 class MyDongle(object):
     def __init__(self, M, m): self.major=M; self.minor=m
 class MyMegaDump(object):

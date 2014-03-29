@@ -22,6 +22,7 @@ class testDump(unittest.TestCase):
         self.assertEqual(d.footer, [0xc0] + range(5))
 
     def testOnlyFooterInvalid(self):
+        """ A dump with only a footer is an invalid dump """
         d = Dump(0)
         d.add([0xc0] + range(5))
         self.assertFalse(d.isValid())

@@ -111,9 +111,14 @@ class GalileoClient(object):
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
-        logger.debug('HTTP response=%s', r.text)
+        try:
+            answer = r.text
+        except AttributeError:
+            answer = r.content
 
-        tag, attrib, childs, body = XMLToTuple(ET.fromstring(r.text))
+        logger.debug('HTTP response=%s', answer)
+
+        tag, attrib, childs, body = XMLToTuple(ET.fromstring(answer))
 
         if tag != 'galileo-server':
             logger.error("Unexpected root element: %s", tag)
@@ -137,8 +142,38 @@ class GalileoClient(object):
 
         return childs
 
-    def requestStatus(self):
-        self.post('status')
+    def requestStatus(self, allowHTTP=False):
+        try:
+            self.post('status')
+        except requests.exceptions.ConnectionError, ce:
+            error_msg = ce.args[0].reason.strerror
+            # No internet connection or fitbit server down
+            logger.error("Not able to connect to the Fitbit server using %s:"
+                         " %s.", self.scheme.upper(), error_msg)
+        else:
+            return True
+
+        if self.scheme == 'https' and not allowHTTP:
+            logger.warning('Config disallow the fallback to HTTP, you might'
+                           ' want to give it a try (--no-https-only)')
+
+        if self.scheme == 'http' or not allowHTTP:
+            return False
+
+        logger.info('Trying http as a backup.')
+        self.scheme = 'http'
+        try:
+            self.post('status')
+        except requests.exceptions.ConnectionError, ce:
+            error_msg = ce.args[0].reason.strerror
+            # No internet connection or fitbit server down
+            logger.error("Not able to connect to the Fitbit server using"
+                         " either HTTP or HTTPS (%s). Check your internet"
+                         " connection", error_msg)
+        else:
+            return True
+
+        return False
 
     def sync(self, dongle, trackerId, megadump):
         server = self.post('sync', dongle, (
@@ -156,8 +191,8 @@ class GalileoClient(object):
 
         _, a, c, _ = tracker
         if a['tracker-id'] != trackerId:
-            logger.error('Got the response for tracker %s, expected tracker %s',
-                         a['tracker-id'], trackerId)
+            logger.error("Got the response for tracker %s, expected tracker"
+                         " %s", a['tracker-id'], trackerId)
         if a['type'] != 'megadumpresponse':
             logger.error('Not a megadumpresponse: %s', a['type'])
 
