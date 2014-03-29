@@ -129,7 +129,7 @@ class LogLevelParameter(Parameter):
     def __init__(self):
         Parameter.__init__(self, 'logLevel', 'logging', (),  logging.WARNING,
                            False, "logging Verbosity")
-        self.__logLevelMap = {'default': logging.WARNING,
+        self.__logLevelMap = {'quiet': logging.WARNING,
                               'verbose': logging.INFO,
                               'debug': logging.DEBUG}
         self.__logLevelMapReverse = {}
@@ -157,7 +157,7 @@ class LogLevelParameter(Parameter):
         elif args.debug:
             value = self.__logLevelMap['debug']
         elif args.quiet:
-            value = self.__logLevelMap['default']
+            value = self.__logLevelMap['quiet']
         if value is not None:
             optdict[self.varName] = value
 
