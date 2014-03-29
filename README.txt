@@ -3,7 +3,7 @@ Galileo
 
 :author: Benoît Allard <benoit.allard@gmx.de>
 :version: 0.4dev
-:license: LGPL
+:license: LGPLv3+
 :bug tracker: https://bitbucket.org/benallard/galileo/issues
 :mailing list: galileo@freelists.org (subscribe_, archive_)
 
@@ -15,14 +15,14 @@ Introduction
 
 Galileo is a Python utility to securely synchronize a Fitbit device with the
 Fitbit web service. It allows you to browse your data on their website, and
-their apps.
+compatible applications.
 
 All Bluetooth-based trackers are supported. Those are:
 
 - Fitbit One
 - Fitbit Zip
 - Fitbit Flex
-- (Fitbit Force)
+- Fitbit Force
 
 .. note:: The Fitbit Ultra tracker is **not supported** as it communicates
           using the ANT protocol. To synchronize it, please use libfitbit_.
