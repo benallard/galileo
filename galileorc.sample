@@ -1,3 +1,4 @@
+
 # -*- mode: yaml; -*-
 
 # Default settings for galileo.py. Settings may be changed here or
@@ -22,13 +23,13 @@ logging: verbose
 # synchronize even if trackers were recently synchronized
 force-sync: false
 
-# include
-include-trackers:
+# trackers to include
+include:
   - 123456789ABC
   - 9876543210AB
   - '112233445566' # tracker id composed of only numbers need to be quoted
 
-# exclude
-exclude-trackers:
+# trackers to exclude
+exclude:
   - AABBCCDDEEFF
   - 881144BB1234

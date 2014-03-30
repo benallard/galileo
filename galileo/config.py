@@ -194,6 +194,9 @@ class Config(object):
     DEFAULT_RCFILE_NAME = "~/.galileorc"
     DEFAULT_DUMP_DIR = "~/.galileo"
 
+    # NOTE TO SELF: When modifying something here, don't forget to propagate the
+    # modifications to the man-pages (under /doc)
+
     def __init__(self, opts=None):
         if opts is None:
             opts = [
