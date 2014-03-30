@@ -12,7 +12,7 @@ them to be read from configuration files. Man pages have also been added.
 Contributors to this release: Stuart Hickinbottom, and Alexander Voronin.
 
 Main changes since 0.3.1:
-- Manual pages added for galileo(1) and galileorc(5)
+- Manual pages added for galileo(1) and galileorc(5) (issue#38, PR #12)
 - Add a lots of tests (issue#32)
 - Add a `daemon` mode (issue#30)
 - Detect when Fitbit server is in 'maintenance mode' (issue#29)
