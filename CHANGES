@@ -1,4 +1,4 @@
-galileo 0.4 (????-??-??)
+galileo 0.4 (2014-03-31)
 ------------------------
 
 This is the next feature release of galileo, a free utility to securely
@@ -13,6 +13,7 @@ Contributors to this release: Stuart Hickinbottom, and Alexander Voronin.
 
 Main changes since 0.3.1:
 - Manual pages added for galileo(1) and galileorc(5) (issue#38, PR #12)
+- Add compatibility with dongles 1.6 (issue#45)
 - Add a lots of tests (issue#32)
 - Add a `daemon` mode (issue#30)
 - Detect when Fitbit server is in 'maintenance mode' (issue#29)
