@@ -112,10 +112,12 @@ of the dump. Once this information reached a suffficient level of maturation,
 the goal is to integrate it into the project documentation. So head-on there,
 and start sharing your findings !
 
-Manual pages for the galileo(1) utility and the galileorc(5)
-configuration file are provided within the ``doc`` directory.
+Manual pages for the galileo_\(1) utility and the galileorc_\(5) configuration
+file are provided within the ``doc`` directory.
 
 .. _wiki: https://bitbucket.org/benallard/galileo/wiki
+.. _galileo: https://pythonhosted.org/galileo/galileo.1.html
+.. _galileorc: https://pythonhosted.org/galileo/galileorc.5.html
 
 Acknowledgements
 ----------------
