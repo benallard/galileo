@@ -235,7 +235,8 @@ def daemon(config):
 
 def main():
     """ This is the entry point """
-    logger.addHandler(logging.NullHandler())
+    import galileo
+    logging.getLogger(galileo.__name__).addHandler(logging.NullHandler())
 
     config = Config()
 
