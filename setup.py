@@ -20,9 +20,9 @@ def check_version():
     man_re = re.compile(r'^\.TH.+[\s"]+' + __version__ + r'[\s"]+',
                         re.MULTILINE | re.IGNORECASE)
     for filename, regex in (
-            ('README.txt', readme_re),):
-#            ('doc/galileo.1', man_re),
-#            ('doc/galileorc.5', man_re)):
+            ('README.txt', readme_re),
+            ('doc/galileo.1', man_re),
+            ('doc/galileorc.5', man_re)):
         with open(filename) as f:
             content = f.read()
         if regex.search(content) is None:
