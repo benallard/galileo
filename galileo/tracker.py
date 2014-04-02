@@ -94,8 +94,7 @@ class FitbitClient(object):
             tracker = Tracker(trackerId, addrType, attributes, sUUID)
             if not tracker.syncedRecently and (serviceUUID != sUUID):
                 logger.debug("Cannot acknowledge the serviceUUID: %s vs %s",
-                             a2x(trackerId, delim=""), a2x(serviceUUID, ':'),
-                             a2x(sUUID, ':'))
+                             a2x(serviceUUID, ':'), a2x(sUUID, ':'))
             logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'),
                          addrType, RSSI, a2x(attributes, ':'))
             if RSSI < -80:
