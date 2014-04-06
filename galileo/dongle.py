@@ -129,6 +129,7 @@ class FitBitDongle(USBDevice):
 
     def __init__(self):
         USBDevice.__init__(self, self.VID, self.PID)
+        self.hasVersion = False
 
     def setup(self):
         if self.dev is None:
@@ -150,6 +151,13 @@ class FitBitDongle(USBDevice):
         self.DataIF = cfg[(0, 0)]
         self.CtrlIF = cfg[(1, 0)]
         self.dev.set_configuration()
+
+    def setVersion(self, major, minor):
+        self.major = major
+        self.minor = minor
+        self.hasVersion = True
+        logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
+                     self.minor)
 
     def ctrl_write(self, msg, timeout=2000):
         logger.debug('--> %s', msg)

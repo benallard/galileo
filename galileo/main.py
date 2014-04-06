@@ -117,7 +117,7 @@ def syncAllTrackers(config):
         else:
             logger.info('Sending tracker data to Fitbit')
             try:
-                response = galileo.sync(fitbit, trackerid, dump)
+                response = galileo.sync(fitbit.dongle, trackerid, dump)
 
                 if config.keepDumps:
                     logger.debug("Appending answer from server to %s",
