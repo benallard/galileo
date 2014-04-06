@@ -90,7 +90,7 @@ class GalileoClient(object):
             ('client-id', {}, [], self.ID),
             ('client-version', {}, [], __version__),
             ('client-mode', {}, [], mode)])
-        if dongle is not None:
+        if (dongle is not None) and dongle.hasInfo:
             info.append(toXML(
                 'dongle-version',
                 {'major': str(dongle.major),

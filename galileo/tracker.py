@@ -30,6 +30,7 @@ class Tracker(object):
 class FitbitClient(object):
     def __init__(self, dongle):
         self.dongle = dongle
+        self.hasInfo = False
 
     def disconnect(self):
         logger.info('Disconnecting from any connected trackers')
@@ -60,6 +61,7 @@ class FitbitClient(object):
         self.minor = d.payload[1]
         logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
                      self.minor)
+        self.hasInfo = True
 
     def discover(self, uuid, service1=0xfb00, write=0xfb01, read=0xfb02,
                  minDuration=4000):
