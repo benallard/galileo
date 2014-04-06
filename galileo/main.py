@@ -37,7 +37,11 @@ def syncAllTrackers(config):
 
     fitbit.disconnect()
 
-    fitbit.getDongleInfo()
+    try:
+        fitbit.getDongleInfo()
+    except TimeoutError:
+        logger.error('Failed to get connected Fitbit dongle information')
+        return
 
     logger.info('Discovering trackers to synchronize')
     try:
