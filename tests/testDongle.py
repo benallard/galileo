@@ -1,6 +1,6 @@
 import unittest
 
-from galileo.dongle import isStatus
+from galileo.dongle import isStatus, CM, DM
 
 class MyCM(object):
     def __init__(self, ins, payload):
@@ -20,3 +20,19 @@ class testisStatus(unittest.TestCase):
 
     def testStartsWith(self):
         self.assertTrue(isStatus(MyCM(1, [0x61, 0x62, 0x63, 0x64 , 0]), 'ab'))
+
+
+class testCM(unittest.TestCase):
+
+    def testEquals(self):
+        self.assertTrue(CM(8) == CM(8))
+        self.assertTrue(CM(5) == CM(5, []))
+        self.assertTrue(CM(2, range(5)), CM(2, range(5)))
+        self.assertEquals(CM(8), CM(8))
+        self.assertEquals(CM(5), CM(5, []))
+        self.assertEquals(CM(2, range(5)), CM(2, range(5)))
+
+    def testNotEquals(self):
+        self.assertFalse(CM(7) == CM(8))
+        self.assertFalse(CM(9) == CM(9, [5]))
+        self.assertFalse(CM(3, range(2)) == CM(3, range(5)))

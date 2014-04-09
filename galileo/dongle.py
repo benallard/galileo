@@ -52,6 +52,12 @@ class CtrlMessage(object):
     def asList(self):
         return [self.len, self.INS] + self.payload
 
+    def __cmp__(self, other):
+        inscmp = cmp(self.INS, other.INS)
+        if inscmp != 0:
+            return inscmp
+        return cmp(self.payload, other.payload)
+
     def __str__(self):
         d = []
         if self.payload:
