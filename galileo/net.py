@@ -176,9 +176,13 @@ class GalileoClient(object):
         return False
 
     def sync(self, dongle, trackerId, megadump):
-        server = self.post('sync', dongle, (
-            'tracker', {'tracker-id': trackerId}, (
-                'data', {}, [], megadump.toBase64())))
+        try:
+            server = self.post('sync', dongle, (
+                'tracker', {'tracker-id': trackerId}, (
+                    'data', {}, [], megadump.toBase64())))
+        except requests.exceptions.ConnectionError, ce:
+            error_msg = ce.args[0].reason.strerror
+            raise SyncError('ConnectionError: %s' % error_msg)
 
         tracker = None
         for elem in server:
