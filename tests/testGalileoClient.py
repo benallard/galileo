@@ -94,7 +94,7 @@ class testStatus(unittest.TestCase):
         gc.requestStatus()
 
 class MyDongle(object):
-    def __init__(self, M, m): self.major=M; self.minor=m
+    def __init__(self, M, m): self.major=M; self.minor=m; self.hasVersion=True
 class MyMegaDump(object):
     def __init__(self, b64): self.b64 = b64
     def toBase64(self): return self.b64
@@ -189,6 +189,20 @@ class testSync(unittest.TestCase):
         galileo.net.requests.post = mypost
         gc = GalileoClient('rsync', 'ssh', 'a/b/c', 22)
         self.assertRaises(SyncError, gc.sync, D, T_ID, d)
+
+    def testConnectionError(self):
+        T_ID = 'abcd'
+        D = MyDongle(0, 0)
+        d = MyMegaDump('YWJjZA==')
+        def mypost(url, data, headers):
+            class Reason(object):
+                class Error(object): strerror = ''
+                reason = Error()
+            raise galileo.net.requests.exceptions.ConnectionError(Reason())
+
+        galileo.net.requests.post = mypost
+        gc = GalileoClient('a', 'b', 'c', 0)
+        self.assertRaises(SyncError, gc.sync,D, T_ID, d)
 
 class testURL(unittest.TestCase):
 

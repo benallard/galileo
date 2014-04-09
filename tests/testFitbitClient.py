@@ -28,6 +28,7 @@ class MyDongle(object):
     def data_read(self, *args):
         return MyDM(self.read())
     def data_write(self, *args): pass
+    def setVersion(self, M, m): self.hasVersion = True
 
 class MyUUID(object):
     @property
