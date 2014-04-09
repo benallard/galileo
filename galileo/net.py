@@ -90,7 +90,7 @@ class GalileoClient(object):
             ('client-id', {}, [], self.ID),
             ('client-version', {}, [], __version__),
             ('client-mode', {}, [], mode)])
-        if dongle is not None:
+        if (dongle is not None) and dongle.hasVersion:
             info.append(toXML(
                 'dongle-version',
                 {'major': str(dongle.major),
@@ -111,9 +111,14 @@ class GalileoClient(object):
                           headers={"Content-Type": "text/xml"})
         r.raise_for_status()
 
-        logger.debug('HTTP response=%s', r.text)
+        try:
+            answer = r.text
+        except AttributeError:
+            answer = r.content
 
-        tag, attrib, childs, body = XMLToTuple(ET.fromstring(r.text))
+        logger.debug('HTTP response=%s', answer)
+
+        tag, attrib, childs, body = XMLToTuple(ET.fromstring(answer))
 
         if tag != 'galileo-server':
             logger.error("Unexpected root element: %s", tag)
@@ -143,12 +148,14 @@ class GalileoClient(object):
         except requests.exceptions.ConnectionError, ce:
             error_msg = ce.args[0].reason.strerror
             # No internet connection or fitbit server down
-            logger.error('Not able to connect to the Fitbit server using %s: %s.', self.scheme.upper(), error_msg)
+            logger.error("Not able to connect to the Fitbit server using %s:"
+                         " %s.", self.scheme.upper(), error_msg)
         else:
             return True
 
         if self.scheme == 'https' and not allowHTTP:
-            logger.warning('Config disallow the fallback to HTTP, you might want to give it a try (--no-https-only)')
+            logger.warning('Config disallow the fallback to HTTP, you might'
+                           ' want to give it a try (--no-https-only)')
 
         if self.scheme == 'http' or not allowHTTP:
             return False
@@ -160,7 +167,9 @@ class GalileoClient(object):
         except requests.exceptions.ConnectionError, ce:
             error_msg = ce.args[0].reason.strerror
             # No internet connection or fitbit server down
-            logger.error('Not able to connect to the Fitbit server using either HTTP or HTTPS (%s). Check your internet connection', error_msg)
+            logger.error("Not able to connect to the Fitbit server using"
+                         " either HTTP or HTTPS (%s). Check your internet"
+                         " connection", error_msg)
         else:
             return True
 
@@ -182,8 +191,8 @@ class GalileoClient(object):
 
         _, a, c, _ = tracker
         if a['tracker-id'] != trackerId:
-            logger.error('Got the response for tracker %s, expected tracker %s',
-                         a['tracker-id'], trackerId)
+            logger.error("Got the response for tracker %s, expected tracker"
+                         " %s", a['tracker-id'], trackerId)
         if a['type'] != 'megadumpresponse':
             logger.error('Not a megadumpresponse: %s', a['type'])
 

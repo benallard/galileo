@@ -2,8 +2,8 @@ Galileo
 =======
 
 :author: Benoît Allard <benoit.allard@gmx.de>
-:version: 0.4dev
-:license: LGPL
+:version: 0.5dev
+:license: LGPLv3+
 :bug tracker: https://bitbucket.org/benallard/galileo/issues
 :mailing list: galileo@freelists.org (subscribe_, archive_)
 
@@ -15,14 +15,14 @@ Introduction
 
 Galileo is a Python utility to securely synchronize a Fitbit device with the
 Fitbit web service. It allows you to browse your data on their website, and
-their apps.
+compatible applications.
 
 All Bluetooth-based trackers are supported. Those are:
 
 - Fitbit One
 - Fitbit Zip
 - Fitbit Flex
-- (Fitbit Force)
+- Fitbit Force
 
 .. note:: The Fitbit Ultra tracker is **not supported** as it communicates
           using the ANT protocol. To synchronize it, please use libfitbit_.
@@ -81,10 +81,12 @@ The more complicated way
 First, you need to clone this repository locally, and install the required
 dependencies:
 
-- **pyusb** (need at least a 1.0 version, 0.4 and earlier are not compatible.
+**pyusb**:
+  Need at least a 1.0 version, 0.4 and earlier are not compatible.
   Please use a tagged release as development version might contains bug or
-  interface breakage)
-- **requests** (version 2 preferred, although version 1 should work)
+  interface breakage.
+**requests**:
+  Newer versions (2.x) preferred, although older should also work.
 
 You should copy the file ``99-fitbit.rules`` to the directory
 ``/etc/udev/rules.d`` in order to be able to run the utility as a
@@ -104,13 +106,18 @@ Documentation
 -------------
 
 For the moment, this README (and the ``--help`` command line option) is the
-only documentation we have. The wiki_ is meant to gather technical
+main documentation we have. The wiki_ is meant to gather technical
 information about the project like the communication protocol, or the format
 of the dump. Once this information reached a suffficient level of maturation,
 the goal is to integrate it into the project documentation. So head-on there,
 and start sharing your findings !
 
+Manual pages for the galileo_\(1) utility and the galileorc_\(5) configuration
+file are provided within the ``doc`` directory.
+
 .. _wiki: https://bitbucket.org/benallard/galileo/wiki
+.. _galileo: https://pythonhosted.org/galileo/galileo.1.html
+.. _galileorc: https://pythonhosted.org/galileo/galileorc.5.html
 
 Acknowledgements
 ----------------
@@ -123,3 +130,11 @@ https://docs.google.com/file/d/0BwJmJQV9_KRcSE0ySGxkbG1PbVE/edit and
 
 .. _`issue 46`: https://github.com/openyou/libfitbit/issues/46
 .. _`Ingo Lütkebohle`: https://github.com/iluetkeb
+
+Disclaimer
+----------
+
+Fitbit is a registered trademark and service mark of Fitbit, Inc.  galileo is
+designed for use with the Fitbit platform.  This product is not put out by
+Fitbit, and Fitbit does not service or warrant the functionality of this
+product.

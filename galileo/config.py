@@ -24,15 +24,18 @@ class Parameter(object):
         self.default = default
         self.helpText = helpText
         self.paramOnly = paramOnly
+
     def toArgParse(self, parser):
         """ Add the parameter to the 'argparse' parser given in parameter """
         raise NotImplementedError
+
     def fromArgs(self, args, optdict):
         """ Take the value from the args parameter (from 'argparse'), and fill
         it in the dict """
         val = getattr(args, self.name)
         if val:
             optdict[self.varName] = val
+
     def fromFile(self, filedict, optdict):
         """ Take the value from the filedict parameter and fill it in the
         dict """
@@ -44,23 +47,25 @@ class Parameter(object):
 class StrParameter(Parameter):
     def toArgParse(self, parser):
         parser.add_argument(*self.paramName,
-                            dest = self.name,
-                            help=self.helpText + " (default to %s)" % self.default)
+                            dest=self.name,
+                            help=self.helpText +
+                            " (default to %s)" % self.default)
 
 
 class IntParameter(Parameter):
     def toArgParse(self, parser):
         parser.add_argument(*self.paramName,
-                            dest = self.name, type=int,
-                            help=self.helpText + " (default to %s)" % self.default)
+                            dest=self.name, type=int,
+                            help=self.helpText +
+                            " (default to %s)" % self.default)
 
 
 class BoolParameter(Parameter):
     def toArgParse(self, parser):
         if self.paramOnly:
             parser.add_argument(*self.paramName,
-                                action={True: "store_false",
-                                        False:"store_true"}[self.defaultVal],
+                                action={True:  "store_false",
+                                        False: "store_true"}[self.defaultVal],
                                 dest=self.name,
                                 help=self.helpText)
         else:
@@ -69,18 +74,21 @@ class BoolParameter(Parameter):
             self.paramName = self.paramName[0]
             if self.paramName.startswith('--'):
                 self.paramName = self.paramName[2:]
-            group = parser.add_argument_group(description="wheter or not to "+self.helpText)
+            group = parser.add_argument_group(
+                description="wheter or not to "+self.helpText)
             mut_ex_group = group.add_mutually_exclusive_group()
             _help = {}
             if self.default:
                 _help['help'] = "DEFAULT"
             mut_ex_group.add_argument("--%s" % self.paramName,
-                                      action="store_true", dest=self.name, **_help)
+                                      action="store_true", dest=self.name,
+                                      **_help)
             _help = {}
             if not self.default:
                 _help['help'] = "DEFAULT"
             mut_ex_group.add_argument("--no-%s" % self.paramName,
-                                      action="store_true", dest="no_%s" % self.name, **_help)
+                                      action="store_true",
+                                      dest="no_%s" % self.name, **_help)
 
     def fromArgs(self, args, optdict):
         if self.paramOnly:
@@ -97,6 +105,7 @@ class SetParameter(Parameter):
         parser.add_argument(*self.paramName,
                             nargs="+", metavar="ID", dest=self.name,
                             help=self.helpText)
+
     def fromArgs(self, args, optdict):
         # Now make sure the list of trackers is all in upper-case to
         # make comparisons easier later.
@@ -105,6 +114,7 @@ class SetParameter(Parameter):
             optdict[self.varName] = set()
         if values:
             optdict[self.varName].update(values)
+
     def fromFile(self, filedict, optdict):
         if self.paramOnly: return
         if self.name in filedict:
@@ -117,14 +127,16 @@ class SetParameter(Parameter):
 class LogLevelParameter(Parameter):
     """ A class extra for setting the LogLevel """
     def __init__(self):
-        Parameter.__init__(self, 'logLevel', 'logging', (),  logging.WARNING, False, "logging Verbosity")
-        self.__logLevelMap = {'default': logging.WARNING,
+        Parameter.__init__(self, 'logLevel', 'logging', (),  logging.WARNING,
+                           False, "logging Verbosity")
+        self.__logLevelMap = {'quiet': logging.WARNING,
                               'verbose': logging.INFO,
                               'debug': logging.DEBUG}
         self.__logLevelMapReverse = {}
         for key, value in self.__logLevelMap.iteritems():
             self.__logLevelMapReverse[value] = key
         self.default = logging.WARNING
+
     def toArgParse(self, parser):
         verbosity_arggroup = parser.add_argument_group(title=self.helpText)
         verbosity_arggroup2 = verbosity_arggroup.add_mutually_exclusive_group()
@@ -137,6 +149,7 @@ class LogLevelParameter(Parameter):
         verbosity_arggroup2.add_argument("-q", "--quiet",
                                          action="store_true",
                                          help="only show errors and summary (default)")
+
     def fromArgs(self, args, optdict):
         value = None
         if args.verbose:
@@ -144,9 +157,10 @@ class LogLevelParameter(Parameter):
         elif args.debug:
             value = self.__logLevelMap['debug']
         elif args.quiet:
-            value = self.__logLevelMap['default']
+            value = self.__logLevelMap['quiet']
         if value is not None:
             optdict[self.varName] = value
+
     def fromFile(self, filedict, optdict):
         if self.paramOnly: return
         if self.name in filedict:
@@ -157,11 +171,14 @@ class LogLevelParameter(Parameter):
 class Argument(StrParameter):
     """ Extra class for the positionnal argument """
     def __init__(self):
-        StrParameter.__init__(self, 'mode', 'mode', ('mode',), 'sync', True, 'The mode to run')
+        StrParameter.__init__(self, 'mode', 'mode', ('mode',), 'sync', True,
+                              'The mode to run')
+
     def toArgParse(self, parser):
         parser.add_argument(*self.paramName,
                             nargs='?', choices=['version', 'sync', 'daemon'],
-                            help=self.helpText + " (default to %s)" % self.default)
+                            help=self.helpText +
+                            " (default to %s)" % self.default)
 
 
 class Config(object):
@@ -177,6 +194,9 @@ class Config(object):
     DEFAULT_RCFILE_NAME = "~/.galileorc"
     DEFAULT_DUMP_DIR = "~/.galileo"
 
+    # NOTE TO SELF: When modifying something here, don't forget to propagate the
+    # modifications to the man-pages (under /doc)
+
     def __init__(self, opts=None):
         if opts is None:
             opts = [
@@ -187,7 +207,7 @@ class Config(object):
                 SetParameter('excludeTrackers', 'exclude', ('-X', '--exclude'), set(), False, "list of tracker IDs to not sync"),
                 LogLevelParameter(),
                 BoolParameter('forceSync', 'force-sync', ('force',), False, False, "synchronize even if tracker reports a recent sync"),
-                BoolParameter('keepDumps', 'keep-dumps', ('dump',) , True, False, "enable saving of the megadump to file"),
+                BoolParameter('keepDumps', 'keep-dumps', ('dump',), True, False, "enable saving of the megadump to file"),
                 BoolParameter('doUpload', 'do-upload',  ('upload',), True, False, "upload the dump to the server"),
                 BoolParameter('httpsOnly', 'https-only', ('https-only',), True, False, "use http if https is not available"),
                 Argument(),
@@ -212,10 +232,10 @@ class Config(object):
 
     def parseUserConfig(self):
         """ Load the user based configuration file """
-        if 'XDG_CONFIG_HOME' in os.environ:
-            self.load(os.path.join(os.environ['XDG_CONFIG_HOME'], 'galileo', 'config'))
-        else:
-            self.load('~/.galileorc')
+        self.load(os.path.join(
+            os.environ.get('XDG_CONFIG_HOME', '~/.config'),
+            'galileo', 'config'))
+        self.load('~/.galileorc')
 
     def load(self, filename):
         """Load configuration settings from the named YAML-format
@@ -272,17 +292,20 @@ class Config(object):
         # provided then ignore this tracker if it's not in that list.
         if (self.includeTrackers is not None) and (trackerid not in self.includeTrackers):
             logger.info("Include list not empty, and tracker %s not there, skipping.", trackerid)
+            tracker.status = "Skipped becaise not in include list"
             return True
 
         # If a list of trackers to avoid syncing is configured then
         # ignore this tracker if it is in that list.
         if trackerid in self.excludeTrackers:
             logger.info("Tracker %s in exclude list, skipping.", trackerid)
+            tracker.status = "Skipped because in exclude list"
             return True
 
         if tracker.syncedRecently:
             if not self.forceSync:
                 logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
+                tracker.status = "Skipped because recently synchronised"
                 return True
             logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
 
