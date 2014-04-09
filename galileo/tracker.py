@@ -115,14 +115,18 @@ class FitbitClient(object):
                                   tracker.serviceUUID))
         if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
             return False
-        if self.dongle.ctrl_read(5000).INS != 4:
+        d = self.dongle.ctrl_read(5000)
+        if d != CM(4, [0]):
+            logger.error('Unexpected message: %s', d)
             return False
         # established, waiting for service discovery
         # - This one takes long
         if not isStatus(self.dongle.ctrl_read(8000),
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
-        if self.dongle.ctrl_read().INS != 7:
+        d = self.dongle.ctrl_read()
+        if d != CM(7):
+            logger.error('Unexpected 2nd message: %s', d)
             return False
         return True
 
