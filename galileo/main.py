@@ -37,19 +37,12 @@ def syncAllTrackers(config):
 
     fitbit.disconnect()
 
-    try:
-        fitbit.getDongleInfo()
-    except TimeoutError:
-        logger.error('Failed to get connected Fitbit dongle information')
-        return
+    if not fitbit.getDongleInfo():
+        logger.warning('Failed to get connected Fitbit dongle information')
 
     logger.info('Discovering trackers to synchronize')
-    try:
-        trackers = [t for t in fitbit.discover(FitBitUUID)]
 
-    except TimeoutError:
-        logger.debug('Timeout trying to discover trackers')
-        trackers = []
+    trackers = [t for t in fitbit.discover(FitBitUUID)]
 
     logger.info('%d trackers discovered', len(trackers))
     for tracker in trackers:

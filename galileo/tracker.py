@@ -70,7 +70,7 @@ class FitbitClient(object):
         amount = 0
         while True:
             d = self.dongle.ctrl_read(minDuration)
-            if d is None: continue
+            if d is None: break
             elif isStatus(d, 'StartDiscovery', False): continue
             elif d.INS == 2: break
             trackerId = d.payload[:6]
@@ -96,7 +96,7 @@ class FitbitClient(object):
             amount += 1
             yield tracker
 
-        if amount != d.payload[0]:
+        if (d is not None) and (amount != d.payload[0]):
             logger.error('%d trackers discovered, dongle says %d', amount,
                          d.payload[0])
         # tracker found, cancel discovery
