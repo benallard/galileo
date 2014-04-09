@@ -11,6 +11,9 @@ class MyCM(object):
         self.len = data[0]
         self.INS = data[1]
         self.payload = data[2:]
+    def asList(self): return [self.len, self.INS] + self.payload
+    def __str__(self):
+        return str(self.asList)
 
 class MyDongle(object):
     def __init__(self, responses):
