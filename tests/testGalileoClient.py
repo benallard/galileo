@@ -94,7 +94,7 @@ class testStatus(unittest.TestCase):
         gc.requestStatus()
 
 class MyDongle(object):
-    def __init__(self, M, m): self.major=M; self.minor=m
+    def __init__(self, M, m): self.major=M; self.minor=m; self.hasVersion=True
 class MyMegaDump(object):
     def __init__(self, b64): self.b64 = b64
     def toBase64(self): return self.b64
