@@ -17,18 +17,22 @@ class MyDongle(object):
     def __init__(self, responses):
         self.responses = responses
         self.idx = 0
-    def read(self, *args):
+    def read(self, ctrl):
         response = self.responses[self.idx]
         self.idx += 1
         if not response:
             return None
-        return list(response)
+        if ctrl:
+            return MyCM(list(response))
+        else:
+            return MyDM(list(response))
     def ctrl_write(self, *args): pass
     def ctrl_read(self, *args):
-        return MyCM(self.read())
+        return self.read(True)
     def data_read(self, *args):
-        return MyDM(self.read())
+        return self.read(False)
     def data_write(self, *args): pass
+    def setVersion(self, M, m): pass
 
 class MyUUID(object):
     @property
