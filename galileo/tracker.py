@@ -46,18 +46,6 @@ class FitbitClient(object):
             goOn = self.dongle.ctrl_read() is not None
 
     def getDongleInfo(self):
-        self.dongle.ctrl_write([2, 1, 0, 0x78, 1, 0x96])
-        d = self.dongle.ctrl_read()
-        if d is None:
-            logger.error('failed to get dongle Information')
-            return False
-        self.major = d[2]
-        self.minor = d[3]
-        logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
-                     self.minor)
-        return True
-
-    def getDongleInfo(self):
         self.dongle.ctrl_write(CM(1))
         d = self.dongle.ctrl_read()
         if (d is None) or (d.INS != 8):
