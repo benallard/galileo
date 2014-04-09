@@ -84,6 +84,9 @@ class DataMessage(object):
     def asList(self):
         return self.data + [0] * (self.LENGTH - 1 - self.len) + [self.len]
 
+    def __cmp__(self, other):
+        return cmp(self.asList(), other.asList())
+
     def __str__(self):
         return ' '.join(['[', a2x(self.data), ']', '-', str(self.len)])
 

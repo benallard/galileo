@@ -5,6 +5,7 @@ from galileo.tracker import FitbitClient, TimeoutError
 class MyDM(object):
     def __init__(self, data):
         self.data = data
+    def asList(self): return data
 
 class MyCM(object):
     def __init__(self, data):
