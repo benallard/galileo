@@ -53,6 +53,7 @@ class CtrlMessage(object):
         return [self.len, self.INS] + self.payload
 
     def __cmp__(self, other):
+        if other is None: return 1
         return cmp(self.asList(), other.asList())
 
     def __str__(self):
@@ -105,9 +106,6 @@ def isATimeout(excpt):
 class NoDongleException(Exception): pass
 
 
-class TimeoutError(Exception): pass
-
-
 class DongleWriteException(Exception): pass
 
 
@@ -115,6 +113,8 @@ class PermissionDeniedException(Exception): pass
 
 
 def isStatus(data, msg=None, logError=True):
+    if data is None:
+        return False
     if data.INS != 1:
         if logError:
             logging.warning("Message is not a status message: %x", data.INS)
@@ -174,15 +174,18 @@ class FitBitDongle(USBDevice):
             raise DongleWriteException
 
     def ctrl_read(self, timeout=2000, length=32):
+        msg = None
         try:
             data = self.dev.read(0x82, length, self.CtrlIF.bInterfaceNumber,
                                  timeout)
         except usb.core.USBError, ue:
-            if isATimeout(ue):
-                raise TimeoutError
-            raise
-        msg = CM(None, list(data))
-        if isStatus(msg, logError=False):
+            if not isATimeout(ue):
+                raise
+        else:
+            msg = CM(None, list(data))
+        if msg is None:
+            logger.debug('<-- ...')
+        elif isStatus(msg, logError=False):
             logger.debug('<-- %s', a2s(msg.payload))
         else:
             logger.debug('<-- %s', msg)
@@ -197,13 +200,14 @@ class FitBitDongle(USBDevice):
             raise DongleWriteException
 
     def data_read(self, timeout=2000):
+        msg = None
         try:
             data = self.dev.read(0x81, DM.LENGTH, self.DataIF.bInterfaceNumber,
                                  timeout)
         except usb.core.USBError, ue:
-            if isATimeout(ue):
-                raise TimeoutError
-            raise
-        msg = DM(data, out=False)
-        logger.debug('<== %s', msg)
+            if not isATimeout(ue):
+                raise
+        else:
+            msg = DM(data, out=False)
+        logger.debug('<== %s', msg or '...')
         return msg

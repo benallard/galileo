@@ -3,7 +3,7 @@ from ctypes import c_byte
 import logging
 logger = logging.getLogger(__name__)
 
-from .dongle import TimeoutError, CM, DM, isStatus
+from .dongle import DM, CM, isStatus
 from .dump import Dump
 from .utils import a2x, i2lsba, a2lsbi
 
@@ -40,23 +40,17 @@ class FitbitClient(object):
         if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
             return False
 
-        try:
-            # It is OK to have a timeout with the following ctrl_read as
-            # they are there to clean up any connection left open from
-            # the previous attempts.
-            self.dongle.ctrl_read()
-            self.dongle.ctrl_read()
-            self.dongle.ctrl_read()
-        except TimeoutError:
-            # assuming link terminated
-            pass
+        # We exhaust the pipe, then we know that we have a clean state
+        goOn = True
+        while goOn:
+            goOn = self.dongle.ctrl_read() is not None
 
         return True
 
     def getDongleInfo(self):
         self.dongle.ctrl_write(CM(1))
         d = self.dongle.ctrl_read()
-        if d.INS != 8:
+        if (d is None) or (d.INS != 8):
             return False
         self.dongle.setVersion(d.payload[0], d.payload[1])
         return True
@@ -78,7 +72,8 @@ class FitbitClient(object):
         amount = 0
         while True:
             d = self.dongle.ctrl_read(minDuration)
-            if isStatus(d, 'StartDiscovery', False): continue
+            if d is None: break
+            elif isStatus(d, 'StartDiscovery', False): continue
             elif d.INS == 2: break
             trackerId = d.payload[:6]
             addrType = d.payload[6]
@@ -103,9 +98,9 @@ class FitbitClient(object):
             amount += 1
             yield tracker
 
-        if amount != d.payload[0]:
+        if (d is None) or (amount != d.payload[0]):
             logger.error('%d trackers discovered, dongle says %d', amount,
-                         d.payload[0])
+                         d and d.payload[0] or 0)
         # tracker found, cancel discovery
         self.dongle.ctrl_write(CM(5))
         isStatus(self.dongle.ctrl_read(), 'CancelDiscovery')
@@ -137,7 +132,7 @@ class FitbitClient(object):
             byte = 1
         self.dongle.ctrl_write(CM(8, [byte]))
         d = self.dongle.data_read(5000)
-        return d.data == [0xc0, 0xb]
+        return (d is not None) and (d.data == [0xc0, 0xb])
 
     def initializeAirlink(self):
         nums = [0xa, 6, 6, 0, 200]
@@ -148,63 +143,94 @@ class FitbitClient(object):
         #data = data + [1]
         self.dongle.data_write(DM([0xc0, 0xa] + data))
         d = self.dongle.ctrl_read(10000)
-        if d.INS != 6:
+        if (d is None) or (d.INS != 6):
             return False
         if [a2lsbi(d.payload[0:2]), a2lsbi(d.payload[2:4]),
                 a2lsbi(d.payload[4:6])] != nums[-3:]:
             return False
-        self.dongle.data_read()
+        d = self.dongle.data_read()
+        if d is None:  # We could improve the test here ...
+            return False
         return True
 
     def displayCode(self):
+        """ :returns: a boolean about the sucessfull execution """
         logger.debug('Displaying code on tracker')
         self.dongle.data_write(DM([0xc0, 6]))
         r = self.dongle.data_read()
-        return r.data == [0xc0, 2]
+        return (r is not None) and (r.data == [0xc0, 2])
 
     def getDump(self, dumptype=MEGADUMP):
+        """ :returns: a `Dump` object or None """
         logger.debug('Getting dump type %d', dumptype)
 
         # begin dump of appropriate type
         self.dongle.data_write(DM([0xc0, 0x10, dumptype]))
         r = self.dongle.data_read()
-        assert r.data == [0xc0, 0x41, dumptype], r.data
+        if (r is not None) and (r.data != [0xc0, 0x41, dumptype]):
+            return None
 
         dump = Dump(dumptype)
         # Retrieve the dump
         d = self.dongle.data_read()
+        if d is None:
+            return None
         dump.add(d.data)
         while d.data[0] != 0xc0:
             d = self.dongle.data_read()
+            if d is None:
+                return None
             dump.add(d.data)
         # Analyse the dump
         if not dump.isValid():
             logger.error('Dump not valid')
+            return None
         logger.debug("Dump done, length %d, transportCRC=0x%04x, esc1=0x%02x,"
                      " esc2=0x%02x", dump.len, dump.crc.final(), dump.esc[0],
                      dump.esc[1])
         return dump
 
     def uploadResponse(self, response):
+        """ 4 and 6 are magic values here ...
+        :returns: a boolean about the success of the operation.
+        """
         self.dongle.data_write(DM([0xc0, 0x24, 4] + i2lsba(len(response), 6)))
-        self.dongle.data_read()
+        d = self.dongle.data_read()
+        if (d is None) or (d.data[:2] != [0xc0, 0x12]):
+            return False
+        if (d.data[2] & 0xf0) != 0:
+            return False
 
-        for i in range(0, len(response), 20):
-            self.dongle.data_write(DM(response[i:i + 20]))
-            self.dongle.data_read()
+        CHUNK_LEN = 20
+
+        for i in range(0, len(response), CHUNK_LEN):
+            self.dongle.data_write(DM(response[i:i + CHUNK_LEN]))
+            d = self.dongle.data_read()
+            if (d is None) or (d.data[:2] != [0xc0, 0x13]):
+                return False
+            if (d.data[2] & 0xf0) != (((i // CHUNK_LEN) + 1) << 4):
+                logger.error("Wrong sequence number: %x, %x", d.data[2], i // CHUNK_LEN)
+                return False
 
         self.dongle.data_write(DM([0xc0, 2]))
         # Next one can be very long. He is probably erasing the memory there
-        self.dongle.data_read(60000)
+        d = self.dongle.data_read(60000)
+        if (d is None) or (d.data != [0xc0, 2]):
+            return False
         self.dongle.data_write(DM([0xc0, 1]))
-        self.dongle.data_read()
+        d = self.dongle.data_read()
+        if (d is None) or (d.data != [0xc0, 1]):
+            return False
+
+        return True
 
     def terminateAirlink(self):
         self.dongle.ctrl_write(CM(7))
         if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
             return False
 
-        if self.dongle.ctrl_read().INS != 5:
+        d = self.dongle.ctrl_read()
+        if (d is None) or (d.INS != 5):
             # Payload can be either 0x16 or 0x08
             return False
         if not isStatus(self.dongle.ctrl_read(), 'GAP_LINK_TERMINATED_EVENT'):
