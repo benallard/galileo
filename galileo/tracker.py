@@ -150,29 +150,37 @@ class FitbitClient(object):
         return True
 
     def displayCode(self):
+        """ :returns: a boolean about the sucessfull execution """
         logger.debug('Displaying code on tracker')
         self.dongle.data_write(DM([0xc0, 6]))
         r = self.dongle.data_read()
-        return r.data == [0xc0, 2]
+        return (r is not None) and (r.data == [0xc0, 2])
 
     def getDump(self, dumptype=MEGADUMP):
+        """ :returns: a `Dump` object or None """
         logger.debug('Getting dump type %d', dumptype)
 
         # begin dump of appropriate type
         self.dongle.data_write(DM([0xc0, 0x10, dumptype]))
         r = self.dongle.data_read()
-        assert r.data == [0xc0, 0x41, dumptype], r.data
+        if (r is not None) and (r.data != [0xc0, 0x41, dumptype]):
+            return None
 
         dump = Dump(dumptype)
         # Retrieve the dump
         d = self.dongle.data_read()
+        if d is None:
+            return None
         dump.add(d.data)
         while d.data[0] != 0xc0:
             d = self.dongle.data_read()
+            if d is None:
+                return None
             dump.add(d.data)
         # Analyse the dump
         if not dump.isValid():
             logger.error('Dump not valid')
+            return None
         logger.debug("Dump done, length %d, transportCRC=0x%04x, esc1=0x%02x,"
                      " esc2=0x%02x", dump.len, dump.crc.final(), dump.esc[0],
                      dump.esc[1])
