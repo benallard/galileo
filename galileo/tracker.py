@@ -98,7 +98,7 @@ class FitbitClient(object):
             amount += 1
             yield tracker
 
-        if (d is None) or (amount != d.payload[0]):
+        if d != CM(2, [amount]):
             logger.error('%d trackers discovered, dongle says %d', amount,
                          d and d.payload[0] or 0)
         # tracker found, cancel discovery
@@ -126,15 +126,15 @@ class FitbitClient(object):
         return True
 
     def toggleTxPipe(self, on):
-        """ `on` is a boolean that dictate the status of the pipe """
-        byte = 0
-        if on:
-            byte = 1
-        self.dongle.ctrl_write(CM(8, [byte]))
+        """ `on` is a boolean that dictate the status of the pipe
+        :returns: a boolean about the sucessfull execution
+        """
+        self.dongle.ctrl_write(CM(8, [int(on)]))
         d = self.dongle.data_read(5000)
-        return (d is not None) and (d.data == [0xc0, 0xb])
+        return d == DM([0xc0, 0xb])
 
-    def initializeAirlink(self):
+    def initializeAirlink(self, tracker):
+        """ :returns: a boolean about the sucessfull execution """
         nums = [0xa, 6, 6, 0, 200]
         #nums = [1, 8, 16, 0, 200]
         data = []
@@ -143,13 +143,13 @@ class FitbitClient(object):
         #data = data + [1]
         self.dongle.data_write(DM([0xc0, 0xa] + data))
         d = self.dongle.ctrl_read(10000)
-        if (d is None) or (d.INS != 6):
-            return False
-        if [a2lsbi(d.payload[0:2]), a2lsbi(d.payload[2:4]),
-                a2lsbi(d.payload[4:6])] != nums[-3:]:
+        if d != CM(6, data[-6:]):
+            logger.error("Unexpected message: %s != %s", d, CM(6, data[-6:]))
             return False
         d = self.dongle.data_read()
-        if d is None:  # We could improve the test here ...
+        expected = DM([0xc0, 0x14] + i2lsba(0x010c, 2) + i2lsba(0, 2) + tracker.id)
+        if d != expected:
+            logger.error("Unexpected message: %s != %s", d, expected)
             return False
         return True
 
@@ -167,7 +167,8 @@ class FitbitClient(object):
         # begin dump of appropriate type
         self.dongle.data_write(DM([0xc0, 0x10, dumptype]))
         r = self.dongle.data_read()
-        if (r is not None) and (r.data != [0xc0, 0x41, dumptype]):
+        if r != DM([0xc0, 0x41, dumptype]):
+            logger.error("Tracker did not acknowledged the dump type: %s", r)
             return None
 
         dump = Dump(dumptype)
@@ -194,11 +195,11 @@ class FitbitClient(object):
         """ 4 and 6 are magic values here ...
         :returns: a boolean about the success of the operation.
         """
-        self.dongle.data_write(DM([0xc0, 0x24, 4] + i2lsba(len(response), 6)))
+        dumptype = 4  # ???
+        self.dongle.data_write(DM([0xc0, 0x24, dumptype] + i2lsba(len(response), 6)))
         d = self.dongle.data_read()
-        if (d is None) or (d.data[:2] != [0xc0, 0x12]):
-            return False
-        if (d.data[2] & 0xf0) != 0:
+        if d != DM([0xc0, 0x12, dumptype, 0, 0]):
+            logger.error("Tracker did not acknowledgded upload type: %s", d)
             return False
 
         CHUNK_LEN = 20
@@ -206,20 +207,20 @@ class FitbitClient(object):
         for i in range(0, len(response), CHUNK_LEN):
             self.dongle.data_write(DM(response[i:i + CHUNK_LEN]))
             d = self.dongle.data_read()
-            if (d is None) or (d.data[:2] != [0xc0, 0x13]):
-                return False
-            if (d.data[2] & 0xf0) != (((i // CHUNK_LEN) + 1) << 4):
-                logger.error("Wrong sequence number: %x, %x", d.data[2], i // CHUNK_LEN)
+            expected = DM([0xc0, 0x13, (((i // CHUNK_LEN) + 1) << 4) + dumptype, 0, 0])
+            if d != expected:
+                logger.error("Wrong sequence number: %s", d)
                 return False
 
         self.dongle.data_write(DM([0xc0, 2]))
         # Next one can be very long. He is probably erasing the memory there
         d = self.dongle.data_read(60000)
-        if (d is None) or (d.data != [0xc0, 2]):
+        if d != DM([0xc0, 2]):
+            logger.error("Unexpected answer from tracker: %s", d)
             return False
         self.dongle.data_write(DM([0xc0, 1]))
         d = self.dongle.data_read()
-        if (d is None) or (d.data != [0xc0, 1]):
+        if d != DM([0xc0, 1]):
             return False
 
         return True

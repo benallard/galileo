@@ -66,7 +66,7 @@ def syncAllTrackers(config):
 
         logger.debug('Establishing link with tracker')
         if not (fitbit.establishLink(tracker) and fitbit.toggleTxPipe(True)
-                and fitbit.initializeAirlink()):
+                and fitbit.initializeAirlink(tracker)):
             logger.debug('Timeout while trying to establish link with tracker')
             logger.warning('Unable to connect with tracker %s. Skipping',
                            trackerid)

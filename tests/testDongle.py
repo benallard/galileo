@@ -36,6 +36,7 @@ class testCM(unittest.TestCase):
         self.assertFalse(CM(7) == CM(8))
         self.assertFalse(CM(9) == CM(9, [5]))
         self.assertFalse(CM(3, range(2)) == CM(3, range(5)))
+        self.assertFalse(None == CM(3, range(5)))
 
 
 class testDM(unittest.TestCase):
@@ -47,3 +48,4 @@ class testDM(unittest.TestCase):
     def testNotEquals(self):
         self.assertFalse(DM([87]) == DM([42]))
         self.assertFalse(DM(range(2)) == DM(range(5)))
+        self.assertFalse(None == DM(range(5)))

@@ -6,7 +6,7 @@ from galileo.tracker import FitbitClient
 class MyDM(object):
     def __init__(self, data):
         self.data = data
-    def asList(self): return data
+    def __str__(self): return str(self.data)
 
 class MyCM(object):
     def __init__(self, data):
@@ -14,8 +14,7 @@ class MyCM(object):
         self.INS = data[1]
         self.payload = data[2:]
     def asList(self): return [self.len, self.INS] + self.payload
-    def __str__(self):
-        return str(self.asList())
+    def __str__(self): return str(self.asList())
 
 class MyDongle(object):
     def __init__(self, responses):
@@ -62,7 +61,7 @@ GOOD_SCENARIO = [
     (2, 7),
     (0xc0, 0xb),
     (8, 6, 6, 0, 0, 0, 0xc8, 0),
-    (0xc0, 0x14, 0xc, 1, 0, 0, 0,0,0,0,0,0),
+    (0xc0, 0x14, 0xc,1, 0,0, 0,0,42,0,0,0),
     # getDump
     (0xc0, 0x41, 0xd),
     (0x26, 2, 0, 0, 0, 0, 0),
@@ -92,7 +91,7 @@ class testScenarii(unittest.TestCase):
         self.assertEqual(ts[0].id, [0,0,42,0,0,0])
         self.assertTrue(c.establishLink(ts[0]))
         self.assertTrue(c.toggleTxPipe(True))
-        self.assertTrue(c.initializeAirlink())
+        self.assertTrue(c.initializeAirlink(ts[0]))
         dump = c.getDump()
         self.assertFalse(dump is None)
         self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
@@ -129,9 +128,9 @@ class testScenarii(unittest.TestCase):
                 continue
             self.assertTrue(c.toggleTxPipe(True))
             if i < 15:
-                self.assertFalse(c.initializeAirlink())
+                self.assertFalse(c.initializeAirlink(ts[0]))
                 continue
-            self.assertTrue(c.initializeAirlink())
+            self.assertTrue(c.initializeAirlink(ts[0]))
             if i < 18:
                 self.assertEquals(None, c.getDump())
                 continue
