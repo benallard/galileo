@@ -34,58 +34,119 @@ class MyDongle(object):
     def data_write(self, *args): pass
     def setVersion(self, M, m): pass
 
+class MyDongleWithTimeout(MyDongle):
+    """ A Dongle that starts timeouting at threshold """
+    def __init__(self, data, threshold):
+        MyDongle.__init__(self, data[:threshold] + [()] * (len(data) - threshold))
+
 class MyUUID(object):
     @property
     def int(self): return 0
 
+GOOD_SCENARIO = [
+    (0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
+    (0x20, 1, 0x54, 0x65, 0x72, 0x6D, 0x69, 0x6E, 0x61, 0x74, 0x65, 0x4C, 0x69, 0x6E, 0x6B, 0),
+    (),
+    (0x15, 8, 1, 1),
+    (0x20, 1, 0x53, 0x74, 0x61, 0x72, 0x74, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
+    (0x13, 3, 0,0,42,0,0,0, 1, 0x80, 2, 6,4),
+    (3, 2, 1),
+    (0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
+    (0x20, 1, 0x45, 0x73, 0x74, 0x61, 0x62, 0x6C, 0x69, 0x73, 0x68, 0x4C, 0x69, 0x6E, 0x6B, 0),
+    (3, 4),
+    (0x20, 1, 0x47, 0x41, 0x50, 0x5F, 0x4C, 0x49, 0x4E, 0x4B, 0x5F, 0x45, 0x53, 0x54, 0x41, 0x42, 0x4C, 0x49, 0x53, 0x48, 0x45, 0x44, 0x5F, 0x45, 0x56, 0x45, 0x4E, 0x54, 0),
+    (2, 7),
+    (0xc0, 0xb),
+    (8, 6, 6, 0, 0, 0, 0xc8, 0),
+    (0xc0, 0x14, 0xc, 1, 0, 0, 0,0,0,0,0,0),
+    # getDump
+    (0xc0, 0x41, 0xd),
+    (0x26, 2, 0, 0, 0, 0, 0),
+    (0xc0, 0,0xd,0x93,0x44,7, 0),
+    #response
+    (0xc0, 0x12, 4, 0, 0),
+    (0xc0, 0x13, 0x14, 0, 0),
+    (0xc0, 0x13, 0x24, 0, 0),
+    (0xc0, 2),
+    (0xc0, 1),
+    (0xc0, 0xb),
+    (0x20, 1, 0x54, 0x65, 0x72, 0x6D, 0x69, 0x6E, 0x61, 0x74, 0x65, 0x4C, 0x69, 0x6E, 0x6B, 0),
+    (3, 5, 0x16, 0),
+    (0x20, 1, 0x47, 0x41, 0x50, 0x5F, 0x4C, 0x49, 0x4E, 0x4B, 0x5F, 0x54, 0x45, 0x52, 0x4D, 0x49, 0x4E, 0x41, 0x54, 0x45, 0x44, 0x5F, 0x45, 0x56, 0x45, 0x4E, 0x54, 0),
+    (0x20, 1, 0x32, 0x32, 0),
+]
+
 class testScenarii(unittest.TestCase):
 
     def testOk(self):
-        d = MyDongle([(0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
-                      (0x20, 1, 0x54, 0x65, 0x72, 0x6D, 0x69, 0x6E, 0x61, 0x74, 0x65, 0x4C, 0x69, 0x6E, 0x6B, 0),
-                      (),
-                      (0x15, 8, 1, 1),
-                      (0x20, 1, 0x53, 0x74, 0x61, 0x72, 0x74, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
-                      (0x13, 3, 0,0,42,0,0,0, 1, 0x80, 2, 6,4),
-                      (3, 2, 1),
-                      (0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
-                      (0x20, 1, 0x45, 0x73, 0x74, 0x61, 0x62, 0x6C, 0x69, 0x73, 0x68, 0x4C, 0x69, 0x6E, 0x6B, 0),
-                      (3, 4),
-                      (0x20, 1, 0x47, 0x41, 0x50, 0x5F, 0x4C, 0x49, 0x4E, 0x4B, 0x5F, 0x45, 0x53, 0x54, 0x41, 0x42, 0x4C, 0x49, 0x53, 0x48, 0x45, 0x44, 0x5F, 0x45, 0x56, 0x45, 0x4E, 0x54, 0),
-                      (2, 7),
-                      (0xc0, 0xb),
-                      (8, 6, 6, 0, 0, 0, 0xc8, 0),
-                      (0xc0, 0x14, 0xc, 1, 0, 0, 0,0,0,0,0,0),
-                      # getDump
-                      (0xc0, 0x41, 0xd),
-                      (0x26, 2, 0, 0, 0, 0, 0),
-                      (0xc0, 0,0xd,0x93,0x44,7, 0),
-                      #response
-                      (0xc0, 0x12, 4, 0, 0),
-                      (0xc0, 0x13, 0x14, 0, 0),
-                      (0xc0, 0x13, 0x24, 0, 0),
-                      (0xc0, 2),
-                      (0xc0, 1),
-                      (0xc0, 0xb),
-                      (0x20, 1, 0x54, 0x65, 0x72, 0x6D, 0x69, 0x6E, 0x61, 0x74, 0x65, 0x4C, 0x69, 0x6E, 0x6B, 0),
-                      (3, 5, 0x16, 0),
-                      (0x20, 1, 0x47, 0x41, 0x50, 0x5F, 0x4C, 0x49, 0x4E, 0x4B, 0x5F, 0x54, 0x45, 0x52, 0x4D, 0x49, 0x4E, 0x41, 0x54, 0x45, 0x44, 0x5F, 0x45, 0x56, 0x45, 0x4E, 0x54, 0),
-                      (0x20, 1, 0x32, 0x32, 0),
-                     ])
+        d = MyDongle(GOOD_SCENARIO)
         c = FitbitClient(d)
-        c.disconnect()
-        c.getDongleInfo()
+        self.assertTrue(c.disconnect())
+        self.assertTrue(c.getDongleInfo())
         ts = [t for t in c.discover(MyUUID())]
         self.assertEqual(1, len(ts))
         self.assertEqual(ts[0].id, [0,0,42,0,0,0])
-        c.establishLink(ts[0]),
-        c.toggleTxPipe(True)
-        c.initializeAirlink()
+        self.assertTrue(c.establishLink(ts[0]))
+        self.assertTrue(c.toggleTxPipe(True))
+        self.assertTrue(c.initializeAirlink())
         dump = c.getDump()
+        self.assertFalse(dump is None)
         self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
-        c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
-        c.toggleTxPipe(False)
-        c.terminateAirlink()
+        self.assertTrue(c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)))
+        self.assertTrue(c.toggleTxPipe(False))
+        self.assertTrue(c.terminateAirlink())
+
+    def testTimeout(self):
+        # the test will have to be re-writen if the scenario changes
+        self.assertEquals(28, len(GOOD_SCENARIO))
+        for i in range(len(GOOD_SCENARIO) + 1):
+            d = MyDongleWithTimeout(GOOD_SCENARIO, i)
+            c = FitbitClient(d)
+            if i < 2:
+                self.assertFalse(c.disconnect(), i)
+                continue
+            self.assertTrue(c.disconnect())
+            if i < 4:
+                self.assertFalse(c.getDongleInfo(), i)
+                continue
+            self.assertTrue(c.getDongleInfo())
+            ts = [t for t in c.discover(MyUUID())]
+            if i < 6:
+                self.assertEquals([], ts, i)
+                continue
+            self.assertEqual(1, len(ts))
+            self.assertEqual(ts[0].id, [0,0,42,0,0,0])
+            if i < 12:
+                self.assertFalse(c.establishLink(ts[0]), i)
+                continue
+            self.assertTrue(c.establishLink(ts[0]))
+            if i < 13:
+                self.assertFalse(c.toggleTxPipe(True), i)
+                continue
+            self.assertTrue(c.toggleTxPipe(True))
+            if i < 15:
+                self.assertFalse(c.initializeAirlink())
+                continue
+            self.assertTrue(c.initializeAirlink())
+            if i < 18:
+                self.assertEquals(None, c.getDump())
+                continue
+            dump = c.getDump()
+            self.assertFalse(dump is None)
+            self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
+            if i < 23:
+                self.assertFalse(c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)))
+                continue
+            self.assertTrue(c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)))
+            if i < 24:
+                self.assertFalse(c.toggleTxPipe(False))
+                continue
+            self.assertTrue(c.toggleTxPipe(False))
+            if i < 28:
+                self.assertFalse(c.terminateAirlink())
+                continue
+            self.assertTrue(c.terminateAirlink())
+            self.assertEquals(len(GOOD_SCENARIO), i)
 
 class testDiscover(unittest.TestCase):
 

@@ -99,9 +99,6 @@ def isATimeout(excpt):
 class NoDongleException(Exception): pass
 
 
-class TimeoutError(Exception): pass
-
-
 class DongleWriteException(Exception): pass
 
 

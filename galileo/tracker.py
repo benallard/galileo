@@ -45,6 +45,8 @@ class FitbitClient(object):
         while goOn:
             goOn = self.dongle.ctrl_read() is not None
 
+        return True
+
     def getDongleInfo(self):
         self.dongle.ctrl_write(CM(1))
         d = self.dongle.ctrl_read()
@@ -96,9 +98,9 @@ class FitbitClient(object):
             amount += 1
             yield tracker
 
-        if (d is not None) and (amount != d.payload[0]):
+        if (d is None) or (amount != d.payload[0]):
             logger.error('%d trackers discovered, dongle says %d', amount,
-                         d.payload[0])
+                         d and d.payload[0] or 0)
         # tracker found, cancel discovery
         self.dongle.ctrl_write(CM(5))
         isStatus(self.dongle.ctrl_read(), 'CancelDiscovery')
@@ -109,7 +111,7 @@ class FitbitClient(object):
         if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
             return False
         d = self.dongle.ctrl_read(5000)
-        if (d is not None) and (d.INS != 4):
+        if (d is None) or (d.INS != 4):
             return False
         # established, waiting for service discovery
         # - This one takes long
@@ -117,7 +119,7 @@ class FitbitClient(object):
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
         d = self.dongle.ctrl_read()
-        if (d is not None) and (d.INS != 7):
+        if (d is None) or (d.INS != 7):
             return False
         return True
 
@@ -192,7 +194,7 @@ class FitbitClient(object):
         """
         self.dongle.data_write(DM([0xc0, 0x24, 4] + i2lsba(len(response), 6)))
         d = self.dongle.data_read()
-        if (d is not None) and (d.data[:2] != [0xc0, 0x12]):
+        if (d is None) or (d.data[:2] != [0xc0, 0x12]):
             return False
         if (d.data[2] & 0xf0) != 0:
             return False
@@ -202,7 +204,7 @@ class FitbitClient(object):
         for i in range(0, len(response), CHUNK_LEN):
             self.dongle.data_write(DM(response[i:i + CHUNK_LEN]))
             d = self.dongle.data_read()
-            if (d is not None) and (d.data[:2] != [0xc0, 0x13]):
+            if (d is None) or (d.data[:2] != [0xc0, 0x13]):
                 return False
             if (d.data[2] & 0xf0) != (((i // CHUNK_LEN) + 1) << 4):
                 logger.error("Wrong sequence number: %x, %x", d.data[2], i // CHUNK_LEN)
@@ -211,11 +213,11 @@ class FitbitClient(object):
         self.dongle.data_write(DM([0xc0, 2]))
         # Next one can be very long. He is probably erasing the memory there
         d = self.dongle.data_read(60000)
-        if (d is not None) and (d.data != [0xc0, 2]):
+        if (d is None) or (d.data != [0xc0, 2]):
             return False
         self.dongle.data_write(DM([0xc0, 1]))
         d = self.dongle.data_read()
-        if (d is not None) and (d.data != [0xc0, 1]):
+        if (d is None) or (d.data != [0xc0, 1]):
             return False
 
         return True
@@ -225,7 +227,8 @@ class FitbitClient(object):
         if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
             return False
 
-        if self.dongle.ctrl_read().INS != 5:
+        d = self.dongle.ctrl_read()
+        if (d is None) or (d.INS != 5):
             # Payload can be either 0x16 or 0x08
             return False
         if not isStatus(self.dongle.ctrl_read(), 'GAP_LINK_TERMINATED_EVENT'):
