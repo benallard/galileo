@@ -187,18 +187,38 @@ class FitbitClient(object):
         return dump
 
     def uploadResponse(self, response):
+        """ 4 and 6 are magic values here ...
+        :returns: a boolean about the success of the operation.
+        """
         self.dongle.data_write(DM([0xc0, 0x24, 4] + i2lsba(len(response), 6)))
-        self.dongle.data_read()
+        d = self.dongle.data_read()
+        if (d is not None) and (d.data[:2] != [0xc0, 0x12]):
+            return False
+        if (d.data[2] & 0xf0) != 0:
+            return False
 
-        for i in range(0, len(response), 20):
-            self.dongle.data_write(DM(response[i:i + 20]))
-            self.dongle.data_read()
+        CHUNK_LEN = 20
+
+        for i in range(0, len(response), CHUNK_LEN):
+            self.dongle.data_write(DM(response[i:i + CHUNK_LEN]))
+            d = self.dongle.data_read()
+            if (d is not None) and (d.data[:2] != [0xc0, 0x13]):
+                return False
+            if (d.data[2] & 0xf0) != (((i // CHUNK_LEN) + 1) << 4):
+                logger.error("Wrong sequence number: %x, %x", d.data[2], i // CHUNK_LEN)
+                return False
 
         self.dongle.data_write(DM([0xc0, 2]))
         # Next one can be very long. He is probably erasing the memory there
-        self.dongle.data_read(60000)
+        d = self.dongle.data_read(60000)
+        if (d is not None) and (d.data != [0xc0, 2]):
+            return False
         self.dongle.data_write(DM([0xc0, 1]))
-        self.dongle.data_read()
+        d = self.dongle.data_read()
+        if (d is not None) and (d.data != [0xc0, 1]):
+            return False
+
+        return True
 
     def terminateAirlink(self):
         self.dongle.ctrl_write(CM(7))
