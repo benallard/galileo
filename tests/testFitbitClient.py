@@ -59,7 +59,7 @@ class testScenarii(unittest.TestCase):
                       # getDump
                       (0xc0, 0x41, 0xd),
                       (0x26, 2, 0, 0, 0, 0, 0),
-                      (0xc0, 0,0,0,0,0),
+                      (0xc0, 0,0xd,0x93,0x44,7, 0),
                       #response
                       (0xc0, 0x12, 4, 0, 0),
                       (0xc0, 0x13, 0x14, 0, 0),
