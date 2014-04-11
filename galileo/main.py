@@ -120,7 +120,7 @@ def syncAllTrackers(config):
                 logger.info('Successfully sent tracker data to Fitbit')
 
                 logger.info('Passing Fitbit response to tracker')
-                if not fitbit.uploadResponse(response)
+                if not fitbit.uploadResponse(response):
                     logger.warning("Timeout error while trying to give Fitbit"
                                    " response to tracker %s", trackerid)
                 tracker.status = "Synchronisation sucessfull"
@@ -131,7 +131,7 @@ def syncAllTrackers(config):
                 tracker.status = "Synchronisation failed: %s" % e.errorstring
 
         logger.debug('Disconnecting from tracker')
-        if not (fitbit.toggleTxPipe(False) and fitbit.terminateAirlink():
+        if not (fitbit.toggleTxPipe(False) and fitbit.terminateAirlink()):
             logger.warning('Timeout while disconnecting from tracker %s',
                            trackerid)
             tracker.status += " (Error disconnecting)"
