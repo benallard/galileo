@@ -108,14 +108,16 @@ class FitbitClient(object):
                                   tracker.serviceUUID))
         if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
             return False
-        if self.dongle.ctrl_read(5000).INS != 4:
+        d = self.dongle.ctrl_read(5000)
+        if (d is not None) and (d.INS != 4):
             return False
         # established, waiting for service discovery
         # - This one takes long
         if not isStatus(self.dongle.ctrl_read(8000),
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
-        if self.dongle.ctrl_read().INS != 7:
+        d = self.dongle.ctrl_read()
+        if (d is not None) and (d.INS != 7):
             return False
         return True
 
@@ -126,7 +128,7 @@ class FitbitClient(object):
             byte = 1
         self.dongle.ctrl_write(CM(8, [byte]))
         d = self.dongle.data_read(5000)
-        return d.data == [0xc0, 0xb]
+        return (d is not None) and (d.data == [0xc0, 0xb])
 
     def initializeAirlink(self):
         nums = [0xa, 6, 6, 0, 200]
@@ -137,12 +139,14 @@ class FitbitClient(object):
         #data = data + [1]
         self.dongle.data_write(DM([0xc0, 0xa] + data))
         d = self.dongle.ctrl_read(10000)
-        if d.INS != 6:
+        if (d is None) or (d.INS != 6):
             return False
         if [a2lsbi(d.payload[0:2]), a2lsbi(d.payload[2:4]),
                 a2lsbi(d.payload[4:6])] != nums[-3:]:
             return False
-        self.dongle.data_read()
+        d = self.dongle.data_read()
+        if d is None:  # We could improve the test here ...
+            return False
         return True
 
     def displayCode(self):
