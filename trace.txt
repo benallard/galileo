@@ -1,23 +1,24 @@
---> 02 02
-<-- 20 01 CancelDiscovery
-<-- 20 01 TerminateLink
---> 02 01 00 78 01 96
-<-- 15 08 01 01 6F 7B AD 29 6A BC 74 09 00 20 00 00 FF E7 03 00 01 00 (11 times)
---> 1A 04 BA 56 89 A6 FA BF A2 BD 01 46 7D 6E 00 00 AB AD 00 FB 01 FB 02 FB A0 0F 00 D3 00 00 00 00
-<-- 20 01 StartDiscovery
-<-- 13 03 E5 14 53 33 EE FF 01 BC 02 05 04 03 2C 31 F6 D8 58 00 (13 times)
---> 02 05
-<-- 03 02 01 00 (29 times)
-<-- 20 01 CancelDiscovery
---> 0B 06 E5 14 53 33 EE FF 01 D8 58
-<-- 20 01 EstablishLink
-<-- 03 04 00 (30 times)
-<-- 20 01 GAP_LINK_ESTABLISHED_EVENT
-<-- 02 07 00 (30 times)
---> 03 08 01
+--> 02 - 1
+<-- CancelDiscovery
+<-- TerminateLink
+<-- ...
+--> 01 - 2
+<-- 08 ( 01 01 6F 7B AD 29 6A BC 74 09 00 20 00 00 FF E7 03 00 01) - 21
+--> 04 ( BA 56 89 A6 FA BF A2 BD 01 46 7D 6E 00 00 AB AD 00 FB 01 FB 02 FB A0 0F) - 26
+<-- StartDiscovery
+<-- 03 ( E5 14 53 33 EE FF 01 BC 02 05 04 03 2C 31 F6 D8 58 ) - 19
+--> 05 - 2
+<-- 02 ( 01 ) - 3
+<-- CancelDiscovery
+--> 06 ( E5 14 53 33 EE FF 01 D8 58 ) - 11
+<-- EstablishLink
+<-- 04 ( 00 ) - 3
+<-- GAP_LINK_ESTABLISHED_EVENT
+<-- 07 - 2
+--> 08 ( 01 ) - 3
 <== [ C0 0B ] - 2
 ==> [ C0 0A 0A 00 06 00 06 00 00 00 C8 00 ] - 12
-<-- 08 06 06 00 00 00 C8 00 (25 times)
+<-- 06 ( 06 00 00 00 C8 00 ) - 8
 <== [ C0 14 0C 01 00 00 E5 14 53 33 EE FF ] - 12
 Megadump
 ==> [ C0 10 0D ] - 3
@@ -71,10 +72,10 @@ Done
 <== [ C0 02 ] - 2
 ==> [ C0 01 ] - 2
 <== [ C0 01 ] - 2
---> 03 08
+--> 08 ( 00 ) - 3
 <== [ C0 0B ] - 2
---> 02 07
-<-- 20 01 TerminateLink
-<-- 03 05 16 00 (29 times)
-<-- 20 01 GAP_LINK_TERMINATED_EVENT
-<-- 20 01 22
+--> 07 - 2
+<-- TerminateLink
+<-- 05 ( 16 ) - 3
+<-- GAP_LINK_TERMINATED_EVENT
+<-- 22
