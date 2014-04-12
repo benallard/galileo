@@ -1,22 +1,8 @@
-def a2x(a, delim=' ', shorten=False):
+def a2x(a, delim=' '):
     """ array to string of hexa
     delim is the delimiter between the hexa
-    shorten don't print the trailing zeros
     """
-    a = a[:]
-    shortened = 0
-    if shorten:
-        while (len(a) != 0) and (a[-1] == 0):
-            shortened += 1
-            del a[-1]
-    s = delim.join('%02X' % x for x in a)
-    if shortened:
-        shortened = '00 (%d times)' % shortened
-        if s:
-            s = delim.join([s, shortened])
-        else:
-            s = shortened
-    return s
+    return delim.join('%02X' % x for x in a)
 
 
 def x2a(hexstr):
