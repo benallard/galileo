@@ -46,7 +46,7 @@ def main(config):
     exit = False
     print_help()
     while not exit:
-        input = raw_input('> ')
+        input = raw_input('> ').strip()
         input = input.split(' ')
         try:
             f = cmds[input[0]]
@@ -181,3 +181,26 @@ def needtracker(fn):
 def toggleTxPipe(on):
     if fitbit.toggleTxPipe(bool(int(on))):
         print 'Ok'
+
+@command('al', "initialise airLink")
+@needtracker
+def initialiseAirLink():
+    if fitbit.initializeAirlink(tracker):
+        print 'Ok'
+
+@command('AL', "terminate airLink")
+@needfitbit
+def terminateairLink():
+    if fitbit.terminateAirlink():
+        print 'Ok'
+
+@command('D', 'getDump')
+@needfitbit
+def getDump():
+    fitbit.getDump()
+
+@command('R', 'uploadResponse')
+@needfitbit
+def uploadResponse(*response):
+    response = x2a(' '.join(response))
+    fitbit.uploadResponse(response)
