@@ -1,6 +1,6 @@
 import unittest
 
-from galileo.utils import a2x, a2s, a2lsbi, a2msbi, i2lsba, s2a
+from galileo.utils import a2x, a2s, a2lsbi, a2msbi, i2lsba, s2a, x2a
 
 class testa2x(unittest.TestCase):
 
@@ -13,6 +13,13 @@ class testa2x(unittest.TestCase):
     def testDelim(self):
         self.assertEqual(a2x(range(190, 196), '|'), 'BE|BF|C0|C1|C2|C3')
 
+
+class testx2a(unittest.TestCase):
+
+    def testSimple(self):
+        self.assertEquals(x2a('2'), [2])
+        self.assertEquals(x2a('02'), [2])
+        self.assertEquals(x2a('2 3'), [2, 3])
 
 class testa2s(unittest.TestCase):
 
