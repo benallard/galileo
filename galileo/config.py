@@ -176,7 +176,8 @@ class Argument(StrParameter):
 
     def toArgParse(self, parser):
         parser.add_argument(*self.paramName,
-                            nargs='?', choices=['version', 'sync', 'daemon'],
+                            nargs='?', choices=['version', 'sync', 'daemon',
+                                                'interactive'],
                             help=self.helpText +
                             " (default to %s)" % self.default)
 

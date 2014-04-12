@@ -19,6 +19,11 @@ def a2x(a, delim=' ', shorten=False):
     return s
 
 
+def x2a(hexstr):
+    """ String of hex a to array """
+    return [int(x,16) for x in hexstr.split(' ')]
+
+
 def a2s(a, toPrint=True):
     """ array to string
     toPrint indicates that the resulting string is to be printed (stop at the

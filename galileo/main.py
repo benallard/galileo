@@ -15,6 +15,7 @@ from .dongle import FitBitDongle, NoDongleException, PermissionDeniedException
 from .net import GalileoClient, SyncError, BackOffException
 from .tracker import FitbitClient
 from .utils import a2x
+from . import interactive
 
 FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
 
@@ -251,6 +252,7 @@ def main():
             'version': version_mode,
             'sync': sync,
             'daemon': daemon,
+            'interactive': interactive.main,
         }[config.mode](config)
     except:
         print "# A serious error happened, which is probably due to a"
