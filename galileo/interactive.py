@@ -55,6 +55,8 @@ def main(config):
             continue
         try:
             f(*input[1:])
+        except TypeError, te:
+            print "Wrong number of argument given: %s" % te
         except Exception, e:
             # We need that to be able to close the connection nicely
             print "BaD bAd BAd", e
@@ -69,8 +71,12 @@ from .dongle import FitBitDongle, NoDongleException, CM, DM
 from .tracker import FitbitClient
 from .utils import x2a
 
+import uuid
+
 dongle = None
 fitbit = None
+trackers = []
+tracker = None
 
 @command('c', "Connect")
 def connect():
@@ -107,5 +113,68 @@ def send_ctrl(INS, *payload):
 
 @command('<-', "Receive once on the control channel")
 @needfitbit
-def receive():
-    dongle.ctrl_read()
+def receive_ctrl(param='1'):
+    if param == '-':
+        goOn = True
+        while goOn:
+            goOn = dongle.ctrl_read() is not None
+    else:
+        for i in range(int(param)):
+            dongle.ctrl_read()
+
+@command('=>', "Send on the control channel")
+@needfitbit
+def send_data(*payload):
+    m = DM(x2a(' '.join(payload)))
+    dongle.data_write(m)
+
+@command('<=', "Receive once on the control channel")
+@needfitbit
+def receive_data(param='1'):
+    if param == '-':
+        goOn = True
+        while goOn:
+            goOn = dongle.data_read() is not None
+    else:
+        for i in range(int(param)):
+            dongle.data_read()
+
+@command('d', "Discovery")
+@needfitbit
+def discovery(UUID="{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}"):
+    UUID = uuid.UUID(UUID)
+    global trackers
+    trackers = [t for t in fitbit.discover(UUID)]
+
+
+def needtrackers(fn):
+    def wrapped(*args):
+        if not trackers:
+            print "No trackers, run a discovery (d) first"
+            return
+        return fn(*args)
+    return wrapped
+
+@command('l', "establishLink")
+@needtrackers
+def establishLink(idx='0'):
+    global tracker
+    tracker = trackers[int(idx)]
+    if fitbit.establishLink(tracker):
+        print 'Ok'
+    else:
+        tracker = None
+
+def needtracker(fn):
+    def wrapped(*args):
+        if tracker is None:
+            print "No tracker, establish a Link (l) first"
+            return
+        return fn(*args)
+    return wrapped
+
+@command('tx', "toggle Tx Pipe")
+@needfitbit
+def toggleTxPipe(on):
+    if fitbit.toggleTxPipe(bool(on)):
+        print 'Ok'
