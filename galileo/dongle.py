@@ -117,8 +117,9 @@ def isStatus(data, msg=None, logError=True):
         return True
     message = a2s(data.payload)
     if not message.startswith(msg):
-        logging.warning("Message '%s' (received) is not '%s' (expected)",
-                        message, msg)
+        if logError:
+            logging.warning("Message '%s' (received) is not '%s' (expected)",
+                            message, msg)
         return False
     return True
 
