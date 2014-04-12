@@ -113,7 +113,11 @@ class FitbitClient(object):
                          d.payload[0])
         # tracker found, cancel discovery
         self.dongle.ctrl_write(CM(5))
-        isStatus(self.dongle.ctrl_read(), 'CancelDiscovery')
+        d = self.dongle.ctrl_read()
+        if isStatus(d, 'StartDiscovery', False):
+            # We had not received the 'StartDiscovery' yet
+            d = self.dongle.ctrl_read()
+        isStatus(d, 'CancelDiscovery')
 
     def establishLink(self, tracker):
         self.dongle.ctrl_write(CM(6, tracker.id + [tracker.addrType] +
