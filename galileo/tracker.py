@@ -38,10 +38,9 @@ class FitbitClient(object):
         self.dongle.ctrl_write(CM(2))
         if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
             return False
-        if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
-            return False
 
         try:
+            isStatus(self.dongle.ctrl_read(), 'TerminateLink')
             # It is OK to have a timeout with the following ctrl_read as
             # they are there to clean up any connection left open from
             # the previous attempts.
