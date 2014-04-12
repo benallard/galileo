@@ -44,12 +44,15 @@ def print_help():
 def main(config):
     global exit
     exit = False
+    print_help()
     while not exit:
         input = raw_input('> ')
         input = input.split(' ')
         try:
             f = cmds[input[0]]
         except KeyError:
+            if input[0] == '':
+                continue
             print 'Command %s not known' % input[0]
             print_help()
             continue
@@ -176,5 +179,5 @@ def needtracker(fn):
 @command('tx', "toggle Tx Pipe")
 @needfitbit
 def toggleTxPipe(on):
-    if fitbit.toggleTxPipe(bool(on)):
+    if fitbit.toggleTxPipe(bool(int(on))):
         print 'Ok'
