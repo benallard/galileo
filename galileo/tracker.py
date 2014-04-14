@@ -137,8 +137,8 @@ class FitbitClient(object):
         d = self.dongle.data_read(5000)
         return d == DM([0xc0, 0xb])
 
-    def initializeAirlink(self, tracker):
-        """ :returns: a boolean about the sucessfull execution """
+    def initializeAirlink(self, tracker=None):
+        """ :returns: a boolean about the successful execution """
         nums = [0xa, 6, 6, 0, 200]
         #nums = [1, 8, 16, 0, 200]
         data = []
@@ -151,10 +151,16 @@ class FitbitClient(object):
             logger.error("Unexpected message: %s != %s", d, CM(6, data[-6:]))
             return False
         d = self.dongle.data_read()
-        expected = DM([0xc0, 0x14] + i2lsba(0x010c, 2) + i2lsba(0, 2) + tracker.id)
-        if d != expected:
-            logger.error("Unexpected message: %s != %s", d, expected)
+        if d is None:
             return False
+        if d.data[:2] != [0xc0, 0x14]:
+            logger.error("Wrong header: %s", a2s(d.data[:2]))
+            return False
+        if (tracker is not None) and (d.data[-6:] != tracker.id):
+            logger.error("Connected to wrong tracker: %s", a2s(d.data[-6:]))
+            return False
+        logger.debug("Connection established: %d, %d",
+                     a2lsbi(d.data[2:4]), a2lsbi(d.data[4:6]))
         return True
 
     def displayCode(self):
