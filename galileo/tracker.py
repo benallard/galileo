@@ -3,7 +3,7 @@ from ctypes import c_byte
 import logging
 logger = logging.getLogger(__name__)
 
-from .dongle import DM, CM, isStatus
+from .dongle import CM, DM, isStatus
 from .dump import Dump
 from .utils import a2x, i2lsba, a2lsbi
 
@@ -37,8 +37,8 @@ class FitbitClient(object):
         self.dongle.ctrl_write(CM(2))
         if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
             return False
-        if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
-            return False
+        # Next one is not critical. It can happen that it does not comes
+        isStatus(self.dongle.ctrl_read(), 'TerminateLink')
 
         # We exhaust the pipe, then we know that we have a clean state
         goOn = True
