@@ -105,7 +105,7 @@ class testScenarii(unittest.TestCase):
         for i in range(len(GOOD_SCENARIO) + 1):
             d = MyDongleWithTimeout(GOOD_SCENARIO, i)
             c = FitbitClient(d)
-            if i < 2:
+            if i < 1:
                 self.assertFalse(c.disconnect(), i)
                 continue
             self.assertTrue(c.disconnect())
