@@ -53,6 +53,7 @@ class FitbitClient(object):
         if (d is None) or (d.INS != 8):
             return False
         self.dongle.setVersion(d.payload[0], d.payload[1])
+        self.dongle.address = d.payload[2:8]
         return True
 
     def discover(self, uuid, service1=0xfb00, write=0xfb01, read=0xfb02,
