@@ -104,9 +104,6 @@ def isATimeout(excpt):
         return False
 
 
-class NoDongleException(Exception): pass
-
-
 class DongleWriteException(Exception): pass
 
 
@@ -141,7 +138,7 @@ class FitBitDongle(USBDevice):
 
     def setup(self):
         if self.dev is None:
-            raise NoDongleException()
+            return False
 
         try:
             if self.dev.is_kernel_driver_active(0):
@@ -159,6 +156,7 @@ class FitBitDongle(USBDevice):
         self.DataIF = cfg[(0, 0)]
         self.CtrlIF = cfg[(1, 0)]
         self.dev.set_configuration()
+        return True
 
     def setVersion(self, major, minor):
         self.major = major
