@@ -11,7 +11,7 @@ import requests
 
 from . import __version__
 from .config import Config
-from .dongle import FitBitDongle, NoDongleException, PermissionDeniedException
+from .dongle import FitBitDongle, PermissionDeniedException
 from .net import GalileoClient, SyncError, BackOffException
 from .tracker import FitbitClient
 from .utils import a2x

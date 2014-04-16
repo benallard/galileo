@@ -70,7 +70,7 @@ def main(config):
 #---------------------------
 # The commands
 
-from .dongle import FitBitDongle, NoDongleException, CM, DM
+from .dongle import FitBitDongle, CM, DM
 from .tracker import FitbitClient
 from .utils import x2a
 
@@ -85,12 +85,9 @@ tracker = None
 def connect():
     global dongle
     dongle = FitBitDongle()
-    try:
-        dongle.setup()
-    except NoDongleException:
+    if dongle.setup() != True:
         print "No dongle connected, aborting"
-        global exit
-        exit = True
+        quit()
     global fitbit
     fitbit = FitbitClient(dongle)
     print 'Ok'
