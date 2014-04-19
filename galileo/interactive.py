@@ -40,32 +40,41 @@ def quit():
 def print_help():
     for cmd in sorted(helps.keys()):
         print '%s\t%s' % (cmd, helps[cmd])
-
+    print """Note:
+ - You can enter multiple commands separated by ';'
+ - To establish a link with the tracker, enter the following command:
+      c ; d ; l ; tx 1 ; al
+"""
 
 def main(config):
     global exit
     exit = False
     print_help()
     while not exit:
-        input = raw_input('> ').strip()
-        input = input.split(' ')
-        try:
-            f = cmds[input[0]]
-        except KeyError:
-            if input[0] == '':
+        orders = raw_input('> ').strip()
+        if ';' in orders:
+            orders = orders.split(';')
+        else:
+            orders = [orders]
+        for order in orders:
+            order = order.strip().split(' ')
+            try:
+                f = cmds[order[0]]
+            except KeyError:
+                if order[0] == '':
+                    continue
+                print 'Command %s not known' % order[0]
+                print_help()
                 continue
-            print 'Command %s not known' % input[0]
-            print_help()
-            continue
-        try:
-            f(*input[1:])
-        except TypeError, te:
-            print "Wrong number of argument given: %s" % te
-        except Exception, e:
-            # We need that to be able to close the connection nicely
-            print "BaD bAd BAd", e
-            traceback.print_exc(file=sys.stdout)
-            exit = True
+            try:
+                f(*order[1:])
+            except TypeError, te:
+                print "Wrong number of argument given: %s" % te
+            except Exception, e:
+                # We need that to be able to close the connection nicely
+                print "BaD bAd BAd", e
+                traceback.print_exc(file=sys.stdout)
+                return
 
 
 #---------------------------
