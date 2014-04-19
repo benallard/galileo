@@ -194,8 +194,8 @@ def terminateairLink():
 
 @command('D', 'getDump')
 @needfitbit
-def getDump():
-    fitbit.getDump()
+def getDump(type="13"):
+    fitbit.getDump(int(type))
 
 @command('R', 'uploadResponse')
 @needfitbit
