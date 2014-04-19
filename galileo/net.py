@@ -118,7 +118,7 @@ class GalileoClient(object):
 
         logger.debug('HTTP response=%s', answer)
 
-        tag, attrib, childs, body = XMLToTuple(ET.fromstring(answer))
+        tag, attrib, childs, body = XMLToTuple(ET.fromstring(answer.encode('utf-8')))
 
         if tag != 'galileo-server':
             logger.error("Unexpected root element: %s", tag)
