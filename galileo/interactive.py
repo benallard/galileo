@@ -10,6 +10,7 @@ https://bitbucket.org/benallard/libfitbit/src/tip/python/ifitbit.py?at=default
 #---------------------------
 # The engine
 
+import readline
 import traceback
 import sys
 
