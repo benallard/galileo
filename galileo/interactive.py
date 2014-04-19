@@ -85,7 +85,7 @@ tracker = None
 def connect():
     global dongle
     dongle = FitBitDongle()
-    if dongle.setup() != True:
+    if not dongle.setup():
         print "No dongle connected, aborting"
         quit()
     global fitbit
