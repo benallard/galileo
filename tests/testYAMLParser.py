@@ -43,6 +43,11 @@ test_2:
 test-3:
 """), {"test": None, 'test_2': None, 'test-3': None})
 
+    def testOnlyOneValue(self):
+        self.assertEquals(parser.loads('5'), 5)
+        self.assertEquals(parser.loads('a'), 'a')
+        self.assertEquals(parser.loads('true'), True)
+        
     def testIntegerValue(self):
         self.assertEquals(parser.loads("t: 5"), {'t': 5})
     def testSimpleStringValue(self):

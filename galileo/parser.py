@@ -63,13 +63,16 @@ def loads(s):
         i += 1
         if not line: continue
         if _getident(line) == 0:
-            current_key = None
-            k, v = line.split(':')
-            res = _addKey(res, k)
-            if not v:
-                current_key = k
+            if ':' in line:
+                current_key = None
+                k, v = line.split(':')
+                res = _addKey(res, k)
+                if not v:
+                    current_key = k
+                else:
+                    res[k] = unJSONize(v)
             else:
-                res[k] = unJSONize(v)
+                return unJSONize(line)
         else:
             assert current_key is not None
             # value indented
