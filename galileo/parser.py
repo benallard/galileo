@@ -56,8 +56,11 @@ def unJSONize(s):
 def loads(s):
     res = None
     current_key = None
-    for line in s.split('\n'):
-        line = _stripcomment(line)
+    lines = s.split('\n')
+    i = 0
+    while i < len(lines):
+        line = _stripcomment(lines[i])
+        i += 1
         if not line: continue
         if _getident(line) == 0:
             current_key = None
