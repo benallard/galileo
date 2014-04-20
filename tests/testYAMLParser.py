@@ -13,6 +13,21 @@ class testUtilities(unittest.TestCase):
     def testStripCommentDoubleComment(self):
         self.assertEquals(parser._stripcomment("ab # cd # ef"), "ab")
 
+    def testdedent1(self):
+        self.assertEquals(parser._dedent("""\
+a:
+  - a
+  - b
+""".split('\n'), 1), ['  - a', '  - b'])
+    def testdedent2(self):
+        self.assertEquals(parser._dedent("""\
+-
+  a:
+    b
+  c:
+    5
+""".split('\n'), 1), ['  a:', '    b', '  c:', '    5'])
+
 class testload(unittest.TestCase):
 
     def testEmpty(self):
@@ -47,7 +62,10 @@ test-3:
         self.assertEquals(parser.loads('5'), 5)
         self.assertEquals(parser.loads('a'), 'a')
         self.assertEquals(parser.loads('true'), True)
-        
+
+    def testOneArray(self):
+        self.assertEquals(parser.loads('- a\n- b'), ['a', 'b'])
+
     def testIntegerValue(self):
         self.assertEquals(parser.loads("t: 5"), {'t': 5})
     def testSimpleStringValue(self):
@@ -66,3 +84,33 @@ test:
   - a
   - 5
 """), {'test': ['a', 5]})
+
+    def testDoubleDict(self):
+        self.assertEquals(parser.loads("""\
+a:
+  b: c
+"""), {'a': {'b': 'c'}})
+    def testDoubleDict2(self):
+        self.assertEquals(parser.loads("""\
+a:
+  b:
+    c
+"""), {'a': {'b': 'c'}})
+
+    def testMultiArray(self):
+        self.assertEquals(parser.loads("""\
+-
+  -
+    a:
+      b
+    c:
+      5
+  -
+    a:
+      8
+"""), [[{'a':'b', 'c': 5}, {'a': 8}]])
+
+    def testArrayOfDict(self):
+        self.assertEquals(parser.loads("""\
+- a: b
+"""), [{'a':'b'}])

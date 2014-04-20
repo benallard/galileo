@@ -8,11 +8,11 @@ parser. This parser should be adapted to allow the correct configuration.
 
 Known limitations:
 - Only spaces, no tabs
-- The returned dictionary supports only one level
+- Blank lines in the middle of an indented block is pretty bad ...
 """
 
 import json
-
+import textwrap
 
 def _stripcomment(line):
     s = []
@@ -35,13 +35,13 @@ def _getident(line):
 
 def _addKey(d, key):
     if d is None and key:
-        d = {key: None}
+        d = {}
     d[key] = None
     return d
 
 
 def unJSONize(s):
-    """ json is not enough ...
+    """ json is not good enough ...
     "'a'" doesn't get decoded,
     even worst, "a" neither """
     try:
@@ -51,6 +51,19 @@ def unJSONize(s):
         if s[0] == "'" and s[-1] == "'":
             return s[1:-1]
         return s
+
+
+def _dedent(lines, start):
+    res = [lines[start]]
+    idx = start + 1
+    minident = _getident(lines[start])
+    while idx < len(lines):
+        curident = _getident(lines[idx])
+        if curident < minident:
+            break
+        res.append(lines[idx])
+        idx += 1
+    return res
 
 
 def loads(s):
@@ -63,7 +76,15 @@ def loads(s):
         i += 1
         if not line: continue
         if _getident(line) == 0:
-            if ':' in line:
+            if line.startswith('-'):
+                if res is None:
+                    res = []
+                line = line[1:].strip()
+                if line:
+                    res.append(loads(line))
+                elif i == len(lines):
+                    res.append(None)
+            elif ':' in line:
                 current_key = None
                 k, v = line.split(':')
                 res = _addKey(res, k)
@@ -74,15 +95,16 @@ def loads(s):
             else:
                 return unJSONize(line)
         else:
-            assert current_key is not None
-            # value indented
-            line = line.lstrip()
-            if not line.startswith('- '):
-                res[current_key] = unJSONize(line)
+            subblock = _dedent(lines, i-1)
+            subres = loads(textwrap.dedent('\n'.join(subblock)))
+            if isinstance(res, dict):
+                res[current_key] = subres
+            elif isinstance(res, list):
+                res.append(subres)
             else:
-                if res[current_key] is None:
-                    res[current_key] = []
-                res[current_key].append(unJSONize(line[2:]))
+                raise ValueError(res, subres)
+            i += len(subblock) - 1
+
     return res
 
 
@@ -93,4 +115,4 @@ if __name__ == "__main__":
     import sys
     # For fun and quick test
     with open(sys.argv[1], 'rt') as f:
-        print load(f.read())
+        print load(f)
