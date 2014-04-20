@@ -144,6 +144,13 @@ class GalileoClient(object):
                 raise BackOffException(minD, maxD)
             elif stag == 'server-state':
                 self.server_state = sbody
+            elif stag == 'redirect':
+                for schild in schlids:
+                    sstag, _, _, ssbody = schild
+                    if sstag == 'protocol': self.scheme = ssbody
+                    if sstag == 'host': self.host = ssbody
+                    if sstag == 'port': self._port = int(ssbody)
+                logger.info('Found redirect to %s' % self.url)
 
         return childs
 
