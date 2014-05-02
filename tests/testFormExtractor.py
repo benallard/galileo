@@ -12,6 +12,12 @@ class testFormExtractor(unittest.TestCase):
 
     def testOneHidden(self):
         fe = FormExtractor()
-        fe.feed('<html><body><form><input name="username" type="hidden" value="Ben"><input name="password"></form></body></html>')
+        fe.feed('<html><body><form><input name="username" type="hidden" value="User"><input name="password"></form></body></html>')
         self.assertEquals(len(fe.forms), 1)
-        self.assertEquals(fe.forms[0], {'username': 'Ben', 'password': None})
+        self.assertEquals(fe.forms[0], {'username': 'User', 'password': None})
+
+    def testSelect(self):
+        fe = FormExtractor()
+        fe.feed('<html><body><form><select name="choice" ><option value="A" /><option value="B" selected></select></form></body></html>')
+        self.assertEquals(len(fe.forms), 1)
+        self.assertEquals(fe.forms[0], {'choice': 'B'})
