@@ -11,9 +11,11 @@ import requests
 
 from . import __version__
 from .config import Config
+from .conversation import Conversation
 from .dongle import FitBitDongle, PermissionDeniedException
 from .net import GalileoClient, SyncError, BackOffException
 from .tracker import FitbitClient
+from .ui import HardCodedUI
 from .utils import a2x
 from . import interactive
 
@@ -246,11 +248,15 @@ def main():
 
     logger.debug("Configuration: %s", config)
 
+    ui = HardCodedUI(config.hardcoded_ui)
+
     try:
         {
             'version': version_mode,
             'sync': sync,
             'daemon': daemon,
+            'pair': Conversation('pair', ui),
+            'firmware': Conversation('firmware', ui),
             'interactive': interactive.main,
         }[config.mode](config)
     except:
