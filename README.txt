@@ -74,6 +74,13 @@ The following Linux distributions have packages available for installation:
   `squeezebox <http://git.overlays.gentoo.org/gitweb/?p=user/squeezebox.git>`_
   overlay. See https://wiki.gentoo.org/wiki/Layman for details of how
   to use Gentoo overlays.
+**Ubuntu**:
+  The utility is available over the ppa ``ppa:cwayne18/fitbit``. Use the
+  following commands to install it and start the daemon::
+
+    sudo add-apt-repository ppa:cwayne18/fitbit
+    sudo apt-get update && sudo apt-get install galileo
+    start galileo﻿
 
 The more complicated way
 ~~~~~~~~~~~~~~~~~~~~~~~~
