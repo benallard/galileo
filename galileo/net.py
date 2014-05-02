@@ -98,7 +98,7 @@ class GalileoClient(object):
                  'minor': str(dongle.minor)}))
         client.append(info)
         if self.server_state is not None:
-            client.append(toXML('server_state', body=self.server_state))
+            client.append(toXML('server-state', body=self.server_state))
         if data is not None:
             for XMLElem in tuplesToXML(data):
                 client.append(XMLElem)
