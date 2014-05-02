@@ -7,7 +7,7 @@ def a2x(a, delim=' '):
 
 def x2a(hexstr):
     """ String of hex a to array """
-    return [int(x,16) for x in hexstr.split(' ')]
+    return [int(x, 16) for x in hexstr.split(' ')]
 
 
 def a2s(a, toPrint=True):
