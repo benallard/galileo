@@ -53,12 +53,17 @@ class HardCodedUI(BaseUI):
         print answer, fe.forms
         # Figure out which of the form we should fill
         goodForm = None
-        for form in fe.forms:
-            for field in form:
-                if field in answer and form[field] is not None and form[field] == answer[field]:
-                    goodForm = form
-            if goodForm:
-                break
+        if len(fe.forms) == 1:
+            # Only one there, no need to searcj for the correct one ...
+            goodForm = fe.forms[0]
+        else:
+            # We need to find the one that match the most our answers
+            for form in fe.forms:
+                for field in form:
+                    if field in answer and form[field] is not None and form[field] == answer[field]:
+                        goodForm = form
+                if goodForm:
+                    break
         if goodForm is None:
             return []
         # Transfer the answers from the config to the form
