@@ -145,7 +145,7 @@ class GalileoClient(object):
             elif stag == 'server-state':
                 self.server_state = sbody
             elif stag == 'redirect':
-                for schild in schlids:
+                for schild in schilds:
                     sstag, _, _, ssbody = schild
                     if sstag == 'protocol': self.scheme = ssbody
                     if sstag == 'host': self.host = ssbody
