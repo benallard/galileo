@@ -26,3 +26,12 @@ class FormExtractor(HTMLParser):
 
     def handle_data(self, data):
         pass
+
+
+class BaseUI(object):
+    """\
+    This is the base of all ui classes, it provides an interface and handy
+    methods
+    """
+    def request(self, action, client_display):
+        raise NotImplementedError
