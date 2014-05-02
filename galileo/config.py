@@ -182,6 +182,22 @@ class Argument(StrParameter):
                             " (default to %s)" % self.default)
 
 
+class HardCodedUIConfig(Parameter):
+    """\
+    A Config parameter for the config of the HardCodedUI class
+    """
+    def __init__(self):
+        self.name = 'hardcoded-ui'
+        self.varName = self.name.replace('-', '_')
+        self.default = {}
+    def toArgParse(self, parser):
+        """ no-op """
+    def fromArgs(self, args, optdict):
+        """ no-op """
+    def fromFile(self, filedict, optdict):
+        optdict[self.varName] = filedict.get(self.name, {})
+
+
 class Config(object):
     """Class holding the configuration to be applied during synchronization.
     The configuration can be loaded from a file in which case the defaults
@@ -212,6 +228,7 @@ class Config(object):
                 BoolParameter('doUpload', 'do-upload',  ('upload',), True, False, "upload the dump to the server"),
                 BoolParameter('httpsOnly', 'https-only', ('https-only',), True, False, "use http if https is not available"),
                 Argument(),
+                HardCodedUIConfig(),
                 ]
         self.__opts = opts
         self.__optdict = {}
