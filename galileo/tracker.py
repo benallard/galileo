@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 from .dongle import CM, DM, isStatus
 from .dump import Dump
-from .utils import a2x, i2lsba, a2lsbi
+from .utils import a2s, a2x, i2lsba, a2lsbi
 
 MICRODUMP = 3
 MEGADUMP = 13
