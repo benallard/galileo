@@ -58,10 +58,11 @@ def syncAllTrackers(config):
 
         logger.info('Attempting to synchronize tracker %s', trackerid)
 
-        logger.debug('Connecting to Fitbit server and requesting status')
-        if not galileo.requestStatus(not config.httpsOnly):
-            yield tracker
-            break
+        if config.doUpload:
+            logger.debug('Connecting to Fitbit server and requesting status')
+            if not galileo.requestStatus(not config.httpsOnly):
+                yield tracker
+                break
 
         logger.debug('Establishing link with tracker')
         if not (fitbit.establishLink(tracker) and fitbit.toggleTxPipe(True)
