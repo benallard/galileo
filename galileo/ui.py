@@ -9,23 +9,31 @@ class FormExtractor(HTMLParser):
     """ This read a whole html page and extract the forms """
     def __init__(self):
         self.forms = []
-        self.inForm = False
-        self.curForm = {}
+        self.curForm = None
+        self.curSelect = None
         HTMLParser.__init__(self)
+
     def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
         if tag == 'form':
-            self.inForm = True
             self.curForm = {}
         if tag == 'input':
-            attrs = dict(attrs)
             self.curForm[attrs['name']] = attrs.get('value', None)
+        if tag == 'select':
+            self.curSelect = attrs['name']
+            self.curForm[self.curSelect] = None
+        if tag == 'option' and 'selected' in attrs:
+            self.curForm[self.curSelect] = attrs['value']
+
+
     def handle_endtag(self, tag):
         if tag == 'form':
             self.forms.append(self.curForm)
-            self.inForm = False
+            self.curForm = None
+        if tag == 'select':
+            self.curSelect = None
 
-    def handle_data(self, data):
-        pass
+    def handle_data(self, data): pass
 
 
 class BaseUI(object):
