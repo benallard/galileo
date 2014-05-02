@@ -49,7 +49,7 @@ class HardCodedUI(BaseUI):
             html = html[len('<![CDATA['):-len(']]>')]
         fe = FormExtractor()
         fe.feed(html)
-        answer = self.answers.get(action)
+        answer = self.answers.get(action, {})
         print answer, fe.forms
         # Figure out which of the form we should fill
         goodForm = None
