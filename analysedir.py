@@ -35,4 +35,11 @@ def main(dirname):
 
 if __name__ == "__main__":
     import sys
-    main(sys.argv[1])
+    try:
+        os.path.exists(sys.argv[1])
+        filename = sys.argv[1]
+        print "Single file mode: ", filename
+        analyse(filename) 
+
+    except:
+        main(sys.argv[1])
