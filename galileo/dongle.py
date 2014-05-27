@@ -152,10 +152,22 @@ class FitBitDongle(USBDevice):
         self.CtrlIF = cfg[(1, 0)]
         self.dev.set_configuration()
 
+    def write(self, endpoint, data, timeout):
+        interface = {0x02: self.CtrlIF.bInterfaceNumber,
+                     0x01: self.DataIF.bInterfaceNumber}[endpoint]
+        params = (endpoint, data, interface, timeout)
+        try:
+            return self.dev.write(*params)
+        except usb.core.USBError, ue:
+            if ue.errno != errno.EIO:
+                raise
+        logger.info('Caught an I/O Error while writing, trying again ...')
+        # IO Error, try again ...
+        return self.dev.write(*params)
+
     def ctrl_write(self, msg, timeout=2000):
         logger.debug('--> %s', msg)
-        l = self.dev.write(0x02, msg.asList(), self.CtrlIF.bInterfaceNumber,
-                           timeout)
+        l = self.write(0x02, msg.asList(), timeout)
         if l != msg.len:
             logger.error('Bug, sent %d, had %d', l, msg.len)
             raise DongleWriteException
@@ -177,8 +189,7 @@ class FitBitDongle(USBDevice):
 
     def data_write(self, msg, timeout=2000):
         logger.debug('==> %s', msg)
-        l = self.dev.write(0x01, msg.asList(), self.DataIF.bInterfaceNumber,
-                           timeout)
+        l = self.write(0x01, msg.asList(), timeout)
         if l != msg.LENGTH:
             logger.error('Bug, sent %d, had %d', l, msg.LENGTH)
             raise DongleWriteException
