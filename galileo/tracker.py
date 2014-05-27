@@ -74,8 +74,12 @@ class FitbitClient(object):
         while True:
             d = self.dongle.ctrl_read(minDuration)
             if d is None: break
-            elif isStatus(d, 'StartDiscovery', False): continue
-            elif d.INS == 2: break
+            elif isStatus(d, 'StartDiscovery', False):
+                # We know this can happen almost any time during 'discovery'
+                continue
+            elif d.INS == 2:
+                # Last instruction of a discovery sequence has INS==1
+                break
             trackerId = d.payload[:6]
             addrType = d.payload[6]
             RSSI = c_byte(d.payload[7]).value
