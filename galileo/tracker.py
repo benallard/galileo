@@ -80,6 +80,10 @@ class FitbitClient(object):
             elif d.INS == 2:
                 # Last instruction of a discovery sequence has INS==1
                 break
+            elif (d.INS != 3) or (len(d.payload) < 17):
+                  elif (d.INS != 3) or (len(d.payload) < 17):
+                logger.error('payload unexpected: %s', d)
+                break
             trackerId = d.payload[:6]
             addrType = d.payload[6]
             RSSI = c_byte(d.payload[7]).value

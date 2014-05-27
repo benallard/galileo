@@ -23,6 +23,8 @@ Main changes since 0.4:
 - Fix a traceback in debug message (part of issue#51)
 - Fix issue when the dongle doesn't reports its version (issue#53)
 - Fix issue when ConnectionError happens during sync (issue#54)
+- Try again a write operation in case of IOError (issue#61)
+- Be more strict during discovery (issue#66)
 
 
 galileo 0.4 (2014-03-31)
