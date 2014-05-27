@@ -84,6 +84,9 @@ class FitbitClient(object):
             d = self.dongle.ctrl_read(minDuration)
             if isStatus(d, 'StartDiscovery', False): continue
             elif d.INS == 2: break
+            elif (d.INS != 3) or (len(d.payload) < 17):
+                logger.error('payload unexpected: %s', d)
+                break
             trackerId = d.payload[:6]
             addrType = d.payload[6]
             RSSI = c_byte(d.payload[7]).value
@@ -107,7 +110,9 @@ class FitbitClient(object):
             amount += 1
             yield tracker
 
-        if amount != d.payload[0]:
+        if len(d.payload) != 1:
+            logger.error('Unexpected payload: %s', d)
+        elif amount != d.payload[0]:
             logger.error('%d trackers discovered, dongle says %d', amount,
                          d.payload[0])
         # tracker found, cancel discovery
