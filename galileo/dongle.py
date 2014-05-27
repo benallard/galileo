@@ -178,6 +178,17 @@ class FitBitDongle(USBDevice):
         # IO Error, try again ...
         return self.dev.write(*params)
 
+    def read(self, endpoint, length, timeout):
+        interface = {0x82: self.CtrlIF.bInterfaceNumber,
+                     0x81: self.DataIF.bInterfaceNumber}[endpoint]
+        params = (endpoint, length, interface, timeout)
+        try:
+            return self.dev.read(*params)
+        except usb.core.USBError, ue:
+            if not isATimeout(ue):
+                raise
+        return None
+
     def ctrl_write(self, msg, timeout=2000):
         logger.debug('--> %s', msg)
         l = self.write(0x02, msg.asList(), timeout)
@@ -187,13 +198,9 @@ class FitBitDongle(USBDevice):
 
     def ctrl_read(self, timeout=2000, length=32):
         msg = None
-        try:
-            data = self.dev.read(0x82, length, self.CtrlIF.bInterfaceNumber,
-                                 timeout)
-        except usb.core.USBError, ue:
-            if not isATimeout(ue):
-                raise
-        else:
+        data = self.read(0x82, length, timeout)
+        if data is not None:
+            # 'None' parameter in next line means incoming
             msg = CM(None, list(data))
         if msg is None:
             logger.debug('<-- ...')
@@ -212,13 +219,8 @@ class FitBitDongle(USBDevice):
 
     def data_read(self, timeout=2000):
         msg = None
-        try:
-            data = self.dev.read(0x81, DM.LENGTH, self.DataIF.bInterfaceNumber,
-                                 timeout)
-        except usb.core.USBError, ue:
-            if not isATimeout(ue):
-                raise
-        else:
+        data = self.read(0x81, DM.LENGTH, timeout)
+        if data is not None:
             msg = DM(data, out=False)
         logger.debug('<== %s', msg or '...')
         return msg
