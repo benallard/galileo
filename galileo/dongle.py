@@ -184,9 +184,11 @@ class FitBitDongle(USBDevice):
     VID = 0x2687
     PID = 0xfb01
 
-    def __init__(self):
+    def __init__(self, logsize):
         USBDevice.__init__(self, self.VID, self.PID)
         self.hasVersion = False
+        global log
+        log = DataRing(logsize)
 
     def setup(self):
         if self.dev is None:
@@ -221,6 +223,7 @@ class FitBitDongle(USBDevice):
         interface = {0x02: self.CtrlIF.bInterfaceNumber,
                      0x01: self.DataIF.bInterfaceNumber}[endpoint]
         params = (endpoint, data, interface, timeout)
+        log.add((OUT, data))
         try:
             return self.dev.write(*params)
         except usb.core.USBError, ue:
@@ -234,12 +237,14 @@ class FitBitDongle(USBDevice):
         interface = {0x82: self.CtrlIF.bInterfaceNumber,
                      0x81: self.DataIF.bInterfaceNumber}[endpoint]
         params = (endpoint, length, interface, timeout)
+        data = None
         try:
-            return self.dev.read(*params)
+            data = self.dev.read(*params)
         except usb.core.USBError, ue:
             if not isATimeout(ue):
                 raise
-        return None
+        log.add((IN, data))
+        return data
 
     def ctrl_write(self, msg, timeout=2000):
         logger.debug('--> %s', msg)

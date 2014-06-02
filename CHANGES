@@ -10,6 +10,7 @@ Planned for this release:
 - Removal of the Timeout class (issue#43)
 - Add a pair mode (issue#33)
 - Get a UI abstraction layer (issue#31)
+- Keep a rolling log of the last communication to help debugging (issue#67)
 
 
 galileo 0.4.1 (????-??-??)

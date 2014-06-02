@@ -12,11 +12,11 @@ import requests
 from . import __version__
 from .config import Config
 from .conversation import Conversation
-from .dongle import FitBitDongle, PermissionDeniedException
 from .net import GalileoClient, SyncError, BackOffException
 from .tracker import FitbitClient
 from .ui import HardCodedUI
 from .utils import a2x
+from . import dongle as dgl
 from . import interactive
 
 FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
@@ -24,7 +24,7 @@ FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
 
 def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
-    dongle = FitBitDongle()
+    dongle = dgl.FitBitDongle(config.logSize)
     if not dongle.setup():
         logger.error("No dongle connected, aborting")
         return
@@ -148,7 +148,7 @@ fitbit dongle. In order to do so, as root, create the file
 SUBSYSTEM=="usb", ATTR{idVendor}=="%(VID)x", ATTR{idProduct}=="%(PID)x", SYMLINK+="fitbit", MODE="0666"
 
 The dongle must then be removed and reinserted to receive the new permissions.""" % {
-    'VID': FitBitDongle.VID, 'PID': FitBitDongle.PID}
+    'VID': dgl.FitBitDongle.VID, 'PID': dgl.FitBitDongle.PID}
 
 
 def version(verbose, delim='\n'):
@@ -193,7 +193,7 @@ def sync(config):
             microseconds=boe.getAValue()*1000)
         print "I suggest waiting until %s" % later
         return
-    except PermissionDeniedException:
+    except dgl.PermissionDeniedException:
         print PERMISSION_DENIED_HELP
         return
     print '\n'.join(statuses)
@@ -223,6 +223,8 @@ def daemon(config):
 
 def main():
     """ This is the entry point """
+
+    # Set the null handler to avoid complaining about no handler presents
     import galileo
     logging.getLogger(galileo.__name__).addHandler(logging.NullHandler())
 
@@ -265,4 +267,8 @@ def main():
         print "# information on the galileo bug tracker:"
         print "#    https://bitbucket.org/benallard/galileo/issues/new"
         print '#', version(True, '\n# ')
+        print '# Last communications:'
+        for comm in dgl.log.getData():
+            dir, dat = comm
+            print '# %s %s' % ({dgl.IN: '<', dgl.OUT: '>'}.get(dir, '-'), a2x(dat or []))
         raise
