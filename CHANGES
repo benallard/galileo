@@ -4,7 +4,7 @@ galileo 0.5 (????-??-??)
 This is the next feature release of galileo, a free utility to securely
 synchronize fitbit bluetooth trackers with the fitbit web-service.
 
-Contributor to this release: Dean Giberson and Richard Weait.
+Contributor to this release: Dean Giberson, Richard Weait and Chris Wayne.
 
 Planned for this release:
 - Removal of the Timeout class (issue#43)
