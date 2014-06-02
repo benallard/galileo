@@ -21,6 +21,7 @@ galileo \- synchronize Fitbit devices
 .RB [ "\-\-dump" | "\-\-no\-dump" ]
 .RB [ "\-\-upload" | "\-\-no\-upload" ]
 .RB [ "\-\-https\-only" | "\-\-no\-https\-only" ]
+.RB [ "\-\-log\-size \fISIZE\fR" ]
 .RB [ "sync" | "daemon" | "version" ]
 
 .SH DESCRIPTION
@@ -130,7 +131,7 @@ default.
 .B \-\-no\-upload
 prevent the uploading of tracker data to the Fitbit web service. Data
 is not deleted from trackers until it is acknowledged by the fitbit server
- so this will not result in data loss.
+so this will not result in data loss.
 .TP
 .B \-\-https\-only
 data sent to the Fitbit web service will be transferred via a secure connection
@@ -140,6 +141,13 @@ using HTTPS. This is the default.
 if HTTPS connection is not possible, this will allow the fallback to HTTP.
 This should only be required if problems with encryption libraries prevent
 data transfer without this option.
+.TP
+.BI \-\-log\-size " SIZE"
+indicate the amount of communication that should be displayed in case of
+errors. Galileo will keep in memory the last \fISIZE\fR communications to help
+debugging if an error happen. This is particularly useful in case of
+hard-to-reproduce issues, where it is too late to collect debug information.
+Default to 10. Set to 0 to disable this functionality.
 
 .SH REQUIREMENTS
 An original Fitbit Bluetooth-LE USB synchronization dongle is
