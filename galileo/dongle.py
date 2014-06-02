@@ -20,6 +20,58 @@ except ImportError, ie:
 
 from .utils import a2x, a2s
 
+IN, OUT = 1, -1
+
+class DataRing(object):
+    """ A 'stupid' data structure that store not more that capacity elements,
+    and keeps them in order
+
+    head points to the next spot
+    queue points to the last spot
+    fill tell us how much is filled
+    """
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.ring = [None] * self.capacity
+        self.head = 0
+        self.queue = 0
+        # We can't distinguish empty from full without the fillage
+        self.fill = 0
+
+    @property
+    def empty(self):
+        return self.fill == 0
+
+    @property
+    def full(self):
+        return self.fill == self.capacity
+
+    def add(self, data):
+        if self.capacity == 0:
+            # Special case, do nothing
+            return
+        if self.full:
+            # full, don't forget to increase the queue
+            self.queue = (self.queue + 1) % self.capacity
+        self.ring[self.head] = data
+        self.head = (self.head + 1) % self.capacity
+        self.fill = min(self.fill + 1, self.capacity)
+
+    def remove(self):
+        """ For the fun, doesnt fit into our use case """
+        if self.empty:
+            # NOOP
+            return
+        self.queue = (self.queue - 1)  % self.capacity
+
+    def getData(self):
+        if self.empty:
+            return []
+        elif self.queue < self.head:
+            return self.ring[self.queue:self.head]
+        else:
+            return self.ring[self.queue:] + self.ring[:self.head]
+
 
 class USBDevice(object):
     def __init__(self, vid, pid):
