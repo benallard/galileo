@@ -16,26 +16,27 @@ class Conversation(object):
         self.ui = ui
 
     def __call__(self, config):
-        dongle = FitBitDongle()
-        if not dongle.setup():
+        self.dongle = FitBitDongle(config.logSize)
+        if not self.dongle.setup():
             logger.error("No dongle connected, aborting")
             return
 
-        fitbit = FitbitClient(dongle)
+        self.fitbit = FitbitClient(self.dongle)
 
-        galileo = GalileoClient('https', 'client.fitbit.com',
+        self.galileo = GalileoClient('https', 'client.fitbit.com',
                                 'tracker/client/message')
 
-        fitbit.disconnect()
+        self.fitbit.disconnect()
 
-        if not fitbit.getDongleInfo():
+        if not self.fitbit.getDongleInfo():
             logger.warning('Failed to get connected Fitbit dongle information')
 
         action = ''
         uiresp = []
 
         while True:
-            answ = galileo.post(self.mode, dongle, ('ui-response', {'action': action}, uiresp))
+            resp = [('ui-response', {'action': action}, uiresp)]
+            answ = self.galileo.post(self.mode, self.dongle, resp)
             print answ
             html = ''
             commands = None
@@ -55,10 +56,58 @@ class Conversation(object):
                     commands = childs
             if trackers:
                 # First: Do what is asked
-                pass
+                for tracker in trackers:
+                    self.do_tracker(tracker)
             if commands:
                 # Prepare an answer for the server
-                pass
+                res = []
+                for command in commands:
+                    r = self.do_command(command)
+                    if r is not None:
+                        res.append(r)
+                resp.append(('command-response', {}, res))
             if action:
                 # Get an answer from the ui
                 uiresp = self.ui.request(action, html)
+
+    #-------- The commands
+
+    def do_command(self, cmd):
+        tag, elems, childs = cmd
+        f = {'pair-to-tracker': self._pair,
+            'connect-to-tracker': self._connect,
+            'list-trackers': self._list,
+            'ack-tracker-data': self._ack}[tag]
+        r = f(*childs, **elems)
+
+    def _pair(self, **params):
+        """ :returns: nothing
+        """
+        displayCode = bool(params['displayCode'])
+        waitForUserInput = bool(params['waitForUserInput'])
+        trackerId = params['tracker-id']
+
+    def _connect(self, **params):
+        """ :returns: nothing
+        """
+        trackerId = params['tracker-id']
+        if 'connection' in params:
+            connection = params['connection'] == 'disconnect'
+        elif 'response-data' in params:
+            responseData = params['response-data']
+        else:
+            raise ValueError(params)
+
+    def _list(self, *childs, **params):
+        immediateRsi = int(params['immediateRsi'])
+        minDuration = int(params['minDuration'])
+        maxDuration = int(params['maxDuration'])
+
+    def _ack(self, **params):
+        trackerId = params['tracker-id']
+
+
+    # ------
+
+    def do_tracker(self, tracker):
+        pass
