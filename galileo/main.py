@@ -125,7 +125,7 @@ def syncAllTrackers(config):
                 if not fitbit.uploadResponse(response):
                     logger.warning("Timeout error while trying to give Fitbit"
                                    " response to tracker %s", trackerid)
-                tracker.status = "Synchronisation sucessfull"
+                tracker.status = "Synchronisation successful"
 
             except SyncError, e:
                 logger.error("Fitbit server refused data from tracker %s,"
