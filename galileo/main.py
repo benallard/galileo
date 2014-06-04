@@ -267,8 +267,9 @@ def main():
         print "# information on the galileo bug tracker:"
         print "#    https://bitbucket.org/benallard/galileo/issues/new"
         print '#', version(True, '\n# ')
-        print '# Last communications:'
-        for comm in dgl.log.getData():
-            dir, dat = comm
-            print '# %s %s' % ({dgl.IN: '<', dgl.OUT: '>'}.get(dir, '-'), a2x(dat or []))
+        if hasattr(dgl, 'log'):
+            print '# Last communications:'
+            for comm in dgl.log.getData():
+                dir, dat = comm
+                print '# %s %s' % ({dgl.IN: '<', dgl.OUT: '>'}.get(dir, '-'), a2x(dat or []))
         raise
