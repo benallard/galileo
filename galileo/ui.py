@@ -72,6 +72,14 @@ class HardCodedUI(BaseUI):
                         goodForm = form
                 if goodForm:
                     break
+            if goodForm is None:
+                # Not found, search again, less picky
+                for form in fe.forms:
+                    for field in form:
+                        if field in answer and form[field] is None and answer[field] is not None:
+                            goodForm = form
+                    if goodForm:
+                        break
         if goodForm is None:
             return []
         # Transfer the answers from the config to the form
