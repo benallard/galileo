@@ -12,7 +12,7 @@ MEGADUMP = 13
 
 
 class Tracker(object):
-    def __init__(self, Id, addrType, attributes, serviceUUID=None):
+    def __init__(self, Id, addrType, attributes, RSSI, serviceUUID=None):
         self.id = Id
         self.addrType = addrType
         if serviceUUID is None:
@@ -20,6 +20,7 @@ class Tracker(object):
         else:
             self.serviceUUID = serviceUUID
         self.attributes = attributes
+        self.RSSI = RSSI
         self.status = 'unknown'  # If we happen to read it before anyone set it
 
     @property
@@ -57,7 +58,7 @@ class FitbitClient(object):
         return True
 
     def discover(self, uuid, service1=0xfb00, write=0xfb01, read=0xfb02,
-                 minDuration=4000):
+                 minRSSI=-255, minDuration=4000):
         """\
         The uuid is a mask on the service (characteristics ?) we understand
         service1 parameter is unused (at lease for the 'One')
@@ -90,7 +91,7 @@ class FitbitClient(object):
             sUUID = d.payload[15:17]
             serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
                            trackerId[0] ^ trackerId[2] ^ trackerId[4]]
-            tracker = Tracker(trackerId, addrType, attributes, sUUID)
+            tracker = Tracker(trackerId, addrType, attributes, RSSI, sUUID)
             if not tracker.syncedRecently and (serviceUUID != sUUID):
                 logger.debug("Cannot acknowledge the serviceUUID: %s vs %s",
                              a2x(serviceUUID, ':'), a2x(sUUID, ':'))
@@ -100,10 +101,15 @@ class FitbitClient(object):
                 logger.info("Tracker %s has low signal power (%ddBm), higher"
                             " chance of miscommunication",
                             a2x(trackerId, delim=""), RSSI)
+
             if not tracker.syncedRecently:
                 logger.debug('Tracker %s was not recently synchronized',
                              a2x(trackerId, delim=""))
             amount += 1
+            if RSSI < minRSSI:
+                logger.warning("Tracker %s below power threshold (%ddBm),"
+                               "dropping", a2x(trackerId, delim=""), minRSSI)
+                #continue
             yield tracker
 
         if d != CM(2, [amount]):

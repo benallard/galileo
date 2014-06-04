@@ -2,12 +2,18 @@
 The conversationnal part between the server and the client ...
 """
 
+import uuid
+
 import logging
 logger = logging.getLogger(__name__)
 
 from .dongle import FitBitDongle
 from .net import GalileoClient
 from .tracker import FitbitClient
+from .utils import a2x
+
+
+FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
 
 
 class Conversation(object):
@@ -33,9 +39,9 @@ class Conversation(object):
 
         action = ''
         uiresp = []
+        resp = [('ui-response', {'action': action}, uiresp)]
 
         while True:
-            resp = [('ui-response', {'action': action}, uiresp)]
             answ = self.galileo.post(self.mode, self.dongle, resp)
             print answ
             html = ''
@@ -54,6 +60,7 @@ class Conversation(object):
                     trackers.append()
                 elif tag == 'commands':
                     commands = childs
+            resp = []
             if trackers:
                 # First: Do what is asked
                 for tracker in trackers:
@@ -63,22 +70,23 @@ class Conversation(object):
                 res = []
                 for command in commands:
                     r = self.do_command(command)
+                    print r
                     if r is not None:
                         res.append(r)
                 resp.append(('command-response', {}, res))
             if action:
                 # Get an answer from the ui
-                uiresp = self.ui.request(action, html)
+                resp.append(('ui-response', {'action': action}, self.ui.request(action, html)))
 
     #-------- The commands
 
     def do_command(self, cmd):
-        tag, elems, childs = cmd
+        tag, elems, childs, body = cmd
         f = {'pair-to-tracker': self._pair,
             'connect-to-tracker': self._connect,
             'list-trackers': self._list,
             'ack-tracker-data': self._ack}[tag]
-        r = f(*childs, **elems)
+        return f(*childs, **elems)
 
     def _pair(self, **params):
         """ :returns: nothing
@@ -102,6 +110,13 @@ class Conversation(object):
         immediateRsi = int(params['immediateRsi'])
         minDuration = int(params['minDuration'])
         maxDuration = int(params['maxDuration'])
+
+        res = []
+        for tracker in self.fitbit.discover(FitBitUUID, minRSSI=immediateRsi,
+                                             minDuration=minDuration):
+            res.append(('available-tracker', {},
+                        [('tracker-id', {}, [], a2x(tracker.id, delim="")), ('tracker-attributes', {}, [], a2x(tracker.attributes, delim="")), ('rsi', {} , [], str(tracker.RSSI))]))
+        return ('list-trackers', {}, res)
 
     def _ack(self, **params):
         trackerId = params['tracker-id']
