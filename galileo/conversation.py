@@ -47,6 +47,8 @@ class Conversation(object):
             html = ''
             commands = None
             trackers = None
+            action = None
+            containsForm = False
             for tple in answ:
                 tag, attribs, childs, _ = tple
                 if tag == "ui-request":
@@ -54,8 +56,8 @@ class Conversation(object):
                     for child in childs:
                         tag, attribs, _, body = child
                         if tag == "client-display":
-                            if attribs.get('containsForm', False):
-                                html = body
+                            containsForm = attribs.get('containsForm', 'false') == 'true'
+                            html = body
                 elif tag == 'tracker':
                     trackers.append()
                 elif tag == 'commands':
@@ -74,7 +76,7 @@ class Conversation(object):
                     if r is not None:
                         res.append(r)
                 resp.append(('command-response', {}, res))
-            if action:
+            if containsForm:
                 # Get an answer from the ui
                 resp.append(('ui-response', {'action': action}, self.ui.request(action, html)))
 

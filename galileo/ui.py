@@ -4,6 +4,66 @@ This is where to look for for all user interaction stuff ...
 
 from HTMLParser import HTMLParser
 
+class Form(object):
+    def __init__(self):
+        self.fields = set()
+        self.submit = None
+
+    def addField(self, field):
+        self.fields.add(field)
+
+    def commonFields(self, answer, withValues=True):
+        res = 0
+        for field in self.fields:
+            if field.name in answer:
+                if withValues:
+                    if field.value is not None and field.value == answer[field.name]:
+                        res += 1
+                else:
+                    res += 1
+        print 'res = %d' % res
+        return res
+
+    def takeValuesFromAnswer(self, answer):
+        """\
+        Transfer the answers from the config to the form
+        """
+        for field in self.fields:
+            field.value = answer.get(field.name, field.value)
+            if field.type == 'submit':
+                self.submit = field.value
+
+    def asXML(self):
+        """\
+        Return the XML tuples. The trick is: THere can be only one 'submit'
+        """
+        res = []
+        for field in self.fields:
+            if field.type == 'submit':
+                if self.submit != field.value:
+                    continue
+            res.append(field.asXMLParam())
+        return res
+
+    def __str__(self):
+        return ', '.join(str(f) for f in self.fields)
+
+    def asDict(self):
+        """ for comparison in the test suites """
+        return dict((f.name, f.value) for f in self.fields)
+
+class FormField(object):
+    def __init__(self, name, type='text', value=None, **kw):
+        self.name = name
+        self.type = type
+        self.value = value
+
+    def asXMLParam(self):
+        return ('param', {'name': self.name}, [], self.value)
+
+    def __str__(self):
+        return '%r: %r' % (self.name, self.value)
+
 
 class FormExtractor(HTMLParser):
     """ This read a whole html page and extract the forms """
@@ -16,14 +76,14 @@ class FormExtractor(HTMLParser):
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag == 'form':
-            self.curForm = {}
+            self.curForm = Form()
         if tag == 'input':
-            self.curForm[attrs['name']] = attrs.get('value', None)
+            if 'name' in attrs:
+                self.curForm.addField(FormField(**attrs))
         if tag == 'select':
-            self.curSelect = attrs['name']
-            self.curForm[self.curSelect] = None
+            self.curSelect = FormField(type='select', **attrs)
         if tag == 'option' and 'selected' in attrs:
-            self.curForm[self.curSelect] = attrs['value']
+            self.curSelect.value = attrs['value']
 
 
     def handle_endtag(self, tag):
@@ -31,6 +91,7 @@ class FormExtractor(HTMLParser):
             self.forms.append(self.curForm)
             self.curForm = None
         if tag == 'select':
+            self.curForm.addField(self.curSelect)
             self.curSelect = None
 
     def handle_data(self, data): pass
@@ -57,37 +118,29 @@ class HardCodedUI(BaseUI):
             html = html[len('<![CDATA['):-len(']]>')]
         fe = FormExtractor()
         fe.feed(html)
-        answer = self.answers.get(action, {})
+        answer = self.answers[action]
         print answer, fe.forms
         # Figure out which of the form we should fill
         goodForm = None
         if len(fe.forms) == 1:
-            # Only one there, no need to searcj for the correct one ...
+            # Only one there, no need to search for the correct one ...
             goodForm = fe.forms[0]
         else:
             # We need to find the one that match the most our answers
+            max = 0
             for form in fe.forms:
-                for field in form:
-                    if field in answer and form[field] is not None and form[field] == answer[field]:
-                        goodForm = form
-                if goodForm:
-                    break
-            if goodForm is None:
+                v = form.commonFields(answer)
+                if v > max:
+                    goodForm = form
+                    max = v
+            if max == 0:
                 # Not found, search again, less picky
                 for form in fe.forms:
-                    for field in form:
-                        if field in answer and form[field] is None and answer[field] is not None:
-                            goodForm = form
-                    if goodForm:
-                        break
+                    v = form.commonFields(answer, False)
+                    if v > max:
+                        goodForm = form
+                        max = v
         if goodForm is None:
-            return []
-        # Transfer the answers from the config to the form
-        for field in goodForm:
-            if field in answer:
-                goodForm[field] = answer[field]
-        # Return the XML tuples
-        res = []
-        for field in goodForm:
-            res.append(('param', {'name': field}, [], goodForm[field]))
-        return res
+            raise ValueError('no answer found')
+        goodForm.takeValuesFromAnswer(answer)
+        return goodForm.asXML()

@@ -94,7 +94,7 @@ tracker = None
 @command('c', "Connect")
 def connect():
     global dongle
-    dongle = FitBitDongle()
+    dongle = FitBitDongle(0)  # No DataRing needed
     if not dongle.setup():
         print "No dongle connected, aborting"
         quit()
