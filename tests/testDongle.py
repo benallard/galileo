@@ -1,6 +1,7 @@
 import unittest
 
-from galileo.dongle import isStatus, CM, DM
+import galileo.dongle
+from galileo.dongle import isStatus, FitBitDongle, CM, DM
 
 class MyCM(object):
     def __init__(self, ins, payload):
@@ -49,3 +50,19 @@ class testDM(unittest.TestCase):
         self.assertFalse(DM([87]) == DM([42]))
         self.assertFalse(DM(range(2)) == DM(range(5)))
         self.assertFalse(None == DM(range(5)))
+
+
+class MyDev(object):
+    """ Minimal object to reproduce issue#75 """
+    def is_kernel_driver_active(self, a): raise NotImplementedError()
+    def get_active_configuration(self): return {(0,0): None, (1,0): None}
+    def set_configuration(self): pass
+
+class testDongle(unittest.TestCase):
+
+    def testNIE(self):
+        def myFind(*args, **kwargs):
+            return MyDev()
+        galileo.dongle.usb.core.find = myFind
+        d = FitBitDongle()
+        d.setup()
