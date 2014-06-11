@@ -64,5 +64,5 @@ class testDongle(unittest.TestCase):
         def myFind(*args, **kwargs):
             return MyDev()
         galileo.dongle.usb.core.find = myFind
-        d = FitBitDongle()
+        d = FitBitDongle(0)
         d.setup()
