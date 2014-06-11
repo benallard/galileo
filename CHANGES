@@ -13,6 +13,8 @@ Main changes since 0.4:
 - Fix issue when ConnectionError happens during sync (issue#54)
 - Try again a write operation in case of IOError (issue#61)
 - Be more strict during discovery (issue#66)
+- Handle issue when USB backend does not implement non-mandatory methods
+  (issue#75)
 
 
 galileo 0.4 (2014-03-31)

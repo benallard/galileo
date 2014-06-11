@@ -146,6 +146,8 @@ class FitBitDongle(USBDevice):
                              ' dongle')
                 raise PermissionDeniedException
             raise
+        except NotImplementedError, nie:
+            logger.error("Hit some 'Not Implemented Error': '%s', moving on ...", nie)
 
         cfg = self.dev.get_active_configuration()
         self.DataIF = cfg[(0, 0)]
