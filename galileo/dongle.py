@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import usb.core
-except ImportError, ie:
+except ImportError as ie:
     # if ``usb`` is there, but not ``usb.core``, a pre-1.0 version of pyusb
     # is installed.
     try:
@@ -201,13 +201,13 @@ class FitBitDongle(USBDevice):
                 self.dev.detach_kernel_driver(0)
             if self.dev.is_kernel_driver_active(1):
                 self.dev.detach_kernel_driver(1)
-        except usb.core.USBError, ue:
+        except usb.core.USBError as ue:
             if ue.errno == errno.EACCES:
                 logger.error('Insufficient permissions to access the Fitbit'
                              ' dongle')
                 raise PermissionDeniedException
             raise
-        except NotImplementedError, nie:
+        except NotImplementedError as nie:
             logger.error("Hit some 'Not Implemented Error': '%s', moving on ...", nie)
 
         cfg = self.dev.get_active_configuration()
@@ -230,7 +230,7 @@ class FitBitDongle(USBDevice):
         log.add((OUT, data))
         try:
             return self.dev.write(*params)
-        except usb.core.USBError, ue:
+        except usb.core.USBError as ue:
             if ue.errno != errno.EIO:
                 raise
         logger.info('Caught an I/O Error while writing, trying again ...')
@@ -244,7 +244,7 @@ class FitBitDongle(USBDevice):
         data = None
         try:
             data = self.dev.read(*params)
-        except usb.core.USBError, ue:
+        except usb.core.USBError as ue:
             if not isATimeout(ue):
                 raise
         log.add((IN, data))
