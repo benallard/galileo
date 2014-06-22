@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import errno
 
 import logging
@@ -13,9 +15,9 @@ except ImportError as ie:
     except ImportError:
         pass
     else:
-        print "You have an older pyusb version installed. This utility needs"
-        print "at least version 1.0.0a2 to work properly."
-        print "Please upgrade your system to a newer version."
+        print("You have an older pyusb version installed. This utility needs")
+        print("at least version 1.0.0a2 to work properly.")
+        print("Please upgrade your system to a newer version.")
     raise ie
 
 from .utils import a2x, a2s
