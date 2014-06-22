@@ -152,7 +152,7 @@ class HardCodedUI(BaseUI):
         return goodForm.asXML()
 
 
-def query_yes_no(question, default=True):
+def query_yes_no(question, default="y"):
     """Ask a yes/no question via raw_input() and return their answer.
 
     "question" is a string that is presented to the user.
@@ -169,9 +169,9 @@ def query_yes_no(question, default=True):
              "no":False,   "n":False}
     if default is None:
         prompt = " [y/n] "
-    elif default:
+    elif valid.get(default, False):
         prompt = " [Y/n] "
-    elif not default:
+    elif not valid.get(default, True):
         prompt = " [y/N] "
     else:
         raise ValueError("invalid default answer: '%s'" % default)
