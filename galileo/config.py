@@ -242,7 +242,6 @@ class Config(object):
     def __getattr__(self, name):
         """ Allow accessing the attributes as config.XXX """
         if name not in self.__optdict:
-            print self.__optdict.keys()
             raise AttributeError(name)
         return self.__optdict[name]
 
