@@ -14,7 +14,7 @@ from .config import Config
 from .conversation import Conversation
 from .net import GalileoClient, SyncError, BackOffException
 from .tracker import FitbitClient
-from .ui import HardCodedUI
+from .ui import InteractiveUI
 from .utils import a2x
 from . import dongle as dgl
 from . import interactive
@@ -250,7 +250,7 @@ def main():
 
     logger.debug("Configuration: %s", config)
 
-    ui = HardCodedUI(config.hardcoded_ui)
+    ui = InteractiveUI(config.hardcoded_ui)
 
     try:
         {

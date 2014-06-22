@@ -2,6 +2,8 @@
 This is where to look for for all user interaction stuff ...
 """
 
+import sys
+
 from HTMLParser import HTMLParser
 
 class Form(object):
@@ -47,6 +49,7 @@ class Form(object):
 
     def __str__(self):
         return ', '.join(str(f) for f in self.fields)
+    __repr__ = __str__  # To get it printed
 
     def asDict(self):
         """ for comparison in the test suites """
@@ -113,6 +116,7 @@ class HardCodedUI(BaseUI):
     """
     def __init__(self, answers):
         self.answers = answers
+
     def request(self, action, html):
         if html.startswith('<![CDATA[') and html.endswith(']]>'):
             html = html[len('<![CDATA['):-len(']]>')]
@@ -144,3 +148,56 @@ class HardCodedUI(BaseUI):
             raise ValueError('no answer found')
         goodForm.takeValuesFromAnswer(answer)
         return goodForm.asXML()
+
+
+def query_yes_no(question, default=True):
+    """Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+        It must be "yes" (the default), "no" or None (meaning
+        an answer is required of the user).
+
+    The "answer" return value is one of True or False.
+
+    This is from http://stackoverflow.com/a/3041990/1182619
+    Itself from http://code.activestate.com/recipes/577058/
+    """
+    valid = {"yes":True,   "y":True,  "ye":True,
+             "no":False,   "n":False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default:
+        prompt = " [Y/n] "
+    elif not default:
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = raw_input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' "\
+                             "(or 'y' or 'n').\n")
+
+
+class InteractiveUI(HardCodedUI):
+    """ We can't avoid asking the user to type what's written on the dongle """
+
+    def request(self, action, html):
+        if action == 'requestSecret':
+            return self.handle_requestSecret()
+        return HardCodedUI.request(self, action, html)
+
+    def handle_requestSecret(self):
+        if not query_yes_no("Do you see a number ?"):
+            return [('param', {'name': 'secret'}, [], ''),
+                     ('param', {'name': 'tryOther'}, [], 'TRY_OTHER')]
+        sys.stdout.write("Type here the number you see:")
+        secret = raw_input()
+        return [('param', {'name': 'secret'}, [], secret)]

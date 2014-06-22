@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 from .dongle import FitBitDongle
 from .net import GalileoClient
-from .tracker import FitbitClient
+from .tracker import FitbitClient, MICRODUMP, MEGADUMP
 from .utils import a2x
 
 
@@ -33,6 +33,9 @@ class Conversation(object):
                                 'tracker/client/message')
 
         self.fitbit.disconnect()
+
+        self.trackers = {}  # Dict indexed by trackerId
+        self.connected = None
 
         if not self.fitbit.getDongleInfo():
             logger.warning('Failed to get connected Fitbit dongle information')
@@ -75,7 +78,8 @@ class Conversation(object):
                     print r
                     if r is not None:
                         res.append(r)
-                resp.append(('command-response', {}, res))
+                if res:
+                    resp.extend(res)
             if containsForm:
                 # Get an answer from the ui
                 resp.append(('ui-response', {'action': action}, self.ui.request(action, html)))
@@ -91,11 +95,21 @@ class Conversation(object):
         return f(*childs, **elems)
 
     def _pair(self, **params):
-        """ :returns: nothing
+        """ Establish a connection with the tracker.
+            :returns: the minidump
         """
         displayCode = bool(params['displayCode'])
         waitForUserInput = bool(params['waitForUserInput'])
         trackerId = params['tracker-id']
+        tracker = self.trackers[trackerId]
+        self.fitbit.establishLink(tracker)
+        self.fitbit.toggleTxPipe(True)
+        self.fitbit.initializeAirlink(tracker)
+        self.connected = tracker
+        dump = self.fitbit.getDump(MICRODUMP)
+        if displayCode:
+            self.fitbit.displayCode()
+        return ('tracker', {'tracker-id':trackerId}, [('data', {}, [], dump.toBase64())])
 
     def _connect(self, **params):
         """ :returns: nothing
@@ -107,24 +121,30 @@ class Conversation(object):
             responseData = params['response-data']
         else:
             raise ValueError(params)
+        raise NotImplementedError()
 
     def _list(self, *childs, **params):
         immediateRsi = int(params['immediateRsi'])
         minDuration = int(params['minDuration'])
         maxDuration = int(params['maxDuration'])
 
+        self.trackers = {}
         res = []
         for tracker in self.fitbit.discover(FitBitUUID, minRSSI=immediateRsi,
                                              minDuration=minDuration):
+            trackerId = a2x(tracker.id, delim="")
+            self.trackers[trackerId] = tracker
             res.append(('available-tracker', {},
-                        [('tracker-id', {}, [], a2x(tracker.id, delim="")), ('tracker-attributes', {}, [], a2x(tracker.attributes, delim="")), ('rsi', {} , [], str(tracker.RSSI))]))
-        return ('list-trackers', {}, res)
+                        [('tracker-id', {}, [], trackerId),
+                         ('tracker-attributes', {}, [], a2x(tracker.attributes, delim="")),
+                         ('rsi', {} , [], str(tracker.RSSI))]))
+        return ('command-response', {}, [('list-trackers', {}, res)])
 
     def _ack(self, **params):
         trackerId = params['tracker-id']
-
+        raise NotImplementedError()
 
     # ------
 
     def do_tracker(self, tracker):
-        pass
+        raise NotImplementedError()
