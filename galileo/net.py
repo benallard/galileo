@@ -157,7 +157,7 @@ class GalileoClient(object):
     def requestStatus(self, allowHTTP=False):
         try:
             self.post('status')
-        except requests.exceptions.ConnectionError, ce:
+        except requests.exceptions.ConnectionError as ce:
             error_msg = ce.args[0].reason.strerror
             # No internet connection or fitbit server down
             logger.error("Not able to connect to the Fitbit server using %s:"
@@ -176,7 +176,7 @@ class GalileoClient(object):
         self.scheme = 'http'
         try:
             self.post('status')
-        except requests.exceptions.ConnectionError, ce:
+        except requests.exceptions.ConnectionError as ce:
             error_msg = ce.args[0].reason.strerror
             # No internet connection or fitbit server down
             logger.error("Not able to connect to the Fitbit server using"
@@ -192,7 +192,7 @@ class GalileoClient(object):
             server = self.post('sync', dongle, (
                 'tracker', {'tracker-id': trackerId}, (
                     'data', {}, [], megadump.toBase64())))
-        except requests.exceptions.ConnectionError, ce:
+        except requests.exceptions.ConnectionError as ce:
             error_msg = ce.args[0].reason.strerror
             raise SyncError('ConnectionError: %s' % error_msg)
 
