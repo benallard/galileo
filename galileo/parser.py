@@ -11,6 +11,8 @@ Known limitations:
 - Blank lines in the middle of an indented block is pretty bad ...
 """
 
+from __future__ import print_function  # for the __main__ block
+
 import json
 import textwrap
 
@@ -115,4 +117,4 @@ if __name__ == "__main__":
     import sys
     # For fun and quick test
     with open(sys.argv[1], 'rt') as f:
-        print load(f)
+        print(load(f))
