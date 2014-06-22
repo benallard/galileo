@@ -2,6 +2,8 @@
 The conversationnal part between the server and the client ...
 """
 
+import base64
+import time
 import uuid
 
 import logging
@@ -10,7 +12,7 @@ logger = logging.getLogger(__name__)
 from .dongle import FitBitDongle
 from .net import GalileoClient
 from .tracker import FitbitClient, MICRODUMP, MEGADUMP
-from .utils import a2x
+from .utils import a2x, s2a
 
 
 FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
@@ -49,7 +51,7 @@ class Conversation(object):
             print answ
             html = ''
             commands = None
-            trackers = None
+            trackers = []
             action = None
             containsForm = False
             for tple in answ:
@@ -62,7 +64,7 @@ class Conversation(object):
                             containsForm = attribs.get('containsForm', 'false') == 'true'
                             html = body
                 elif tag == 'tracker':
-                    trackers.append()
+                    trackers.append(tple)
                 elif tag == 'commands':
                     commands = childs
             resp = []
@@ -106,22 +108,38 @@ class Conversation(object):
         self.fitbit.toggleTxPipe(True)
         self.fitbit.initializeAirlink(tracker)
         self.connected = tracker
-        dump = self.fitbit.getDump(MICRODUMP)
         if displayCode:
             self.fitbit.displayCode()
-        return ('tracker', {'tracker-id':trackerId}, [('data', {}, [], dump.toBase64())])
+            if waitForUserInput:
+                # XXX: That's waiting, but not for user input ...
+                time.sleep(10)
+        dump = self.fitbit.getDump(MICRODUMP)
+        return ('tracker', {'tracker-id':trackerId},
+                 [('data', {}, [], dump.toBase64())])
 
     def _connect(self, **params):
         """ :returns: nothing
         """
         trackerId = params['tracker-id']
+        if a2x(self.connected.id, delim="") != trackerId:
+            raise ValueError(trackerId)
         if 'connection' in params:
-            connection = params['connection'] == 'disconnect'
+            disconnect = params['connection'] == 'disconnect'
+            if disconnect:
+                self.fitbit.toggleTxPipe(False)
+                self.fitbit.terminateAirlink()
+                self.connected = None
+            return
         elif 'response-data' in params:
             responseData = params['response-data']
+            dumptype = {'megadump': MEGADUMP,
+                        'microdump': MICRODUMP}[responseData]
+            dump = self.fitbit.getDump(dumptype)
+            return ('tracker', {'tracker-id': trackerId},
+                     [('data', {}, [], dump.toBase64())])
         else:
             raise ValueError(params)
-        raise NotImplementedError()
+
 
     def _list(self, *childs, **params):
         immediateRsi = int(params['immediateRsi'])
@@ -137,7 +155,7 @@ class Conversation(object):
             res.append(('available-tracker', {},
                         [('tracker-id', {}, [], trackerId),
                          ('tracker-attributes', {}, [], a2x(tracker.attributes, delim="")),
-                         ('rsi', {} , [], str(tracker.RSSI))]))
+                         ('rsi', {}, [], str(tracker.RSSI))]))
         return ('command-response', {}, [('list-trackers', {}, res)])
 
     def _ack(self, **params):
@@ -147,4 +165,16 @@ class Conversation(object):
     # ------
 
     def do_tracker(self, tracker):
-        raise NotImplementedError()
+        tag, elems, childs, body = tracker
+        trackerId = elems['tracker-id']
+        if a2x(self.connected.id, delim="") != trackerId:
+            raise ValueError(trackerId)
+        _type = elems['type']
+        if _type != 'megadumpresponse':
+            raise NotImplementedError(_type)
+        data = None
+        for child in childs:
+            tag, _, _, body = child
+            if tag == 'data':
+                data = s2a(base64.b64decode(body))
+        self.fitbit.uploadResponse(data)
