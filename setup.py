@@ -43,10 +43,6 @@ class CheckVersion(Command):
 with open('README.txt') as file:
     long_description = file.read()
 
-extra = {}
-if sys.version_info >= (3,):
-    extra['use_2to3'] = True
-
 setup(
     name="galileo",
     version=__version__,
@@ -84,5 +80,4 @@ setup(
     cmdclass={
         'checkversion': CheckVersion,
     },
-    **extra
 )
