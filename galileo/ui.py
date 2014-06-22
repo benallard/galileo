@@ -23,7 +23,6 @@ class Form(object):
                         res += 1
                 else:
                     res += 1
-        print 'res = %d' % res
         return res
 
     def takeValuesFromAnswer(self, answer):
@@ -123,7 +122,6 @@ class HardCodedUI(BaseUI):
         fe = FormExtractor()
         fe.feed(html)
         answer = self.answers[action]
-        print answer, fe.forms
         # Figure out which of the form we should fill
         goodForm = None
         if len(fe.forms) == 1:
