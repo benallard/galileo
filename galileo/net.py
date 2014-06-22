@@ -1,7 +1,12 @@
 
 import base64
 import random
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    # Python3
+    from io import StringIO
+
 
 import xml.etree.ElementTree as ET
 
@@ -103,7 +108,7 @@ class GalileoClient(object):
             for XMLElem in tuplesToXML(data):
                 client.append(XMLElem)
 
-        f = StringIO.StringIO()
+        f = StringIO()
 
         tree = ET.ElementTree(client)
         tree.write(f, "UTF-8")
