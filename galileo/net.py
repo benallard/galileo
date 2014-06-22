@@ -112,6 +112,7 @@ class GalileoClient(object):
         r = requests.post(self.url,
                           data=f.getvalue(),
                           headers={"Content-Type": "text/xml"})
+        f.close()
         r.raise_for_status()
 
         try:

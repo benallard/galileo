@@ -12,6 +12,7 @@ class testtoXML(unittest.TestCase):
         tree = ET.ElementTree(xml)
         tree.write(f)
         self.assertEqual(f.getvalue(), xmlStr)
+        f.close()
 
     def testSimple(self):
         self._testEqual(toXML('elem'), '<elem />')
