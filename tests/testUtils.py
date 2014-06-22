@@ -28,12 +28,12 @@ class testa2s(unittest.TestCase):
 
     def testWithNUL(self):
         self.assertEqual(
-            a2s(range(ord('a'), ord('d')+1) + [0]*3 + range(ord('e'), ord('i')+1)),
+            a2s(list(range(ord('a'), ord('d')+1)) + [0]*3 + list(range(ord('e'), ord('i')+1))),
             'abcd')
 
     def testWithNULNotPrint(self):
         self.assertEqual(
-            a2s(range(ord('a'), ord('d')+1) + [0]*3 + range(ord('e'), ord('i')+1), False),
+            a2s(list(range(ord('a'), ord('d')+1)) + [0]*3 + list(range(ord('e'), ord('i')+1)), False),
             'abcd\0\0\0efghi')
 
 
@@ -103,9 +103,9 @@ class testi2lsba(unittest.TestCase):
 class tests2a(unittest.TestCase):
 
     def testSimple(self):
-        self.assertEqual(s2a('abcd'), range(ord('a'), ord('d')+1))
+        self.assertEqual(s2a('abcd'), list(range(ord('a'), ord('d')+1)))
 
     def testWithNUL(self):
         self.assertEqual(s2a('abcd\0\0\0efghi'),
-                         range(ord('a'), ord('d')+1) +
-                        [0] * 3 + range(ord('e'), ord('i') + 1))
+                         list(range(ord('a'), ord('d')+1)) +
+                        [0] * 3 + list(range(ord('e'), ord('i') + 1)))

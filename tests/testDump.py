@@ -17,14 +17,14 @@ class testDump(unittest.TestCase):
     def testFooterIsSet(self):
         d = Dump(0)
         self.assertEqual(d.footer, [])
-        d.add([0xc0] + range(5))
+        d.add([0xc0] + list(range(5)))
         self.assertEqual(d.len, 0)
-        self.assertEqual(d.footer, [0xc0] + range(5))
+        self.assertEqual(d.footer, [0xc0] + list(range(5)))
 
     def testOnlyFooterInvalid(self):
         """ A dump with only a footer is an invalid dump """
         d = Dump(0)
-        d.add([0xc0] + range(5))
+        d.add([0xc0] + list(range(5)))
         self.assertFalse(d.isValid())
 
     def testEsc1(self):
@@ -46,7 +46,7 @@ class testDump(unittest.TestCase):
     def testToBase64(self):
         d = Dump(0)
         d.add(range(10))
-        d.add([0xc0]+range(8))
+        d.add([0xc0] + list(range(8)))
         self.assertEqual(d.toBase64(), 'AAECAwQFBgcICcAAAQIDBAUGBw==')
 
     def testNonValidDataType(self):
