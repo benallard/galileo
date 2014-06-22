@@ -30,18 +30,18 @@ class testDump(unittest.TestCase):
     def testEsc1(self):
         d = Dump(0)
         self.assertEqual(d.esc[0], 0)
-        d.add([0333, 0334])
+        d.add([0xdb, 0xdc])
         self.assertEqual(d.len, 1)
         self.assertEqual(d.esc[0], 1)
-        self.assertEqual(d.data, [0300])
+        self.assertEqual(d.data, [0xc0])
 
     def testEsc2(self):
         d = Dump(0)
         self.assertEqual(d.esc[1], 0)
-        d.add([0333, 0335])
+        d.add([0xdb, 0xdd])
         self.assertEqual(d.len, 1)
         self.assertEqual(d.esc[1], 1)
-        self.assertEqual(d.data, [0333])
+        self.assertEqual(d.data, [0xdb])
 
     def testToBase64(self):
         d = Dump(0)
@@ -60,7 +60,7 @@ class testDump(unittest.TestCase):
         d.add(range(10))
         d.add([0xc0]+[0, 0, 0, 0])
         self.assertFalse(d.isValid())
-        
+
     def testNonValidLen(self):
         d = Dump(0)
         d.add(range(10))

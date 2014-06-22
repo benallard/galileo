@@ -53,13 +53,13 @@ class Dump(object):
     def unSLIP1(self, data):
         """ The protocol uses a particular version of SLIP (RFC 1055) applied
         only on the first byte of the data"""
-        END = 0300
-        ESC = 0333
-        ESC_ = {0334: END,
-                0335: ESC}
+        END = 0xC0
+        ESC = 0xDB
+        ESC_ = {0xDC: END,
+                0xDD: ESC}
         if data[0] == ESC:
             # increment the escape counter
-            self.esc[data[1] - 0334] += 1
+            self.esc[data[1] - 0xDC] += 1
             # return the escaped value
             return [ESC_[data[1]]] + data[2:]
         return data
