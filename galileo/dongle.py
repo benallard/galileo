@@ -92,6 +92,8 @@ def isATimeout(excpt):
         return True
     elif excpt.errno is None and excpt.args == ('Operation timed out',):
         return True
+    elif excpt.errno is None and excpt.args == ('Connection timed out',):
+        return True
     else:
         return False
 
