@@ -29,9 +29,9 @@ class testCM(unittest.TestCase):
         self.assertTrue(CM(8) == CM(8))
         self.assertTrue(CM(5) == CM(5, []))
         self.assertTrue(CM(2, range(5)), CM(2, range(5)))
-        self.assertEquals(CM(8), CM(8))
-        self.assertEquals(CM(5), CM(5, []))
-        self.assertEquals(CM(2, range(5)), CM(2, range(5)))
+        self.assertEqual(CM(8), CM(8))
+        self.assertEqual(CM(5), CM(5, []))
+        self.assertEqual(CM(2, range(5)), CM(2, range(5)))
 
     def testNotEquals(self):
         self.assertFalse(CM(7) == CM(8))
@@ -44,7 +44,7 @@ class testDM(unittest.TestCase):
 
     def testEquals(self):
         self.assertTrue(DM(range(3)) == DM(range(3)))
-        self.assertEquals(DM(range(8)), DM(range(8)))
+        self.assertEqual(DM(range(8)), DM(range(8)))
 
     def testNotEquals(self):
         self.assertFalse(DM([87]) == DM([42]))

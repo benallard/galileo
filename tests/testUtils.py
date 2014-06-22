@@ -17,9 +17,9 @@ class testa2x(unittest.TestCase):
 class testx2a(unittest.TestCase):
 
     def testSimple(self):
-        self.assertEquals(x2a('2'), [2])
-        self.assertEquals(x2a('02'), [2])
-        self.assertEquals(x2a('2 3'), [2, 3])
+        self.assertEqual(x2a('2'), [2])
+        self.assertEqual(x2a('02'), [2])
+        self.assertEqual(x2a('2 3'), [2, 3])
 
 class testa2s(unittest.TestCase):
 

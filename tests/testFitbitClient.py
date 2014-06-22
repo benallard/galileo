@@ -101,7 +101,7 @@ class testScenarii(unittest.TestCase):
 
     def testTimeout(self):
         # the test will have to be re-writen if the scenario changes
-        self.assertEquals(28, len(GOOD_SCENARIO))
+        self.assertEqual(28, len(GOOD_SCENARIO))
         for i in range(len(GOOD_SCENARIO) + 1):
             d = MyDongleWithTimeout(GOOD_SCENARIO, i)
             c = FitbitClient(d)
@@ -115,7 +115,7 @@ class testScenarii(unittest.TestCase):
             self.assertTrue(c.getDongleInfo())
             ts = [t for t in c.discover(MyUUID())]
             if i < 6:
-                self.assertEquals([], ts, i)
+                self.assertEqual([], ts, i)
                 continue
             self.assertEqual(1, len(ts), i)
             self.assertEqual(ts[0].id, [0,0,42,0,0,0])
@@ -132,7 +132,7 @@ class testScenarii(unittest.TestCase):
                 continue
             self.assertTrue(c.initializeAirlink(ts[0]))
             if i < 18:
-                self.assertEquals(None, c.getDump())
+                self.assertEqual(None, c.getDump())
                 continue
             dump = c.getDump()
             self.assertFalse(dump is None)
@@ -149,7 +149,7 @@ class testScenarii(unittest.TestCase):
                 self.assertFalse(c.terminateAirlink())
                 continue
             self.assertTrue(c.terminateAirlink())
-            self.assertEquals(len(GOOD_SCENARIO), i)
+            self.assertEqual(len(GOOD_SCENARIO), i)
 
 class testDiscover(unittest.TestCase):
 
