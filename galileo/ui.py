@@ -4,7 +4,11 @@ This is where to look for for all user interaction stuff ...
 
 import sys
 
-from HTMLParser import HTMLParser
+try:
+    from html.parser import HTMLParser
+except ImportError:
+    # Python2
+    from HTMLParser import HTMLParser
 
 class Form(object):
     def __init__(self):
