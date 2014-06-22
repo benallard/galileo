@@ -127,7 +127,7 @@ def syncAllTrackers(config):
                                    " response to tracker %s", trackerid)
                 tracker.status = "Synchronisation successful"
 
-            except SyncError, e:
+            except SyncError as e:
                 logger.error("Fitbit server refused data from tracker %s,"
                              " reason: %s", trackerid, e.errorstring)
                 tracker.status = "Synchronisation failed: %s" % e.errorstring
@@ -186,7 +186,7 @@ def sync(config):
         for tracker in syncAllTrackers(config):
             statuses.append("Tracker: %s: %s" % (a2x(tracker.id, ''),
                                                  tracker.status))
-    except BackOffException, boe:
+    except BackOffException as boe:
         print "The server requested that we come back between %d and %d"\
             " minutes." % (boe.min / 60*1000, boe.max / 60*1000)
         later = datetime.datetime.now() + datetime.timedelta(
