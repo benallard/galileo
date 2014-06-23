@@ -1,3 +1,10 @@
+galileo 0.4.2 (????-??-??)
+--------------------------
+
+Main changes since 0.4.1:
+- Correctly recognize TimeoutError from libusb0 (issue#82)
+
+
 galileo 0.4.1 (2014-06-22)
 --------------------------
 
