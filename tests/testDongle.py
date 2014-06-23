@@ -1,7 +1,10 @@
+import errno
 import unittest
 
 import galileo.dongle
-from galileo.dongle import isStatus, FitBitDongle, CM, DM
+from galileo.dongle import isStatus, FitBitDongle, CM, DM, isATimeout
+
+USBError = galileo.dongle.usb.core.USBError
 
 class MyCM(object):
     def __init__(self, ins, payload):
@@ -66,3 +69,21 @@ class testDongle(unittest.TestCase):
         galileo.dongle.usb.core.find = myFind
         d = FitBitDongle(0)
         d.setup()
+
+class testisATimeout(unittest.TestCase):
+
+    def testErrnoTIMEOUT(self):
+        """ usb.core.USBError: [Errno 110] Operation timed out """
+        self.assertTrue(isATimeout(USBError('Operation timed out', errno=errno.ETIMEDOUT)))
+
+    def testpyusb1a2(self):
+        """\
+        issue#17
+        usb.core.USBError: Operation timed out """
+        self.assertTrue(isATimeout(IOError('Operation timed out')))
+
+    def testlibusb0(self):
+        """\
+        issue#82
+        usb.core.USBError: [Errno None] Connection timed out """
+        self.assertTrue(isATimeout(USBError('Connection timed out')))
