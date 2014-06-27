@@ -133,7 +133,7 @@ def syncAllTrackers(config):
                 tracker.status = "Synchronisation failed: %s" % e.errorstring
 
         logger.debug('Disconnecting from tracker')
-        if not (fitbit.toggleTxPipe(False) and fitbit.terminateAirlink()):
+        if not (fitbit.terminateAirlink() and fitbit.toggleTxPipe(False) and fitbit.ceaseLink()):
             logger.warning('Timeout while disconnecting from tracker %s',
                            trackerid)
             tracker.status += " (Error disconnecting)"

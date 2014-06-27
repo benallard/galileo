@@ -96,8 +96,9 @@ class testScenarii(unittest.TestCase):
         self.assertFalse(dump is None)
         self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
         self.assertTrue(c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)))
-        self.assertTrue(c.toggleTxPipe(False))
         self.assertTrue(c.terminateAirlink())
+        self.assertTrue(c.toggleTxPipe(False))
+        self.assertTrue(c.ceaseLink())
 
     def testTimeout(self):
         # the test will have to be re-writen if the scenario changes
@@ -137,18 +138,22 @@ class testScenarii(unittest.TestCase):
             dump = c.getDump()
             self.assertFalse(dump is None)
             self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
-            if i < 23:
+            if i < 22:
                 self.assertFalse(c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)))
                 continue
             self.assertTrue(c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)))
+            if i < 23:
+                self.assertFalse(c.terminateAirlink())
+                continue
+            self.assertTrue(c.terminateAirlink())
             if i < 24:
                 self.assertFalse(c.toggleTxPipe(False))
                 continue
             self.assertTrue(c.toggleTxPipe(False))
             if i < 28:
-                self.assertFalse(c.terminateAirlink())
+                self.assertFalse(c.ceaseLink())
                 continue
-            self.assertTrue(c.terminateAirlink())
+            self.assertTrue(c.ceaseLink())
             self.assertEqual(len(GOOD_SCENARIO), i)
 
 class testDiscover(unittest.TestCase):

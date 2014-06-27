@@ -126,8 +126,9 @@ class Conversation(object):
         if 'connection' in params:
             disconnect = params['connection'] == 'disconnect'
             if disconnect:
-                self.fitbit.toggleTxPipe(False)
                 self.fitbit.terminateAirlink()
+                self.fitbit.toggleTxPipe(False)
+                self.fitbit.ceaseLink()
                 self.connected = None
             return
         elif 'response-data' in params:

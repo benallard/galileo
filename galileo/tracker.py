@@ -242,14 +242,21 @@ class FitbitClient(object):
         if d != DM([0xc0, 2]):
             logger.error("Unexpected answer from tracker: %s", d)
             return False
-        self.dongle.data_write(DM([0xc0, 1]))
-        d = self.dongle.data_read()
-        if d != DM([0xc0, 1]):
-            return False
 
         return True
 
     def terminateAirlink(self):
+        """ contrary to ``initializeAirlink`` """
+
+        self.dongle.data_write(DM([0xc0, 1]))
+        d = self.dongle.data_read()
+        if d != DM([0xc0, 1]):
+            return False
+        return True
+
+    def ceaseLink(self):
+        """ contrary to ``establishLink`` """
+
         self.dongle.ctrl_write(CM(7))
         if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
             return False

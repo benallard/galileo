@@ -175,6 +175,14 @@ def establishLink(idx='0'):
     else:
         tracker = None
 
+@command('L', "ceaseLink")
+@needfitbit
+def ceaseLink():
+    if not fitbit.ceaseLink():
+        print 'Bad'
+    else:
+        print 'Ok'
+
 def needtracker(fn):
     def wrapped(*args):
         if tracker is None:
