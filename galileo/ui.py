@@ -35,8 +35,8 @@ class Form(object):
         """
         for field in self.fields:
             field.value = answer.get(field.name, field.value)
-            if field.type == 'submit':
-                self.submit = field.value
+            if (field.name in answer) and (field.type == 'submit'):
+                self.submit = field.name
 
     def asXML(self):
         """\
@@ -45,7 +45,7 @@ class Form(object):
         res = []
         for field in self.fields:
             if field.type == 'submit':
-                if self.submit != field.value:
+                if self.submit != field.name:
                     continue
             res.append(field.asXMLParam())
         return res
