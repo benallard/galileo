@@ -85,7 +85,15 @@ class FormExtractor(HTMLParser):
             self.curForm = Form()
         if tag == 'input':
             if 'name' in attrs:
-                self.curForm.addField(FormField(**attrs))
+                if self.curForm is None:
+                    # In case the input happen outside of a form, just create
+                    # one, and adds it immediatly
+                    f = Form()
+                    f.addField(FormField(**attrs))
+                    self.forms.append(f)
+                else:
+                    self.curForm.addField(FormField(**attrs))
+
         if tag == 'select':
             self.curSelect = FormField(type='select', **attrs)
         if tag == 'option' and 'selected' in attrs:

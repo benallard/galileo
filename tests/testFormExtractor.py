@@ -22,3 +22,10 @@ class testFormExtractor(unittest.TestCase):
         fe.feed('<html><body><form><select name="choice" ><option value="A" /><option value="B" selected></select></form></body></html>')
         self.assertEqual(len(fe.forms), 1)
         self.assertEqual(fe.forms[0].asDict(), {'choice': 'B'})
+
+    def testInputOutOfForm(self):
+        """ From the 'done' action """
+        fe = FormExtractor()
+        fe.feed(u'''<!DOCTYPE html><input class="button" type="submit" name="again" value="Next" />''')
+        self.assertEqual(len(fe.forms), 1)
+        self.assertEqual(fe.forms[0].asDict(), {'again': 'Next'})
