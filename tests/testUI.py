@@ -1,6 +1,6 @@
 import unittest
 
-from galileo.ui import Form, FormField
+from galileo.ui import Form, FormField, MissingConfigError
 
 class testFormField(unittest.TestCase):
     def teststr(self):
@@ -24,3 +24,15 @@ class testHTMLForm(unittest.TestCase):
         f.addField(FormField('name2', 'submit'))
         f.takeValuesFromAnswer({'name2': None})
         self.assertEqual(f.asXML(), [('param', {'name': 'name2'}, [], None)])
+
+class testMissingConfigClass(unittest.TestCase):
+    def testStr(self):
+        f = Form()
+        f.addField(FormField('name'))
+        f.addField(FormField('name2'))
+        f2 = Form()
+        f2.addField(FormField('a'))
+        f2.addField(FormField('b'))
+        f2.addField(FormField('c'))
+        mce = MissingConfigError('test', [f, f2])
+        print mce

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 from .dongle import FitBitDongle
 from .net import GalileoClient
 from .tracker import FitbitClient, MICRODUMP, MEGADUMP
+from .ui import MissingConfigError
 from .utils import a2x, s2a
 
 
@@ -48,7 +49,6 @@ class Conversation(object):
 
         while True:
             answ = self.galileo.post(self.mode, self.dongle, resp)
-            print answ
             html = ''
             commands = None
             trackers = []
@@ -87,7 +87,12 @@ class Conversation(object):
                     resp.extend(res)
             if containsForm:
                 # Get an answer from the ui
-                resp.append(('ui-response', {'action': action}, self.ui.request(action, html)))
+                try:
+                    ui_resp = self.ui.request(action, html)
+                except MissingConfigError as mce:
+                    print mce
+                    break
+                resp.append(('ui-response', {'action': action}, ui_resp))
 
         print 'Done'
 

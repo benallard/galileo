@@ -119,6 +119,24 @@ class BaseUI(object):
     def request(self, action, client_display):
         raise NotImplementedError
 
+class MissingConfigError(Exception):
+    def __init__(self, action, forms):
+        self.action = action
+        self.forms = forms
+    def __str__(self):
+        s = ["The server is asking a question to which I don't know any"
+             " answer.",]
+        s.append("Please add the section '%s' in the galileorc configuration"
+                 " file under 'hardcoded-ui'" % self.action)
+        s.append("Under this section, you should add the answer for one of the"
+                 " following forms:")
+        for f in self.forms:
+            s.append(" - %s" % f.asDict())
+        s.append("To help you decide, you can run the pairing process with the"
+                 " `--debug` command line switch,")
+        s.append("this will print the HTML code from which the questions have"
+                 " been extracted.")
+        return '\n'.join(s)
 
 class HardCodedUI(BaseUI):
     """\
@@ -133,6 +151,8 @@ class HardCodedUI(BaseUI):
             html = html[len('<![CDATA['):-len(']]>')]
         fe = FormExtractor()
         fe.feed(html)
+        if action not in self.answers:
+            raise MissingConfigError(action, fe.forms)
         answer = self.answers[action]
         # Figure out which of the form we should fill
         goodForm = None
