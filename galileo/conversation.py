@@ -67,6 +67,9 @@ class Conversation(object):
                     trackers.append(tple)
                 elif tag == 'commands':
                     commands = childs
+            if ((not containsForm) and (len(trackers) == 0) and
+                (commands is None)):
+                break
             resp = []
             if trackers:
                 # First: Do what is asked
@@ -85,6 +88,8 @@ class Conversation(object):
             if containsForm:
                 # Get an answer from the ui
                 resp.append(('ui-response', {'action': action}, self.ui.request(action, html)))
+
+        print 'Done'
 
     #-------- The commands
 
