@@ -100,6 +100,14 @@ class Conversation(object):
 
         print 'Done'
 
+    def __connect(self, id):
+        tracker = self.trackers[id]
+        self.fitbit.establishLink(tracker)
+        self.fitbit.toggleTxPipe(True)
+        self.fitbit.initializeAirlink(tracker)
+        self.connected = tracker
+
+
     #-------- The commands
 
     def do_command(self, cmd):
@@ -117,11 +125,7 @@ class Conversation(object):
         displayCode = bool(params['displayCode'])
         waitForUserInput = bool(params['waitForUserInput'])
         trackerId = params['tracker-id']
-        tracker = self.trackers[trackerId]
-        self.fitbit.establishLink(tracker)
-        self.fitbit.toggleTxPipe(True)
-        self.fitbit.initializeAirlink(tracker)
-        self.connected = tracker
+        self.__connect(trackerId)
         if displayCode:
             self.fitbit.displayCode()
             if waitForUserInput:
@@ -135,6 +139,9 @@ class Conversation(object):
         """ :returns: nothing
         """
         trackerId = params['tracker-id']
+        if self.connected is None:
+            self.__connect(trackerId)
+
         if a2x(self.connected.id, delim="") != trackerId:
             raise ValueError(trackerId)
         if 'connection' in params:
@@ -175,7 +182,8 @@ class Conversation(object):
 
     def _ack(self, **params):
         trackerId = params['tracker-id']
-        raise NotImplementedError()
+        # Not much to do here as our ack is part of our upload ...
+        return ('command-response', {}, [('ack-tracker-data', {'tracker-id':trackerId})])
 
     # ------
 
