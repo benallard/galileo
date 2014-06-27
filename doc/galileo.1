@@ -49,11 +49,22 @@ option.
 Display the
 .B galileo
 version and exit.
-.TP interactive
+.TP
+.B interactive
 This spawn an interactive shell to allow sending arbitrary commands to
 the dongle and the tracker. This is meant to allow experimenting with
 new commands, or different command orders. To be used by experts
 only.
+.TP
+.B pair
+This mode, in an experimental state, allow you to link your tracker with your
+Fitbit online account. This is needed before being able to use any new tracker.
+In order to use this mode, you need an account in the Fitbit online platform,
+and a tracker. The parameters for this mode are taken from the
+.B hardcoded-ui
+section of the
+.BR galileorc (5)
+file.
 
 .SH OPTIONS
 .TP
@@ -178,13 +189,6 @@ Written and maintained by Benoît Allard, with contributions from other
 authors.
 
 .SH BUGS
-.B galileo
-doesn't currently support linking (pairing) trackers with the Fitbit
-web service account. Before a new tracker can be synchronized it must
-first be linked to your Fitbit account using another method such as a
-Fitbit mobile or tablet app, or the official Fitbit Windows or
-Macintosh desktop clients.
-.PP
 There are no current facilities to make use of the data stored with
 the \fB\-\-dump\fR command.
 .PP
