@@ -35,6 +35,10 @@ class Conversation(object):
         self.galileo = GalileoClient('https', 'client.fitbit.com',
                                 'tracker/client/message')
 
+        if self.mode == 'firmware':
+            # Fake the version to let him believe we can handle that ...
+            self.galileo._version = '1.0.0.2575'
+
         self.fitbit.disconnect()
 
         self.trackers = {}  # Dict indexed by trackerId
