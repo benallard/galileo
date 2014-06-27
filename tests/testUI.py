@@ -35,4 +35,9 @@ class testMissingConfigClass(unittest.TestCase):
         f2.addField(FormField('b'))
         f2.addField(FormField('c'))
         mce = MissingConfigError('test', [f, f2])
-        print mce
+        s = str(mce)
+        self.assertTrue(str(f.asDict()) in s)
+        self.assertTrue(str(f2.asDict()) in s)
+        self.assertTrue('`--debug`' in s)
+        self.assertTrue("'test'" in s)
+        self.assertTrue("'hardcoded-ui'" in s)
