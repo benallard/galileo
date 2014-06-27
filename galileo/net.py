@@ -75,6 +75,7 @@ class GalileoClient(object):
         self.path = path
         self._port = port
         self.server_state = None
+        self._version = None
 
     @property
     def port(self):
@@ -90,11 +91,18 @@ class GalileoClient(object):
             'port': self.port,
             'path': self.path}
 
+    @property
+    def version(self):
+        if self._version is not None:
+            # We're not completely lying ;)
+            return self._version + ' (really: %s)' % __version__
+        return __version__
+
     def post(self, mode, dongle=None, data=None):
         client = toXML('galileo-client', {'version': "2.0"})
         info = toXML('client-info', childs=[
             ('client-id', {}, [], self.ID),
-            ('client-version', {}, [], __version__),
+            ('client-version', {}, [], self.version),
             ('client-mode', {}, [], mode)])
         if (dongle is not None) and dongle.hasVersion:
             info.append(toXML(
