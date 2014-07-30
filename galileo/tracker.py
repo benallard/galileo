@@ -113,8 +113,7 @@ class FitbitClient(object):
             yield tracker
 
         if d != CM(2, [amount]):
-            logger.error('%d trackers discovered, dongle says %d', amount,
-                         d and d.payload[0] or 0)
+            logger.error('%d trackers discovered, dongle says %s', amount, d)
         # tracker found, cancel discovery
         self.dongle.ctrl_write(CM(5))
         d = self.dongle.ctrl_read()
