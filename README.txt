@@ -69,6 +69,10 @@ Distribution packages
 
 The following Linux distributions have packages available for installation:
 
+**Fedora**:
+  The utility is packaged in a COPR repo available at 
+  <https://copr.fedoraproject.org/coprs/stbenjam/galileo/>.  Download the relevant repo
+  for your version of Fedora, and then yum install galileo.
 **Gentoo**:
   The utility is packaged as ``app-misc/galileo`` within the
   `squeezebox <http://git.overlays.gentoo.org/gitweb/?p=user/squeezebox.git>`_
