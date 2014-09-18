@@ -1,11 +1,7 @@
 import unittest
 
 import xml.etree.ElementTree as ET
-try:
-    from StringIO import StringIO
-except ImportError:
-    # Python3
-    from io import StringIO
+from io import BytesIO
 
 from galileo.net import toXML, tuplesToXML, XMLToTuple
 
@@ -13,9 +9,9 @@ class testtoXML(unittest.TestCase):
 
     def _testEqual(self, xml, xmlStr):
         tree = ET.ElementTree(xml)
-        f = StringIO()
+        f = BytesIO()
         tree.write(f)
-        self.assertEqual(f.getvalue(), xmlStr)
+        self.assertEqual(f.getvalue().decode('utf-8'), xmlStr)
         f.close()
 
     def testSimple(self):
