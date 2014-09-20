@@ -110,6 +110,9 @@ class CtrlMessage(object):
         if other is None: return False
         return self.asList() == other.asList()
 
+    def __ne__(self, other):
+        return not self == other
+
     def __str__(self):
         d = []
         if self.payload:
@@ -142,6 +145,9 @@ class DataMessage(object):
     def __eq__(self, other):
         if other is None: return False
         return self.data == other.data
+
+    def __ne__(self, other):
+        return not self == other
 
     def __str__(self):
         return ' '.join(['[', a2x(self.data), ']', '-', str(self.len)])
