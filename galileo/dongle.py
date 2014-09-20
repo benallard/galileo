@@ -106,9 +106,9 @@ class CtrlMessage(object):
     def asList(self):
         return [self.len, self.INS] + self.payload
 
-    def __cmp__(self, other):
-        if other is None: return 1
-        return cmp(self.asList(), other.asList())
+    def __eq__(self, other):
+        if other is None: return False
+        return self.asList() == other.asList()
 
     def __str__(self):
         d = []
@@ -139,9 +139,9 @@ class DataMessage(object):
     def asList(self):
         return self.data + [0] * (self.LENGTH - 1 - self.len) + [self.len]
 
-    def __cmp__(self, other):
-        if other is None: return 1
-        return cmp(self.data, other.data)
+    def __eq__(self, other):
+        if other is None: return False
+        return self.data == other.data
 
     def __str__(self):
         return ' '.join(['[', a2x(self.data), ']', '-', str(self.len)])

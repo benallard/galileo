@@ -27,20 +27,22 @@ class testisStatus(unittest.TestCase):
 
 
 class testCM(unittest.TestCase):
+    r2 = list(range(2))
+    r5 = list(range(5))
 
     def testEquals(self):
         self.assertTrue(CM(8) == CM(8))
         self.assertTrue(CM(5) == CM(5, []))
-        self.assertTrue(CM(2, range(5)), CM(2, range(5)))
+        self.assertTrue(CM(2, self.r5), CM(2, self.r5))
         self.assertEqual(CM(8), CM(8))
         self.assertEqual(CM(5), CM(5, []))
-        self.assertEqual(CM(2, range(5)), CM(2, range(5)))
+        self.assertEqual(CM(2, self.r5), CM(2, self.r5))
 
     def testNotEquals(self):
         self.assertFalse(CM(7) == CM(8))
         self.assertFalse(CM(9) == CM(9, [5]))
-        self.assertFalse(CM(3, range(2)) == CM(3, range(5)))
-        self.assertFalse(None == CM(3, range(5)))
+        self.assertFalse(CM(3, self.r2) == CM(3, self.r5))
+        self.assertFalse(None == CM(3, self.r5))
 
 
 class testDM(unittest.TestCase):
