@@ -8,7 +8,7 @@ from galileo.net import GalileoClient, SyncError, BackOffException
 
 class requestResponse(object):
     def __init__(self, text, server_version='<server-version>\n\n</server-version>'):
-        self.text = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><galileo-server version="2.0">%s%s</galileo-server>""" % (server_version, text)
+        self.text = """<?xml version="1.0" encoding="utf-8" standalone="yes"?><galileo-server version="2.0">%s%s</galileo-server>""" % (server_version, text)
     def raise_for_status(self): pass
 
 class testStatus(unittest.TestCase):
@@ -16,8 +16,8 @@ class testStatus(unittest.TestCase):
     def testOk(self):
         def mypost(url, data, headers):
             self.assertEqual(url, 'scheme://host:8888/path/to/stuff')
-            self.assertEqual(data, """\
-<?xml version='1.0' encoding='UTF-8'?>
+            self.assertEqual(data.decode('utf-8'), """\
+<?xml version='1.0' encoding='utf-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
     'id': GalileoClient.ID, 'version': __version__})
             self.assertEqual(headers['Content-Type'], 'text/xml')
@@ -30,8 +30,8 @@ class testStatus(unittest.TestCase):
     def testError(self):
         def mypost(url, data, headers):
             self.assertEqual(url, 'h://c:8/p')
-            self.assertEqual(data, """\
-<?xml version='1.0' encoding='UTF-8'?>
+            self.assertEqual(data.decode('utf-8'), """\
+<?xml version='1.0' encoding='utf-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
     'id': GalileoClient.ID,
     'version': __version__})
@@ -47,8 +47,8 @@ class testStatus(unittest.TestCase):
         if sys.version_info < (2,7): return
         def mypost(url, data, headers):
             self.assertEqual(url, 'h://c:4/p')
-            self.assertEqual(data, """\
-<?xml version='1.0' encoding='UTF-8'?>
+            self.assertEqual(data.decode('utf-8'), """\
+<?xml version='1.0' encoding='utf-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
     'id': GalileoClient.ID,
     'version': __version__})
@@ -79,8 +79,8 @@ class testStatus(unittest.TestCase):
         """ Older versions of requests only have ``content`` and no ``text`` """
         def mypost(url, data, headers):
             self.assertEqual(url, 'scheme://host:8888/path/to/stuff')
-            self.assertEqual(data, """\
-<?xml version='1.0' encoding='UTF-8'?>
+            self.assertEqual(data.decode('utf-8'), """\
+<?xml version='1.0' encoding='utf-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>status</client-mode></client-info></galileo-client>""" % {
     'id': GalileoClient.ID, 'version': __version__})
             self.assertEqual(headers['Content-Type'], 'text/xml')
@@ -107,8 +107,8 @@ class testSync(unittest.TestCase):
         d = MyMegaDump('YWJjZA==')
         def mypost(url, data, headers):
             self.assertEqual(url, 'a://b:0/c')
-            self.assertEqual(data, """\
-<?xml version='1.0' encoding='UTF-8'?>
+            self.assertEqual(data.decode('utf-8'), """\
+<?xml version='1.0' encoding='utf-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>sync</client-mode><dongle-version major="%(M)d" minor="%(m)d" /></client-info><tracker tracker-id="%(t_id)s"><data>%(b64dump)s</data></tracker></galileo-client>""" % {
     'id': GalileoClient.ID,
     'version': __version__,
@@ -130,8 +130,8 @@ class testSync(unittest.TestCase):
         d = MyMegaDump('base64Dump')
         def mypost(url, data, headers):
             self.assertEqual(url, 'z://y:42/u')
-            self.assertEqual(data, """\
-<?xml version='1.0' encoding='UTF-8'?>
+            self.assertEqual(data.decode('utf-8'), """\
+<?xml version='1.0' encoding='utf-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>sync</client-mode><dongle-version major="%(M)d" minor="%(m)d" /></client-info><tracker tracker-id="%(t_id)s"><data>%(b64dump)s</data></tracker></galileo-client>""" % {
     'id': GalileoClient.ID,
     'version': __version__,
@@ -152,8 +152,8 @@ class testSync(unittest.TestCase):
         d = MyMegaDump('base64Dump')
         def mypost(url, data, headers):
             self.assertEqual(url, 'y://t:8000/v')
-            self.assertEqual(data, """\
-<?xml version='1.0' encoding='UTF-8'?>
+            self.assertEqual(data.decode('utf-8'), """\
+<?xml version='1.0' encoding='utf-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>sync</client-mode><dongle-version major="%(M)d" minor="%(m)d" /></client-info><tracker tracker-id="%(t_id)s"><data>%(b64dump)s</data></tracker></galileo-client>""" % {
     'id': GalileoClient.ID,
     'version': __version__,
@@ -174,8 +174,8 @@ class testSync(unittest.TestCase):
         d = MyMegaDump('base64Dump')
         def mypost(url, data, headers):
             self.assertEqual(url, 'rsync://ssh:22/a/b/c')
-            self.assertEqual(data, """\
-<?xml version='1.0' encoding='UTF-8'?>
+            self.assertEqual(data.decode('utf-8'), """\
+<?xml version='1.0' encoding='utf-8'?>
 <galileo-client version="2.0"><client-info><client-id>%(id)s</client-id><client-version>%(version)s</client-version><client-mode>sync</client-mode><dongle-version major="%(M)d" minor="%(m)d" /></client-info><tracker tracker-id="%(t_id)s"><data>%(b64dump)s</data></tracker></galileo-client>""" % {
     'id': GalileoClient.ID,
     'version': __version__,

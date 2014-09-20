@@ -116,7 +116,7 @@ class GalileoClient(object):
         f = BytesIO()
 
         tree = ET.ElementTree(client)
-        tree.write(f, "UTF-8")
+        tree.write(f, "utf-8", xml_declaration=True)
 
         logger.debug('HTTP POST=%s', f.getvalue())
         r = requests.post(self.url,
