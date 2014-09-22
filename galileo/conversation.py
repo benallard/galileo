@@ -84,7 +84,7 @@ class Conversation(object):
                 res = []
                 for command in commands:
                     r = self.do_command(command)
-                    print r
+                    print(r)
                     if r is not None:
                         res.append(r)
                 if res:
@@ -94,11 +94,11 @@ class Conversation(object):
                 try:
                     ui_resp = self.ui.request(action, html)
                 except MissingConfigError as mce:
-                    print mce
+                    print(mce)
                     break
                 resp.append(('ui-response', {'action': action}, ui_resp))
 
-        print 'Done'
+        print('Done')
 
     def __connect(self, id):
         tracker = self.trackers[id]

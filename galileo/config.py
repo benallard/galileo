@@ -133,7 +133,7 @@ class LogLevelParameter(Parameter):
                               'verbose': logging.INFO,
                               'debug': logging.DEBUG}
         self.__logLevelMapReverse = {}
-        for key, value in self.__logLevelMap.iteritems():
+        for key, value in self.__logLevelMap.items():
             self.__logLevelMapReverse[value] = key
         self.default = logging.WARNING
 

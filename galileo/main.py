@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import datetime
 import os
 import sys
@@ -177,7 +179,7 @@ def version(verbose, delim='\n'):
 
 
 def version_mode(config):
-    print version(config.logLevel in (logging.INFO, logging.DEBUG))
+    print(version(config.logLevel in (logging.INFO, logging.DEBUG)))
 
 
 def sync(config):
@@ -187,16 +189,16 @@ def sync(config):
             statuses.append("Tracker: %s: %s" % (a2x(tracker.id, ''),
                                                  tracker.status))
     except BackOffException as boe:
-        print "The server requested that we come back between %d and %d"\
-            " minutes." % (boe.min / 60*1000, boe.max / 60*1000)
+        print("The server requested that we come back between %d and %d"\
+            " minutes." % (boe.min / 60*1000, boe.max / 60*1000))
         later = datetime.datetime.now() + datetime.timedelta(
             microseconds=boe.getAValue()*1000)
-        print "I suggest waiting until %s" % later
+        print("I suggest waiting until %s" % later)
         return
     except dgl.PermissionDeniedException:
-        print PERMISSION_DENIED_HELP
+        print(PERMISSION_DENIED_HELP)
         return
-    print '\n'.join(statuses)
+    print('\n'.join(statuses))
 
 
 def daemon(config):
@@ -208,7 +210,7 @@ def daemon(config):
                 for tracker in syncAllTrackers(config):
                     logger.info("Tracker %s: %s" % (a2x(tracker.id, ''),
                                                     tracker.status))
-            except BackOffException, boe:
+            except BackOffException as boe:
                 logger.warning("Received a back-off notice from the server,"
                                " waiting for a bit longer.")
                 time.sleep(boe.getAValue())
@@ -217,7 +219,7 @@ def daemon(config):
                             config.daemonPeriod / 1000)
                 time.sleep(config.daemonPeriod / 1000.)
         except KeyboardInterrupt:
-            print "Ctrl-C, caught, stopping ..."
+            print("Ctrl-C, caught, stopping ...")
             goOn = False
 
 
@@ -262,14 +264,14 @@ def main():
             'interactive': interactive.main,
         }[config.mode](config)
     except:
-        print "# A serious error happened, which is probably due to a"
-        print "# programming error. Please open a new issue with the following"
-        print "# information on the galileo bug tracker:"
-        print "#    https://bitbucket.org/benallard/galileo/issues/new"
-        print '#', version(True, '\n# ')
+        print("# A serious error happened, which is probably due to a")
+        print("# programming error. Please open a new issue with the following")
+        print("# information on the galileo bug tracker:")
+        print("#    https://bitbucket.org/benallard/galileo/issues/new")
+        print('#', version(True, '\n# '))
         if hasattr(dgl, 'log'):
-            print '# Last communications:'
+            print('# Last communications:')
             for comm in dgl.log.getData():
                 dir, dat = comm
-                print '# %s %s' % ({dgl.IN: '<', dgl.OUT: '>'}.get(dir, '-'), a2x(dat or []))
+                print('# %s %s' % ({dgl.IN: '<', dgl.OUT: '>'}.get(dir, '-'), a2x(dat or [])))
         raise

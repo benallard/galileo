@@ -7,6 +7,8 @@ https://bitbucket.org/benallard/libfitbit/src/tip/python/ifitbit.py?at=default
 
 """
 
+from __future__ import print_function
+
 #---------------------------
 # The engine
 
@@ -31,7 +33,7 @@ def command(cmd, help):
 
 @command('x', "Quit")
 def quit():
-    print 'Bye !'
+    print('Bye !')
     global exit
     exit = True
 
@@ -39,12 +41,12 @@ def quit():
 @command('?', 'Print possible commands')
 def print_help():
     for cmd in sorted(helps.keys()):
-        print '%s\t%s' % (cmd, helps[cmd])
-    print """Note:
+        print('%s\t%s' % (cmd, helps[cmd]))
+    print("""Note:
  - You can enter multiple commands separated by ';'
  - To establish a link with the tracker, enter the following command:
       c ; d ; l ; tx 1 ; al
-"""
+""")
 
 def main(config):
     global exit
@@ -63,16 +65,16 @@ def main(config):
             except KeyError:
                 if order[0] == '':
                     continue
-                print 'Command %s not known' % order[0]
+                print('Command %s not known' % order[0])
                 print_help()
                 continue
             try:
                 f(*order[1:])
-            except TypeError, te:
-                print "Wrong number of argument given: %s" % te
-            except Exception, e:
+            except TypeError as te:
+                print("Wrong number of argument given: %s" % te)
+            except Exception as e:
                 # We need that to be able to close the connection nicely
-                print "BaD bAd BAd", e
+                print("BaD bAd BAd", e)
                 traceback.print_exc(file=sys.stdout)
                 return
 
@@ -96,17 +98,17 @@ def connect():
     global dongle
     dongle = FitBitDongle(0)  # No DataRing needed
     if not dongle.setup():
-        print "No dongle connected, aborting"
+        print("No dongle connected, aborting")
         quit()
     global fitbit
     fitbit = FitbitClient(dongle)
-    print 'Ok'
+    print('Ok')
 
 
 def needfitbit(fn):
     def wrapped(*args):
         if dongle is None:
-            print "No connection, connect (c) first"
+            print("No connection, connect (c) first")
             return
         return fn(*args)
     return wrapped
@@ -160,7 +162,7 @@ def discovery(UUID="{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}"):
 def needtrackers(fn):
     def wrapped(*args):
         if not trackers:
-            print "No trackers, run a discovery (d) first"
+            print("No trackers, run a discovery (d) first")
             return
         return fn(*args)
     return wrapped
@@ -171,7 +173,7 @@ def establishLink(idx='0'):
     global tracker
     tracker = trackers[int(idx)]
     if fitbit.establishLink(tracker):
-        print 'Ok'
+        print('Ok')
     else:
         tracker = None
 
@@ -179,14 +181,14 @@ def establishLink(idx='0'):
 @needfitbit
 def ceaseLink():
     if not fitbit.ceaseLink():
-        print 'Bad'
+        print('Bad')
     else:
-        print 'Ok'
+        print('Ok')
 
 def needtracker(fn):
     def wrapped(*args):
         if tracker is None:
-            print "No tracker, establish a Link (l) first"
+            print("No tracker, establish a Link (l) first")
             return
         return fn(*args)
     return wrapped
@@ -195,19 +197,19 @@ def needtracker(fn):
 @needfitbit
 def toggleTxPipe(on):
     if fitbit.toggleTxPipe(bool(int(on))):
-        print 'Ok'
+        print('Ok')
 
 @command('al', "initialise airLink")
 @needtracker
 def initialiseAirLink():
     if fitbit.initializeAirlink(tracker):
-        print 'Ok'
+        print('Ok')
 
 @command('AL', "terminate airLink")
 @needfitbit
 def terminateairLink():
     if fitbit.terminateAirlink():
-        print 'Ok'
+        print('Ok')
 
 @command('D', 'getDump')
 @needfitbit
