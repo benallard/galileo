@@ -69,10 +69,11 @@ Distribution packages
 
 The following Linux distributions have packages available for installation:
 
+**Arch**:
+  The utility is available from AUR_. You can install it using the yaourt_ package manager: ``yaourt -S galileo``.
 **Fedora**:
-  The utility is packaged in a COPR repo available at
-  <https://copr.fedoraproject.org/coprs/stbenjam/galileo/>.  Download the relevant repo
-  for your version of Fedora, and then yum install galileo.
+  The utility is packaged in a `COPR repo`_.  Download the relevant repo
+  for your version of Fedora, and then ``yum install galileo``.
 **Gentoo**:
   The utility is packaged as ``app-misc/galileo`` within the
   `squeezebox <http://git.overlays.gentoo.org/gitweb/?p=user/squeezebox.git>`_
@@ -85,6 +86,11 @@ The following Linux distributions have packages available for installation:
     sudo add-apt-repository ppa:cwayne18/fitbit
     sudo apt-get update && sudo apt-get install galileo
     start galileo﻿
+
+.. _AUR: https://aur.archlinux.org/packages/galileo/
+.. _yaourt: https://wiki.archlinux.org/index.php/yaourt
+
+.. _`COPR repo`: https://copr.fedoraproject.org/coprs/stbenjam/galileo/
 
 The more complicated way
 ~~~~~~~~~~~~~~~~~~~~~~~~
