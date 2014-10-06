@@ -132,6 +132,7 @@ class FitBitDongle(USBDevice):
 
     def __init__(self):
         USBDevice.__init__(self, self.VID, self.PID)
+        self.newerPyUSB = None
 
     def setup(self):
         if self.dev is None:
@@ -157,11 +158,21 @@ class FitBitDongle(USBDevice):
         self.dev.set_configuration()
 
     def write(self, endpoint, data, timeout):
-        interface = {0x02: self.CtrlIF.bInterfaceNumber,
-                     0x01: self.DataIF.bInterfaceNumber}[endpoint]
-        params = (endpoint, data, interface, timeout)
+        if self.newerPyUSB:
+            params = (endpoint, data, timeout)
+        else:
+            interface = {0x02: self.CtrlIF.bInterfaceNumber,
+                         0x01: self.DataIF.bInterfaceNumber}[endpoint]
+            params = (endpoint, data, interface, timeout)
         try:
             return self.dev.write(*params)
+        except TypeError:
+            if self.newerPyUSB is not None:
+                # Already been there, something else is happening ...
+                raise
+            logger.debug('Switching to a newer pyusb compatibility mode')
+            self.newerPyUSB = True
+            return self.write(endpoint, data, timeout)
         except usb.core.USBError, ue:
             if ue.errno != errno.EIO:
                 raise
@@ -170,11 +181,21 @@ class FitBitDongle(USBDevice):
         return self.dev.write(*params)
 
     def read(self, endpoint, length, timeout):
-        interface = {0x82: self.CtrlIF.bInterfaceNumber,
-                     0x81: self.DataIF.bInterfaceNumber}[endpoint]
-        params = (endpoint, length, interface, timeout)
+        if self.newerPyUSB:
+            params = (endpoint, length, timeout)
+        else:
+            interface = {0x82: self.CtrlIF.bInterfaceNumber,
+                         0x81: self.DataIF.bInterfaceNumber}[endpoint]
+            params = (endpoint, length, interface, timeout)
         try:
             return self.dev.read(*params)
+        except TypeError:
+            if self.newerPyUSB is not None:
+                # Already been there, something else is happening ...
+                raise
+            logger.debug('Switching to a newer pyusb compatibility mode')
+            self.newerPyUSB = True
+            return self.read(endpoint, length, timeout)
         except usb.core.USBError, ue:
             if isATimeout(ue):
                 raise TimeoutError
