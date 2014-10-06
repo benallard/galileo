@@ -42,7 +42,6 @@ def syncAllTrackers(config):
     logger.info('Discovering trackers to synchronize')
     try:
         trackers = [t for t in fitbit.discover(FitBitUUID)]
-
     except TimeoutError:
         logger.debug('Timeout trying to discover trackers')
         trackers = []
