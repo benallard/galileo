@@ -20,6 +20,8 @@ galileo 0.4.2 (????-??-??)
 
 Main changes since 0.4.1:
 - Correctly recognize TimeoutError from libusb0 (issue#82)
+- Fix TypeError with newer version of PyUSB (issue#36, issue#77, and a few
+  more ...)
 
 
 galileo 0.4.1 (2014-06-22)
