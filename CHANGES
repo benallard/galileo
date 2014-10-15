@@ -5,6 +5,7 @@ Main changes since 0.4.1:
 - Correctly recognize TimeoutError from libusb0 (issue#82)
 - Fix TypeError with newer version of PyUSB (issue#36, issue#77, and a few
   more ...)
+- Fix error when displaying the reason for a Connection Error (issue#118).
 
 
 galileo 0.4.1 (2014-06-22)

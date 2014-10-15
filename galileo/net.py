@@ -1,6 +1,7 @@
 
 import base64
 import random
+import socket
 import StringIO
 
 import xml.etree.ElementTree as ET
@@ -59,6 +60,13 @@ def XMLToTuple(elem):
     for child in elem:
         childs.append(XMLToTuple(child))
     return elem.tag, elem.attrib, childs, elem.text
+
+
+def ConnectionErrorToMessage(ce):
+    excpt = ce.args[0]
+    if isinstance(excpt, socket.error):
+        return excpt.reason.strerror
+    return 'ConnectionError'
 
 
 class GalileoClient(object):
@@ -146,7 +154,7 @@ class GalileoClient(object):
         try:
             self.post('status')
         except requests.exceptions.ConnectionError, ce:
-            error_msg = ce.args[0].reason.strerror
+            error_msg = ConnectionErrorToMessage(ce)
             # No internet connection or fitbit server down
             logger.error("Not able to connect to the Fitbit server using %s:"
                          " %s.", self.scheme.upper(), error_msg)
@@ -165,7 +173,7 @@ class GalileoClient(object):
         try:
             self.post('status')
         except requests.exceptions.ConnectionError, ce:
-            error_msg = ce.args[0].reason.strerror
+            error_msg = ConnectionErrorToMessage(ce)
             # No internet connection or fitbit server down
             logger.error("Not able to connect to the Fitbit server using"
                          " either HTTP or HTTPS (%s). Check your internet"
@@ -181,7 +189,7 @@ class GalileoClient(object):
                 'tracker', {'tracker-id': trackerId}, (
                     'data', {}, [], megadump.toBase64())))
         except requests.exceptions.ConnectionError, ce:
-            error_msg = ce.args[0].reason.strerror
+            error_msg = ConnectionErrorToMessage(ce)
             raise SyncError('ConnectionError: %s' % error_msg)
 
         tracker = None
