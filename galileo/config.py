@@ -75,7 +75,7 @@ class BoolParameter(Parameter):
             if self.paramName.startswith('--'):
                 self.paramName = self.paramName[2:]
             group = parser.add_argument_group(
-                description="wheter or not to "+self.helpText)
+                description="whether or not to "+self.helpText)
             mut_ex_group = group.add_mutually_exclusive_group()
             _help = {}
             if self.default:
@@ -169,7 +169,7 @@ class LogLevelParameter(Parameter):
 
 
 class Argument(StrParameter):
-    """ Extra class for the positionnal argument """
+    """ Extra class for the positional argument """
     def __init__(self):
         StrParameter.__init__(self, 'mode', 'mode', ('mode',), 'sync', True,
                               'The mode to run')
@@ -269,7 +269,7 @@ class Config(object):
 
         self.cmdlineargs = argparser.parse_args()
 
-        # And we apply them immediatly
+        # And we apply them immediately
         self.applyArgs()
 
     def applyArgs(self):
@@ -292,7 +292,7 @@ class Config(object):
         # provided then ignore this tracker if it's not in that list.
         if (self.includeTrackers is not None) and (trackerid not in self.includeTrackers):
             logger.info("Include list not empty, and tracker %s not there, skipping.", trackerid)
-            tracker.status = "Skipped becaise not in include list"
+            tracker.status = "Skipped because not in include list"
             return True
 
         # If a list of trackers to avoid syncing is configured then
