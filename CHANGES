@@ -15,13 +15,20 @@ Main changes since 0.4.2:
 - Get a UI abstraction layer (issue#31)
 - Keep a rolling log of the last communication to help debugging (issue#67)
 
-galileo 0.4.2 (????-??-??)
+galileo 0.4.2 (2014-10-15)
 --------------------------
+
+This is the second patch release of galileo 0.4, a free utility to securely
+synchronize fitbit bluetooth trackers with the fitbit web service.
+
+This release fixes a couple of API changes in the dependent libraries since
+the release of the previous version.
 
 Main changes since 0.4.1:
 - Correctly recognize TimeoutError from libusb0 (issue#82)
 - Fix TypeError with newer version of PyUSB (issue#36, issue#77, and a few
   more ...)
+- Fix error when displaying the reason for a Connection Error (issue#118).
 
 
 galileo 0.4.1 (2014-06-22)
