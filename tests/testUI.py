@@ -16,7 +16,10 @@ class testHTMLForm(unittest.TestCase):
         f = Form()
         f.addField(FormField('name'))
         f.addField(FormField('name2'))
-        self.assertEqual(f.asXML(), [('param', {'name': 'name'}, [], None), ('param', {'name': 'name2'}, [], None)])
+        tpl = f.asXML()
+        self.assertEqual(len(tpl), 2)
+        self.assertIn(('param', {'name': 'name'}, [], None), tpl)
+        self.assertIn(('param', {'name': 'name2'}, [], None), tpl)
 
     def testasXML2Submit(self):
         f = Form()
