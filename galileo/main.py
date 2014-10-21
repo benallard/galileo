@@ -4,6 +4,15 @@ import sys
 import time
 import uuid
 
+try:
+    from logging import NullHandler
+except ImportError:
+    from logging import Handler
+
+    class NullHandler(Handler):
+        def emit(self, record):
+            pass
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -235,7 +244,7 @@ def daemon(config):
 def main():
     """ This is the entry point """
     import galileo
-    logging.getLogger(galileo.__name__).addHandler(logging.NullHandler())
+    logging.getLogger(galileo.__name__).addHandler(NullHandler())
 
     config = Config()
 
