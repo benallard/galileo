@@ -136,7 +136,8 @@ class FitbitClient(object):
         if not isStatus(self.dongle.ctrl_read(8000),
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
-        d = self.dongle.ctrl_read()
+        # This one can also take some time (Charge tracker)
+        d = self.dongle.ctrl_read(5000)
         if d != CM(7):
             logger.error('Unexpected 2nd message: %s', d)
             return False
@@ -167,10 +168,10 @@ class FitbitClient(object):
         if d is None:
             return False
         if d.data[:2] != [0xc0, 0x14]:
-            logger.error("Wrong header: %s", a2s(d.data[:2]))
+            logger.error("Wrong header: %s", a2x(d.data[:2]))
             return False
-        if (tracker is not None) and (d.data[-6:] != tracker.id):
-            logger.error("Connected to wrong tracker: %s", a2s(d.data[-6:]))
+        if (tracker is not None) and (d.data[6:12] != tracker.id):
+            logger.error("Connected to wrong tracker: %s", a2x(d.data[6:12]))
             return False
         logger.debug("Connection established: %d, %d",
                      a2lsbi(d.data[2:4]), a2lsbi(d.data[4:6]))
