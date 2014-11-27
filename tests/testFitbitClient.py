@@ -3,10 +3,12 @@ import unittest
 
 from galileo.tracker import FitbitClient
 
+
 class MyDM(object):
     def __init__(self, data):
         self.data = data
     def __str__(self): return str(self.data)
+
 
 class MyCM(object):
     def __init__(self, data):
@@ -15,6 +17,7 @@ class MyCM(object):
         self.payload = data[2:]
     def asList(self): return [self.len, self.INS] + self.payload
     def __str__(self): return str(self.asList())
+
 
 class MyDongle(object):
     def __init__(self, responses):
@@ -37,14 +40,21 @@ class MyDongle(object):
     def data_write(self, *args): pass
     def setVersion(self, M, m): pass
 
+
 class MyDongleWithTimeout(MyDongle):
     """ A Dongle that starts timeouting at threshold """
     def __init__(self, data, threshold):
         MyDongle.__init__(self, data[:threshold] + [()] * (len(data) - threshold))
 
+
 class MyUUID(object):
     @property
     def int(self): return 0
+
+
+class MyTracker(object):
+    pass
+
 
 GOOD_SCENARIO = [
     (0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
@@ -78,6 +88,7 @@ GOOD_SCENARIO = [
     (0x20, 1, 0x47, 0x41, 0x50, 0x5F, 0x4C, 0x49, 0x4E, 0x4B, 0x5F, 0x54, 0x45, 0x52, 0x4D, 0x49, 0x4E, 0x41, 0x54, 0x45, 0x44, 0x5F, 0x45, 0x56, 0x45, 0x4E, 0x54, 0),
     (0x20, 1, 0x32, 0x32, 0),
 ]
+
 
 class testScenarii(unittest.TestCase):
 
@@ -156,6 +167,7 @@ class testScenarii(unittest.TestCase):
             self.assertTrue(c.ceaseLink())
             self.assertEqual(len(GOOD_SCENARIO), i)
 
+
 class testDiscover(unittest.TestCase):
 
     def testNoTracker(self):
@@ -221,3 +233,44 @@ class testDiscover(unittest.TestCase):
         c = FitbitClient(d)
         ts = [t for t in c.discover(MyUUID())]
         self.assertEqual(len(ts), 0)
+
+
+class testAirLink(unittest.TestCase):
+
+    def testCharge(self):
+        d = MyDongle([(8, 6, 6, 0, 0, 0, 0xc8, 0),
+                      (0xc0, 0x14, 0xc,0xa, 0,0, 0,0,42,0,0,0, 0x17,0),])
+        c = FitbitClient(d)
+        t = MyTracker()
+        t.id = [0,0,42,0,0,0]
+        self.assertTrue(c.initializeAirlink(t))
+
+    def testOthers(self):
+        d = MyDongle([(8, 6, 6, 0, 0, 0, 0xc8, 0),
+                      (0xc0, 0x14, 0xc,1, 0,0, 0,0,42,0,0,0),])
+        c = FitbitClient(d)
+        t = MyTracker()
+        t.id = [0,0,42,0,0,0]
+        self.assertTrue(c.initializeAirlink(t))
+
+
+class testUpload(unittest.TestCase):
+
+    def testLongMessage(self):
+
+        class MyDongle(object):
+            def __init__(self, len):
+                 self.i = -1
+                 self.len = len
+            def data_read(self ,*args):
+                self.i += 1
+                if self.i == 0:
+                    return MyDM([0xc0, 0x12, 4, 0, 0])
+                if self.i < self.len:
+                    return MyDM([0xc0, 0x13, (((self.i) % 16) << 4) + 4, 0, 0])
+                return MyDM([0xc0, 2])
+            def data_write(self, *args): pass
+
+        d = MyDongle(20)
+        c = FitbitClient(d)
+        self.assertTrue(c.uploadResponse([0] * 380))
