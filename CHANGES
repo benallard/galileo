@@ -1,3 +1,16 @@
+galileo 0.4.3 (2014-11-27)
+--------------------------
+
+This is the third patch release of galileo 0.4, a free utility to securely
+synchronize fitbit bluetooth trackers with the fitbit web service.
+
+This release adds support for the new Charge tracker.
+
+Main changes since 0.4.2:
+- Increase a timeout to support the Charge tracker (issue#123)
+- Exclude the `tests` packages when installing.
+
+
 galileo 0.4.2 (2014-10-15)
 --------------------------
 
