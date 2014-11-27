@@ -73,7 +73,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests"]),
     entry_points={
         'console_scripts': [
             'galileo = galileo.main:main'
