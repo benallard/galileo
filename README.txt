@@ -23,6 +23,7 @@ All Bluetooth-based trackers are supported. Those are:
 - Fitbit Zip
 - Fitbit Flex
 - Fitbit Force
+- Fitbit Charge
 
 .. note:: The Fitbit Ultra tracker is **not supported** as it communicates
           using the ANT protocol. To synchronize it, please use libfitbit_.

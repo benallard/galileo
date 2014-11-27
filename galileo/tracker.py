@@ -135,7 +135,8 @@ class FitbitClient(object):
         if not isStatus(self.dongle.ctrl_read(8000),
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
-        if self.dongle.ctrl_read().INS != 7:
+        # this one can also be a bit longer than usual (Charge tracker)
+        if self.dongle.ctrl_read(5000).INS != 7:
             return False
         return True
 
