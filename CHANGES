@@ -1,3 +1,14 @@
+galileo 0.4.4 (????-??-??)
+--------------------------
+
+This release adds support for older python version (2.6).
+
+Contributor to this release: Slobodan Miskovic.
+
+Main changes since 0.4.3:
+- Add support for python 2.6
+
+
 galileo 0.4.3 (2014-11-27)
 --------------------------
 
