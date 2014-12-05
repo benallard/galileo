@@ -71,10 +71,9 @@ def syncAllTrackers(config):
         logger.debug('Establishing link with tracker')
         if not (fitbit.establishLink(tracker) and fitbit.toggleTxPipe(True)
                 and fitbit.initializeAirlink(tracker)):
-            logger.debug('Timeout while trying to establish link with tracker')
             logger.warning('Unable to connect with tracker %s. Skipping',
                            trackerid)
-            tracker.status = 'Unable to establish a connection (timeout).'
+            tracker.status = 'Unable to establish a connection.'
             yield tracker
             continue
 
@@ -84,8 +83,8 @@ def syncAllTrackers(config):
         logger.info('Getting data from tracker')
         dump = fitbit.getDump()
         if dump is None:
-            logger.error("Timeout downloading the dump from tracker")
-            tracker.status = "Failed to download the dump (timeout)"
+            logger.error("Error downloading the dump from tracker")
+            tracker.status = "Failed to download the dump"
             yield tracker
             continue
 
@@ -125,9 +124,11 @@ def syncAllTrackers(config):
 
                 logger.info('Passing Fitbit response to tracker')
                 if not fitbit.uploadResponse(response):
-                    logger.warning("Timeout error while trying to give Fitbit"
-                                   " response to tracker %s", trackerid)
-                tracker.status = "Synchronisation successful"
+                    logger.warning("Error while trying to give Fitbit response"
+                                   " to tracker %s", trackerid)
+                    tracker.status = "Failed to upload fitbit response to tracker"
+                else:
+                    tracker.status = "Synchronisation successful"
 
             except SyncError as e:
                 logger.error("Fitbit server refused data from tracker %s,"
@@ -136,7 +137,7 @@ def syncAllTrackers(config):
 
         logger.debug('Disconnecting from tracker')
         if not (fitbit.terminateAirlink() and fitbit.toggleTxPipe(False) and fitbit.ceaseLink()):
-            logger.warning('Timeout while disconnecting from tracker %s',
+            logger.warning('Error while disconnecting from tracker %s',
                            trackerid)
             tracker.status += " (Error disconnecting)"
         yield tracker
