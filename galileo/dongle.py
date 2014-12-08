@@ -252,9 +252,9 @@ class FitBitDongle(USBDevice):
         except usb.core.USBError as ue:
             if ue.errno != errno.EIO:
                 raise
-        logger.info('Caught an I/O Error while writing, trying again ...')
-        # IO Error, try again ...
-        return self.dev.write(*params)
+            logger.info('Caught an I/O Error while writing, trying again ...')
+            # IO Error, try again ...
+            return self.dev.write(*params)
 
     def read(self, endpoint, length, timeout):
         if self.newerPyUSB:
