@@ -241,7 +241,7 @@ def main():
 
     if config.rcConfigName:
         config.load(config.rcConfigName)
-        # We need to apply our arguments as last
+        # We need to re-apply our arguments as last
         config.applyArgs()
 
     # --- All logging actions before this line are not active ---
