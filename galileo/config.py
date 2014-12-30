@@ -229,6 +229,7 @@ class Config(object):
                 BoolParameter('doUpload', 'do-upload',  ('upload',), True, False, "upload the dump to the server"),
                 BoolParameter('httpsOnly', 'https-only', ('https-only',), True, False, "use http if https is not available"),
                 IntParameter('logSize', 'log-size', ('--log-size',), 10, False, "Amount of communication to display in case of error"),
+                BoolParameter('syslog', 'syslog', ('syslog',), False, False, "send output to syslog instead of stderr"),
                 Argument(),
                 HardCodedUIConfig(),
                 ]

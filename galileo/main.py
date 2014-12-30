@@ -7,6 +7,7 @@ import time
 import uuid
 
 import logging
+import logging.handlers
 logger = logging.getLogger(__name__)
 
 import requests
@@ -247,8 +248,22 @@ def main():
     # --- All logging actions before this line are not active ---
     # This means that the whole Config parsing is not logged because we don't
     # know which logLevel we should use.
-    logging.basicConfig(format='%(asctime)s:%(levelname)s: %(message)s',
-                        level=config.logLevel)
+    if config.syslog:
+        # Syslog messages must have the time/name first.
+        format = ('%(asctime)s ' + galileo.__name__ + ': '
+                  '%(levelname)s: %(module)s: %(message)s')
+        # TODO: Make address into a config option.
+        handler = logging.handlers.SysLogHandler(
+            address='/dev/log',
+            facility=logging.handlers.SysLogHandler.LOG_DAEMON)
+        handler.setFormatter(logging.Formatter(fmt=format))
+        core_logger = logging.getLogger(galileo.__name__)
+        core_logger.handlers = []
+        core_logger.addHandler(handler)
+        core_logger.setLevel(config.logLevel)
+    else:
+        format = '%(asctime)s:%(levelname)s: %(message)s'
+        logging.basicConfig(format=format, level=config.logLevel)
     # --- All logger actions from now on will be effective ---
 
     logger.debug("Configuration: %s", config)
