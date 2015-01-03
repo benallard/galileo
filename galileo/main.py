@@ -215,7 +215,7 @@ def daemon(config):
             except BackOffException as boe:
                 logger.warning("Received a back-off notice from the server,"
                                " waiting for a bit longer.")
-                time.sleep(boe.getAValue())
+                time.sleep(boe.getAValue() / 1000.)
             else:
                 logger.info("Sleeping for %d seconds before next sync",
                             config.daemonPeriod / 1000)
