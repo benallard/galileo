@@ -41,12 +41,16 @@ class FitbitClient(object):
         # Next one is not critical. It can happen that it does not comes
         isStatus(self.dongle.ctrl_read(), 'TerminateLink')
 
-        # We exhaust the pipe, then we know that we have a clean state
+        self.exhaust()
+
+        return True
+
+    def exhaust(self):
+        """ We exhaust the pipe, then we know that we have a clean state """
+        logger.debug("Exhausting the communication pipe")
         goOn = True
         while goOn:
             goOn = self.dongle.ctrl_read() is not None
-
-        return True
 
     def getDongleInfo(self):
         self.dongle.ctrl_write(CM(1))

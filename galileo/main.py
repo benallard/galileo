@@ -37,7 +37,10 @@ def syncAllTrackers(config):
     galileo = GalileoClient('https', 'client.fitbit.com',
                             'tracker/client/message')
 
-    fitbit.disconnect()
+    if not fitbit.disconnect():
+        logger.error("Dirty state, not able to start synchronisation.")
+        fitbit.exhaust()
+        return
 
     if not fitbit.getDongleInfo():
         logger.warning('Failed to get connected Fitbit dongle information')
