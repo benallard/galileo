@@ -38,7 +38,7 @@ class MyDongle(object):
     def data_read(self, *args):
         return self.read(False)
     def data_write(self, *args): pass
-    def setVersion(self, M, m): pass
+    def setVersion(self, M, m): self.v = (M, m)
 
 
 class MyDongleWithTimeout(MyDongle):
@@ -234,6 +234,19 @@ class testDiscover(unittest.TestCase):
         ts = [t for t in c.discover(MyUUID())]
         self.assertEqual(len(ts), 0)
 
+class testGetDongleInfo(unittest.TestCase):
+    def testIssue136(self):
+        d = MyDongle([(0x20, 1, 0x54, 0x65, 0x72, 0x6D, 0x69, 0x6E, 0x61, 0x74, 0x65, 0x4C, 0x69, 0x6E, 0x6B, 0),])
+        c = FitbitClient(d)
+        t = MyTracker()
+        self.assertFalse(c.getDongleInfo())
+
+    def testOk(self):
+        d = MyDongle([(0x16, 8, 2, 5, 0x71, 0x59, 0x46, 0x16, 0x4A, 0x54, 0x74, 4, 0, 0x20, 0, 0, 0xFF, 0xE7, 1, 0, 2, 0),])
+        c = FitbitClient(d)
+        t = MyTracker()
+        self.assertTrue(c.getDongleInfo())
+        self.assertEqual(d.v, (2,5))
 
 class testAirLink(unittest.TestCase):
 
