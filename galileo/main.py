@@ -221,7 +221,7 @@ def daemon(config):
                             config.daemonPeriod / 1000)
                 time.sleep(config.daemonPeriod / 1000.)
         except KeyboardInterrupt:
-            print("Ctrl-C, caught, stopping ...")
+            logger.info("Ctrl-C, caught, stopping ...")
             goOn = False
 
 
