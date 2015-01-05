@@ -99,6 +99,8 @@ if no other logging options are specified.
 .TP
 .BR \-\-syslog
 send logging output to the syslog facility.
+Due to the rate-limiting of some syslog servers, this option might not work in
+combination with the debug log level.
 .TP
 .BR \-\-no\-syslog
 send logging output to stderr.
