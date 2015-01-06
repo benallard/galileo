@@ -218,6 +218,7 @@ class HardCodedUIConfig(Parameter):
         """ no-op """
     def fromFile(self, filedict, optdict):
         optdict[self.varName] = filedict.get(self.name, {})
+        return True
 
 
 class Config(object):
