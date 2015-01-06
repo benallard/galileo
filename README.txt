@@ -6,9 +6,12 @@ Galileo
 :license: LGPLv3+
 :bug tracker: https://bitbucket.org/benallard/galileo/issues
 :mailing list: galileo@freelists.org (subscribe_, archive_)
+:build status: |droneio_badge|_
 
 .. _subscribe: mailto:galileo-request@freelists.org?subject=subscribe
 .. _archive: http://freelists.org/archive/galileo/
+.. |droneio_badge| image:: https://drone.io/bitbucket.org/benallard/galileo/status.png
+.. _droneio_badge: https://drone.io/bitbucket.org/benallard/galileo
 
 Introduction
 ------------
