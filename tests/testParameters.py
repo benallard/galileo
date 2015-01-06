@@ -1,4 +1,5 @@
 import unittest
+import logging
 
 from galileo.config import (
     StrParameter, IntParameter, BoolParameter, SetParameter, LogLevelParameter
@@ -51,3 +52,24 @@ class testStrParameter(unittest.TestCase):
 
 class testBoolParameter(unittest.TestCase): pass
 
+
+class testLogLevelParameter(unittest.TestCase):
+    def testWrongValuefromFile(self):
+        p = LogLevelParameter()
+        d = {}
+        c = {'logging': 'foo'}
+        self.assertFalse(p.fromFile(c, d))
+
+    def testCorrectValueUpper(self):
+        p = LogLevelParameter()
+        d = {}
+        c = {'logging': 'DEBUG'}
+        self.assertTrue(p.fromFile(c, d))
+        self.assertEqual(d['logLevel'], logging.DEBUG)
+
+    def testCorrectValueLower(self):
+        p = LogLevelParameter()
+        d = {}
+        c = {'logging': 'quiet'}
+        self.assertTrue(p.fromFile(c, d))
+        self.assertEqual(d['logLevel'], logging.WARNING)
