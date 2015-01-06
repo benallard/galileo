@@ -37,11 +37,13 @@ class Parameter(object):
             optdict[self.varName] = val
 
     def fromFile(self, filedict, optdict):
-        """ Take the value from the filedict parameter and fill it in the
-        dict """
-        if self.paramOnly: return
+        """ Take the value from the filedict parameter and fill it in the dict
+        :returns: False if something went wrong
+        """
+        if self.paramOnly: return True
         if self.name in filedict:
             optdict[self.varName] = filedict[self.name]
+        return True
 
 
 class StrParameter(Parameter):
@@ -116,12 +118,13 @@ class SetParameter(Parameter):
             optdict[self.varName].update(values)
 
     def fromFile(self, filedict, optdict):
-        if self.paramOnly: return
+        if self.paramOnly: return True
         if self.name in filedict:
             values = [x.upper() for x in filedict[self.name]]
             if optdict[self.varName] is None and values:
                 optdict[self.varName] = set()
             optdict[self.varName].update(values)
+        return True
 
 
 class LogLevelParameter(Parameter):
@@ -164,8 +167,12 @@ class LogLevelParameter(Parameter):
     def fromFile(self, filedict, optdict):
         if self.paramOnly: return
         if self.name in filedict:
-            optdict[self.varName] = self.__logLevelMap[
-                filedict[self.name].lower()]
+            loglevel = filedict[self.name].lower()
+            try:
+                optdict[self.varName] = self.__logLevelMap[loglevel]
+            except KeyError:
+                return False
+        return True
 
 
 class Argument(StrParameter):

@@ -4,6 +4,7 @@ from galileo.config import (
     StrParameter, IntParameter, BoolParameter, SetParameter, LogLevelParameter
 )
 
+
 class MyArgParse(object):
     def __init__(self, tester):
         self.tester = tester
@@ -14,6 +15,7 @@ class MyArgParse(object):
         a = Args()
         setattr(a, self.name, args[1])
         return a
+
 
 class testStrParameter(unittest.TestCase):
     def testArgParse(self):
@@ -33,7 +35,7 @@ class testStrParameter(unittest.TestCase):
         ap = MyArgParse(self)
         d = {}
         c = {'name': 'abcd'}
-        p.fromFile(c, d)
+        self.assertTrue(p.fromFile(c, d))
         self.assertTrue('varName' in d)
         self.assertEqual(d['varName'], 'abcd')
 
@@ -43,7 +45,7 @@ class testStrParameter(unittest.TestCase):
         ap = MyArgParse(self)
         d = {}
         c = {'name': 'abcd'}
-        p.fromFile(c, d)
+        self.assertTrue(p.fromFile(c, d))
         self.assertFalse('varName' in d)
 
 
