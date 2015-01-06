@@ -287,14 +287,15 @@ def main():
             'interactive': interactive.main,
         }[config.mode](config)
     except:
-        print("# A serious error happened, which is probably due to a")
-        print("# programming error. Please open a new issue with the following")
-        print("# information on the galileo bug tracker:")
-        print("#    https://bitbucket.org/benallard/galileo/issues/new")
-        print('#', version(True, '\n# '))
+        logger.critical("# A serious error happened, which is probably due to a")
+        logger.critical("# programming error. Please open a new issue with the following")
+        logger.critical("# information on the galileo bug tracker:")
+        logger.critical("#    https://bitbucket.org/benallard/galileo/issues/new")
+        logger.critical('# %s', version(True, '\n# '))
         if hasattr(dgl, 'log'):
-            print('# Last communications:')
+            logger.critical('# Last communications:')
             for comm in dgl.log.getData():
                 dir, dat = comm
-                print('# %s %s' % ({dgl.IN: '<', dgl.OUT: '>'}.get(dir, '-'), a2x(dat or [])))
-        raise
+                logger.critical('# %s %s' % ({dgl.IN: '<', dgl.OUT: '>'}.get(dir, '-'), a2x(dat or [])))
+        logger.critical("#", exc_info=True)
+        sys.exit(os.EX_SOFTWARE)
