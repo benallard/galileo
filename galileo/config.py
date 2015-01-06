@@ -11,6 +11,20 @@ except ImportError:
 
 from .utils import a2x
 
+class ConfigError(Exception): pass
+
+class ConfigFileError(ConfigError):
+    def __init__(self, filename, paramName, msg=""):
+        self.filename = filename
+        self.paramName = paramName
+        self.msg = msg
+
+    def __str__(self):
+        s = "Error parsing parameter '%s' in file '%s'" % (
+            self.paramName, self.filename)
+        if self.msg:
+            s += ": %s" % self.msg
+        return s
 
 class Parameter(object):
     def __init__(self, varName, name, paramName, default, paramOnly, helpText):
@@ -223,6 +237,7 @@ class Config(object):
     # modifications to the man-pages (under /doc)
 
     def __init__(self, opts=None):
+        """ The opts parameter is used by the testsuite """
         if opts is None:
             opts = [
                 StrParameter('rcConfigName', 'rcconfigname', ('-c', '--config'), None, True, "use alternative configuration file"),
@@ -286,7 +301,8 @@ class Config(object):
             config = yaml.load(f)
 
         for param in self.__opts:
-            param.fromFile(config, self.__optdict)
+            if not param.fromFile(config, self.__optdict):
+                raise ConfigFileError(filename, param.name)
 
     def parseArgs(self):
         argparser = argparse.ArgumentParser(description="synchronize Fitbit trackers with Fitbit web service",

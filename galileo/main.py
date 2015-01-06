@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 import requests
 
 from . import __version__
-from .config import Config
+from .config import Config, ConfigError
 from .conversation import Conversation
 from .net import GalileoClient, SyncError, BackOffException
 from .tracker import FitbitClient
@@ -235,18 +235,22 @@ def main():
     import galileo
     logging.getLogger(galileo.__name__).addHandler(logging.NullHandler())
 
-    config = Config()
+    try:
+        config = Config()
 
-    config.parseSystemConfig()
-    config.parseUserConfig()
+        config.parseSystemConfig()
+        config.parseUserConfig()
 
-    # This gives us the config file name
-    config.parseArgs()
+        # This gives us the config file name
+        config.parseArgs()
 
-    if config.rcConfigName:
-        config.load(config.rcConfigName)
-        # We need to re-apply our arguments as last
-        config.applyArgs()
+        if config.rcConfigName:
+            config.load(config.rcConfigName)
+            # We need to re-apply our arguments as last
+            config.applyArgs()
+    except ConfigError as e:
+        print(e, file=sys.stderr)
+        sys.exit(os.EX_CONFIG)
 
     # --- All logging actions before this line are not active ---
     # This means that the whole Config parsing is not logged because we don't
