@@ -52,7 +52,7 @@ setup(
     author="Benoît Allard",
     author_email="benoit.allard@gmx.de",
     url="https://bitbucket.org/benallard/galileo",
-    platforms='any',
+    platforms=['any'],
     keywords=['fitbit', 'synchronize', 'health', 'tracker'],
     license="LGPL",
     install_requires=[
