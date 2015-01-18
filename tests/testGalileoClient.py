@@ -223,11 +223,7 @@ class testSync(unittest.TestCase):
         gc = GalileoClient('a', 'b', 'c', 0)
         with self.assertRaises(SyncError) as cm:
             gc.sync(D, T_ID, d)
-
-        if galileo.net.requests.__build__ > 0x020000:
-            self.assertEqual(cm.exception.errorstring, 'HTTPError: bad (500)')
-        else:
-            self.assertEqual(cm.exception.errorstring, 'HTTPError: bad')
+        self.assertEqual(cm.exception.errorstring, 'HTTPError: bad (500)')
 
 class testURL(unittest.TestCase):
 

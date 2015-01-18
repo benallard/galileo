@@ -216,7 +216,7 @@ class GalileoClient(object):
             raise SyncError('ConnectionError: %s' % error_msg)
         except requests.exceptions.HTTPError as he:
             status_code = 500
-            if hasattr(he, 'response'):
+            if getattr(he, 'response', None) is not None:
                 status_code = he.response.status_code
             msg = he.args[0]
             raise SyncError("HTTPError: %s (%d)" % (msg, status_code))
