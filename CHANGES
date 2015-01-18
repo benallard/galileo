@@ -15,6 +15,7 @@ Main changes since 0.4.2:
 - Get a UI abstraction layer (issue#31)
 - Keep a rolling log of the last communication to help debugging (issue#67)
 - Support sending logging output to the syslog (issue#134)
+- Catch HTTPError when syncing (issue#147)
 
 
 galileo 0.4.4 (????-??-??)

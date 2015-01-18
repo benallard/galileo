@@ -204,6 +204,20 @@ class testSync(unittest.TestCase):
         gc = GalileoClient('a', 'b', 'c', 0)
         self.assertRaises(SyncError, gc.sync,D, T_ID, d)
 
+    def testHTTPError(self):  # issue147
+        def mypost(url, data, headers):
+            class Response(object): status_code=500
+            raise galileo.net.requests.exceptions.HTTPError('bad', response=Response())
+        galileo.net.requests.post = mypost
+
+        T_ID = 'abcd'
+        D = MyDongle(0, 0)
+        d = MyMegaDump('YWJjZA==')
+        gc = GalileoClient('a', 'b', 'c', 0)
+        with self.assertRaises(SyncError) as cm:
+            gc.sync(D, T_ID, d)
+        self.assertEqual(cm.exception.errorstring, 'HTTPError: bad (500)')
+
 class testURL(unittest.TestCase):
 
     def testWithPort(self):
