@@ -207,7 +207,14 @@ class testSync(unittest.TestCase):
     def testHTTPError(self):  # issue147
         def mypost(url, data, headers):
             class Response(object): status_code=500
-            raise galileo.net.requests.exceptions.HTTPError('bad', response=Response())
+            if galileo.net.requests.__build__ > 0x020000:
+                # Only newer requests exceptions inherit from IOError
+                e = galileo.net.requests.exceptions.HTTPError('bad', response=Response())
+            else:
+                # older inherit from RuntimeError (no kwargs)
+                e = galileo.net.requests.exceptions.HTTPError('bad')
+            raise e
+
         galileo.net.requests.post = mypost
 
         T_ID = 'abcd'
@@ -216,7 +223,11 @@ class testSync(unittest.TestCase):
         gc = GalileoClient('a', 'b', 'c', 0)
         with self.assertRaises(SyncError) as cm:
             gc.sync(D, T_ID, d)
-        self.assertEqual(cm.exception.errorstring, 'HTTPError: bad (500)')
+
+        if galileo.net.requests.__build__ > 0x020000:
+            self.assertEqual(cm.exception.errorstring, 'HTTPError: bad (500)')
+        else:
+            self.assertEqual(cm.exception.errorstring, 'HTTPError: bad')
 
 class testURL(unittest.TestCase):
 
