@@ -62,6 +62,7 @@ class MyDev(object):
     def is_kernel_driver_active(self, a): raise NotImplementedError()
     def get_active_configuration(self): return {(0,0): None, (1,0): None}
     def set_configuration(self): pass
+    def reset(self): pass
 
 class testDongle(unittest.TestCase):
 
