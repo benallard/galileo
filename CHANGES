@@ -7,7 +7,7 @@ synchronize fitbit bluetooth trackers with the fitbit web-service.
 This release ...
 
 Contributor to this release: Dean Giberson, Richard Weait, Chris Wayne,
-David Vasak, and Mike Frysinger.
+David Vasak, Mike Frysinger and Nenad Jankovic.
 
 Main changes since 0.4.2:
 - Add a pair mode (issue#33)
@@ -16,6 +16,7 @@ Main changes since 0.4.2:
 - Keep a rolling log of the last communication to help debugging (issue#67)
 - Support sending logging output to the syslog (issue#134)
 - Catch HTTPError when syncing (issue#147)
+- Improve Charge HR support (issue#148)
 
 
 galileo 0.4.4 (????-??-??)
