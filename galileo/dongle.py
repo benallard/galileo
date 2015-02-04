@@ -277,6 +277,7 @@ class FitBitDongle(USBDevice):
         except usb.core.USBError as ue:
             if not isATimeout(ue):
                 raise
+            logger.info('Got an I/O Timeout (> %dms) while reading!', timeout)
         log.add((IN, data))
         return data
 

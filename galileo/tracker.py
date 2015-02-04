@@ -234,7 +234,8 @@ class FitbitClient(object):
 
         for i in range(0, len(response), CHUNK_LEN):
             self.dongle.data_write(DM(response[i:i + CHUNK_LEN]))
-            d = self.dongle.data_read()
+            # This one can also take some time (Charge HR tracker)
+            d = self.dongle.data_read(10000)
             expected = DM([0xc0, 0x13, ((((i // CHUNK_LEN) + 1) % 16) << 4) + dumptype, 0, 0])
             if d != expected:
                 logger.error("Wrong sequence number: %s", d)
