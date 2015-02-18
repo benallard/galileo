@@ -287,3 +287,27 @@ class testUpload(unittest.TestCase):
         d = MyDongle(20)
         c = FitbitClient(d)
         self.assertTrue(c.uploadResponse([0] * 380))
+
+
+class testDownload(unittest.TestCase):
+
+    def testPreSurge(self):
+        d = MyDongle([
+            (0xc0, 0x41, 0xd),
+            (0x26, 2, 0, 0, 0, 0, 0),
+            (0xc0, 0,0xd,0x93,0x44,7, 0)])
+        c = FitbitClient(d)
+        dump = c.getDump(0xd)
+        self.assertTrue(dump.isValid())
+        self.assertEqual(dump.data, [38, 2, 0, 0, 0, 0, 0])
+        self.assertEqual(dump.footer, [192, 0, 13, 147, 68, 7, 0])
+
+    def testSurge(self):
+        # This is not completely correct
+        d = MyDongle([
+            (0xc0, 0x41, 0xd, 0x42, 0xa, 0, 0),
+            (0x26, 2, 0, 0, 0, 0, 0),
+            (0xc0, 0,0xd,0x93,0x44,7, 0)])
+        c = FitbitClient(d)
+        dump = c.getDump(0xd)
+        self.assertTrue(dump.isValid())

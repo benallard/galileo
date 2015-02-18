@@ -195,7 +195,7 @@ class FitbitClient(object):
         # begin dump of appropriate type
         self.dongle.data_write(DM([0xc0, 0x10, dumptype]))
         r = self.dongle.data_read()
-        if r != DM([0xc0, 0x41, dumptype]):
+        if r and (r.data[:3] != [0xc0, 0x41, dumptype]):
             logger.error("Tracker did not acknowledged the dump type: %s", r)
             return None
 
