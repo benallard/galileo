@@ -59,6 +59,13 @@ class FitbitClient(object):
             return False
         self.dongle.setVersion(d.payload[0], d.payload[1])
         self.dongle.address = d.payload[2:8]
+        self.dongle.flashEraseTime = a2lsbi(d.payload[8:10])
+        self.dongle.firmwareStartAddress = a2lsbi(d.payload[10:14])
+        self.dongle.firmwareEndAddress = a2lsbi(d.payload[14:18])
+        self.dongle.ccIC = d.payload[18]
+        # Not sure how the last ones fit in the last byte
+#        self.dongle.hardwareRevision = d.payload[19]
+#        self.dongle.revision = d.payload[19]
         return True
 
     def discover(self, uuid, service1=0xfb00, write=0xfb01, read=0xfb02,
