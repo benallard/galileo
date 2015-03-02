@@ -23,6 +23,36 @@ class Tracker(object):
         self.RSSI = RSSI
         self.status = 'unknown'  # If we happen to read it before anyone set it
 
+    @classmethod
+    def fromDiscovery(klass, data, minRSSI):
+        trackerId = data[:6]
+        addrType = data[6]
+        RSSI = c_byte(data[7]).value
+
+        attributes = data[9:11]
+        sUUID = data[15:17]
+        serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
+                       trackerId[0] ^ trackerId[2] ^ trackerId[4]]
+        tracker = klass(trackerId, addrType, attributes, RSSI, sUUID)
+        if not tracker.syncedRecently and (serviceUUID != sUUID):
+            logger.debug("Cannot acknowledge the serviceUUID: %s vs %s",
+                         a2x(serviceUUID, ':'), a2x(sUUID, ':'))
+        logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'),
+                     addrType, RSSI, a2x(attributes, ':'))
+        if RSSI < -80:
+            logger.info("Tracker %s has low signal power (%ddBm), higher"
+                        " chance of miscommunication",
+                        a2x(trackerId, delim=""), RSSI)
+
+        if not tracker.syncedRecently:
+            logger.debug('Tracker %s was not recently synchronized',
+                         a2x(trackerId, delim=""))
+        if RSSI < minRSSI:
+            logger.warning("Tracker %s below power threshold (%ddBm),"
+                           "dropping", a2x(trackerId, delim=""), minRSSI)
+            #continue
+        return tracker
+
     @property
     def syncedRecently(self):
         return self.attributes[1] != 4
@@ -95,33 +125,8 @@ class FitbitClient(object):
             elif (d.INS != 3) or (len(d.payload) < 17):
                 logger.error('payload unexpected: %s', d)
                 break
-            trackerId = d.payload[:6]
-            addrType = d.payload[6]
-            RSSI = c_byte(d.payload[7]).value
-            attributes = d.payload[9:11]
-            sUUID = d.payload[15:17]
-            serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
-                           trackerId[0] ^ trackerId[2] ^ trackerId[4]]
-            tracker = Tracker(trackerId, addrType, attributes, RSSI, sUUID)
-            if not tracker.syncedRecently and (serviceUUID != sUUID):
-                logger.debug("Cannot acknowledge the serviceUUID: %s vs %s",
-                             a2x(serviceUUID, ':'), a2x(sUUID, ':'))
-            logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'),
-                         addrType, RSSI, a2x(attributes, ':'))
-            if RSSI < -80:
-                logger.info("Tracker %s has low signal power (%ddBm), higher"
-                            " chance of miscommunication",
-                            a2x(trackerId, delim=""), RSSI)
-
-            if not tracker.syncedRecently:
-                logger.debug('Tracker %s was not recently synchronized',
-                             a2x(trackerId, delim=""))
+            yield Tracker.fromDiscovery(d.payload, minRSSI)
             amount += 1
-            if RSSI < minRSSI:
-                logger.warning("Tracker %s below power threshold (%ddBm),"
-                               "dropping", a2x(trackerId, delim=""), minRSSI)
-                #continue
-            yield tracker
 
         if d != CM(2, [amount]):
             logger.error('%d trackers discovered, dongle says %s', amount, d)
