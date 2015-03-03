@@ -343,3 +343,10 @@ class testDownload(unittest.TestCase):
         c = FitbitClient(d)
         dump = c.getDump(0xd)
         self.assertTrue(dump.isValid())
+
+class testSetPowerLevel(unittest.TestCase):
+
+    def testOk(self):
+        d = MyDongle([(2, 0xfe),])
+        c = FitbitClient(d)
+        self.assertTrue(c.setPowerLevel(5))

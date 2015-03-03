@@ -148,6 +148,13 @@ class FitbitClient(object):
             d = self.dongle.ctrl_read()
         isStatus(d, 'CancelDiscovery')
 
+    def setPowerLevel(self, level):
+        self.dongle.ctrl_write(CM(0xd, [level]))
+        r = self.dongle.ctrl_read()
+        if r != CM(0xFE):
+            return False
+        return True
+
     def establishLink(self, tracker):
         self.dongle.ctrl_write(CM(6, tracker.id + [tracker.addrType] +
                                   i2lsba(tracker.serviceUUID, 2)))
