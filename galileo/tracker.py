@@ -12,33 +12,47 @@ MEGADUMP = 13
 
 
 class Tracker(object):
-    def __init__(self, Id, addrType, attributes, RSSI, serviceUUID=None):
+    def __init__(self, Id, addrType, serviceData, RSSI, serviceUUID=None):
         self.id = Id
         self.addrType = addrType
         if serviceUUID is None:
-            self.serviceUUID = [Id[1] ^ Id[3] ^ Id[5], Id[0] ^ Id[2] ^ Id[4]]
+            self.serviceUUID = a2lsbi([Id[1] ^ Id[3] ^ Id[5],
+                                       Id[0] ^ Id[2] ^ Id[4]])
         else:
             self.serviceUUID = serviceUUID
-        self.attributes = attributes
+        self.serviceData = serviceData
+        # following three are coded somewhere here ...
+        # specialMode
+        # canDisplayNumber
+        # colorCode
         self.RSSI = RSSI
         self.status = 'unknown'  # If we happen to read it before anyone set it
 
+    @property
+    def productId(self):
+        return self.serviceData[0]
+
+    @property
+    def syncedRecently(self):
+        return self.serviceData[1] != 4
+
     @classmethod
-    def fromDiscovery(klass, data, minRSSI):
+    def fromDiscovery(klass, data, minRSSI=-255):
         trackerId = data[:6]
         addrType = data[6]
         RSSI = c_byte(data[7]).value
-
-        attributes = data[9:11]
-        sUUID = data[15:17]
-        serviceUUID = [trackerId[1] ^ trackerId[3] ^ trackerId[5],
-                       trackerId[0] ^ trackerId[2] ^ trackerId[4]]
-        tracker = klass(trackerId, addrType, attributes, RSSI, sUUID)
+        serviceDataLen = data[8]
+        print serviceDataLen
+        serviceData = data[9:9+serviceDataLen+1]  # '+1': go figure !
+        sUUID = a2lsbi(data[15:17])
+        serviceUUID = a2lsbi([trackerId[1] ^ trackerId[3] ^ trackerId[5],
+                              trackerId[0] ^ trackerId[2] ^ trackerId[4]])
+        tracker = klass(trackerId, addrType, serviceData, RSSI, sUUID)
         if not tracker.syncedRecently and (serviceUUID != sUUID):
             logger.debug("Cannot acknowledge the serviceUUID: %s vs %s",
-                         a2x(serviceUUID, ':'), a2x(sUUID, ':'))
+                         a2x(i2lsba(serviceUUID, 2), ':'), a2x(i2lsba(sUUID, 2), ':'))
         logger.debug('Tracker: %s, %s, %s, %s', a2x(trackerId, ':'),
-                     addrType, RSSI, a2x(attributes, ':'))
+                     addrType, RSSI, a2x(serviceData, ':'))
         if RSSI < -80:
             logger.info("Tracker %s has low signal power (%ddBm), higher"
                         " chance of miscommunication",
@@ -52,10 +66,6 @@ class Tracker(object):
                            "dropping", a2x(trackerId, delim=""), minRSSI)
             #continue
         return tracker
-
-    @property
-    def syncedRecently(self):
-        return self.attributes[1] != 4
 
 
 class FitbitClient(object):
@@ -140,7 +150,7 @@ class FitbitClient(object):
 
     def establishLink(self, tracker):
         self.dongle.ctrl_write(CM(6, tracker.id + [tracker.addrType] +
-                                  tracker.serviceUUID))
+                                  i2lsba(tracker.serviceUUID, 2)))
         if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
             return False
         d = self.dongle.ctrl_read(5000)
