@@ -149,6 +149,9 @@ class FitbitClient(object):
         isStatus(d, 'CancelDiscovery')
 
     def setPowerLevel(self, level):
+        # This is quite weird as in the log I took this from, they send:
+        # 020D05 (level5), but as the length is 02, I believe the 05 is not
+        # even acknowledgded by the dongle ...
         self.dongle.ctrl_write(CM(0xd, [level]))
         r = self.dongle.ctrl_read()
         if r != CM(0xFE):
