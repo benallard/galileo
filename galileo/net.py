@@ -135,10 +135,11 @@ class GalileoClient(object):
             logger.error("Unexpected server version: %s",
                          attrib['version'])
 
+        excpt = None
         for child in childs:
             stag, _, schilds, sbody = child
             if stag == 'error':
-                raise SyncError(sbody)
+                excpt = SyncError(sbody)
             elif stag == 'back-off':
                 minD = 0
                 maxD = 0
@@ -146,7 +147,15 @@ class GalileoClient(object):
                     sstag, _, _, ssbody = schild
                     if sstag == 'min': minD = int(ssbody)
                     if sstag == 'max': maxD = int(ssbody)
-                raise BackOffException(minD, maxD)
+                excpt = BackOffException(minD, maxD)
+            elif stag == 'tracker':
+                # We rely on the fact that this tag comes at last
+                if excpt is not None:
+                    logger.warning("Discarding exception: %s", excpt)
+                excpt = None
+
+        if excpt is not None:
+            raise excpt
 
         return childs
 
