@@ -201,7 +201,7 @@ class FitbitClient(object):
 
         for i in range(0, len(response), 20):
             self.dongle.data_write(DM(response[i:i + 20]))
-            self.dongle.data_read()
+            self.dongle.data_read(20000)
 
         self.dongle.data_write(DM([0xc0, 2]))
         # Next one can be very long. He is probably erasing the memory there
@@ -211,10 +211,10 @@ class FitbitClient(object):
 
     def terminateAirlink(self):
         self.dongle.ctrl_write(CM(7))
-        if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
+        if not isStatus(self.dongle.ctrl_read(5000), 'TerminateLink'):
             return False
 
-        if self.dongle.ctrl_read().INS != 5:
+        if self.dongle.ctrl_read(3000).INS != 5:
             # Payload can be either 0x16 or 0x08
             return False
         if not isStatus(self.dongle.ctrl_read(), 'GAP_LINK_TERMINATED_EVENT'):
