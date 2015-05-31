@@ -267,7 +267,7 @@ class FitbitClient(object):
         for i in range(0, len(response), CHUNK_LEN):
             self.dongle.data_write(DM(response[i:i + CHUNK_LEN]))
             # This one can also take some time (Charge HR tracker)
-            d = self.dongle.data_read(10000)
+            d = self.dongle.data_read(20000)
             expected = DM([0xc0, 0x13, ((((i // CHUNK_LEN) + 1) % 16) << 4) + dumptype, 0, 0])
             if d != expected:
                 logger.error("Wrong sequence number: %s", d)
@@ -295,10 +295,10 @@ class FitbitClient(object):
         """ contrary to ``establishLink`` """
 
         self.dongle.ctrl_write(CM(7))
-        if not isStatus(self.dongle.ctrl_read(), 'TerminateLink'):
+        if not isStatus(self.dongle.ctrl_read(5000), 'TerminateLink'):
             return False
 
-        d = self.dongle.ctrl_read()
+        d = self.dongle.ctrl_read(3000)
         if (d is None) or (d.INS != 5):
             # Payload can be either 0x16 or 0x08
             return False

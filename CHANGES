@@ -19,19 +19,26 @@ Main changes since 0.4.2:
 - Improve Charge HR support (issue#148)
 
 
-galileo 0.4.4 (????-??-??)
+galileo 0.4.4 (2015-05-31)
 --------------------------
 
-This release adds support for older python version (2.6), fixes an issue with
-the BackOffException and properly cleans up the USB connection when done.
+This is the fourth patch release of galileo 0.4, a free utility to securely
+synchronize fitbit bluetooth trackers with the fitbit web service.
 
-Contributor to this release: Slobodan Miskovic, and Noel Jackson.
+This release adds support for older python version (2.6), fixes an issue with
+the BackOffException, properly cleans up the USB connection when done as well
+as improves support for the Charge HR tracker.
+
+Contributor to this release: Slobodan Miskovic, Noel Jackson and Nenad
+Jankovic.
 
 Main changes since 0.4.3:
 - Add support for python 2.6
 - Fix handling of BackOffException (issue#140)
 - Reset the USB device when we're done with it in order to prevent a "Device
   Busy" on subsequent tries (issue#142 and a few more ...)
+- Better adjust timeouts for the Charge HR tracker.
+- Discard the BackOff Exception when a payload is transmitted.
 
 
 galileo 0.4.3 (2014-11-27)

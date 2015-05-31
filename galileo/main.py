@@ -195,7 +195,7 @@ def sync(config):
                                                  tracker.status))
     except BackOffException as boe:
         print("The server requested that we come back between %d and %d"\
-            " minutes." % (boe.min / 60*1000, boe.max / 60*1000))
+            " minutes." % (boe.min / (60*1000), boe.max / (60*1000)))
         later = datetime.datetime.now() + datetime.timedelta(
             microseconds=boe.getAValue()*1000)
         print("I suggest waiting until %s" % later)
