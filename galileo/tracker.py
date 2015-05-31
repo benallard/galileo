@@ -42,7 +42,6 @@ class Tracker(object):
         addrType = data[6]
         RSSI = c_byte(data[7]).value
         serviceDataLen = data[8]
-        print serviceDataLen
         serviceData = data[9:9+serviceDataLen+1]  # '+1': go figure !
         sUUID = a2lsbi(data[15:17])
         serviceUUID = a2lsbi([trackerId[1] ^ trackerId[3] ^ trackerId[5],
