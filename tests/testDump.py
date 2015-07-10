@@ -72,3 +72,10 @@ class testDump(unittest.TestCase):
         d.add(range(10))
         d.add([0xc0]+[0, 0, 0x78, 0x23, 10, 0])
         self.assertTrue(d.isValid())
+
+    def testHugeDump(self):
+        # issue 177
+        d = Dump(0)
+        d.add([5] * 71318)
+        d.add([0xc0]+[0, 0, 0x44, 0x95, 0x96, 0x16, 0x01, 0x00])
+        self.assertTrue(d.isValid())

@@ -91,7 +91,7 @@ class Dump(object):
             logger.error("Error in communication, Expected CRC: 0x%04X,"
                          " received 0x%04X", crcVal, transportCRC)
             return False
-        nbBytes = a2lsbi(self.footer[5:7])
+        nbBytes = a2lsbi(self.footer[5:9])
         if self.len != nbBytes:
             logger.error("Error in communication, Expected length: %d bytes,"
                          " received %d bytes", nbBytes, self.len)
