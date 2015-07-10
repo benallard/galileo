@@ -176,7 +176,7 @@ class Conversation(object):
             self.trackers[trackerId] = tracker
             res.append(('available-tracker', {},
                         [('tracker-id', {}, [], trackerId),
-                         ('tracker-attributes', {}, [], a2x(tracker.attributes, delim="")),
+                         ('tracker-attributes', {}, [], a2x(tracker.serviceData, delim="")),
                          ('rsi', {}, [], str(tracker.RSSI))]))
         return ('command-response', {}, [('list-trackers', {}, res)])
 

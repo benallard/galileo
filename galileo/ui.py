@@ -1,8 +1,10 @@
 """\
 This is where to look for for all user interaction stuff ...
 """
-
+import logging
 import sys
+
+logger = logging.getLogger(__name__)
 
 try:
     from html.parser import HTMLParser
@@ -152,6 +154,8 @@ class HardCodedUI(BaseUI):
         fe = FormExtractor()
         fe.feed(html)
         if action not in self.answers:
+            logger.error("No answers provided for '%s'" % action)
+            logger.info("I only know about %s" % self.answers.keys())
             raise MissingConfigError(action, fe.forms)
         answer = self.answers[action]
         # Figure out which of the form we should fill
