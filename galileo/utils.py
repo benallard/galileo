@@ -1,3 +1,10 @@
+"""\
+We internally use array of int as data representation, those routines
+translate them to one or the other format
+"""
+
+import sys
+
 def a2x(a, delim=' '):
     """ array to string of hexa
     delim is the delimiter between the hexa
@@ -22,6 +29,11 @@ def a2s(a, toPrint=True):
         s.append(chr(c))
     return ''.join(s)
 
+def a2b(a):
+    """ array to `bytes` """
+    if sys.version_info > (3, 0):
+        return bytes(a)
+    return a2s(a, False)
 
 def a2lsbi(array):
     """ array to int (LSB first) """
@@ -51,4 +63,6 @@ def i2lsba(value, width):
 
 def s2a(s):
     """ string to array """
-    return [ord(c) for c in s]
+    if isinstance(s, str):
+        return [ord(c) for c in s]
+    return [c for c in s]

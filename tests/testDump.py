@@ -47,7 +47,7 @@ class testDump(unittest.TestCase):
         d = Dump(0)
         d.add(range(10))
         d.add([0xc0] + list(range(8)))
-        self.assertEqual(d.toBase64(), 'AAECAwQFBgcICcAAAQIDBAUGBw==')
+        self.assertEqual(d.toBase64(), b'AAECAwQFBgcICcAAAQIDBAUGBw==')
 
     def testNonValidDataType(self):
         d = Dump(0)

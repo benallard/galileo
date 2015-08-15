@@ -1,9 +1,9 @@
 import base64
-
 import logging
+
 logger = logging.getLogger(__name__)
 
-from .utils import a2x, a2lsbi, a2s
+from .utils import a2x, a2lsbi, a2b
 
 
 class CRC16(object):
@@ -106,4 +106,4 @@ class Dump(object):
             dumpfile.write(a2x(self.footer) + '\n')
 
     def toBase64(self):
-        return base64.b64encode(a2s(self.data + self.footer, False))
+        return base64.b64encode(a2b(self.data + self.footer))
