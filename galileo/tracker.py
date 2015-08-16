@@ -123,7 +123,8 @@ class FitbitClient(object):
         self.dongle.ctrl_write(CM(4, data))
         amount = 0
         while True:
-            d = self.dongle.ctrl_read(minDuration)
+            # Give the dongle 100ms margin
+            d = self.dongle.ctrl_read(minDuration + 100)
             if d is None: break
             elif isStatus(d, 'StartDiscovery', False):
                 # We know this can happen almost any time during 'discovery'
