@@ -106,4 +106,4 @@ class Dump(object):
             dumpfile.write(a2x(self.footer) + '\n')
 
     def toBase64(self):
-        return base64.b64encode(a2b(self.data + self.footer))
+        return base64.b64encode(a2b(self.data + self.footer)).decode('utf-8')
