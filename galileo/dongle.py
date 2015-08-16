@@ -88,7 +88,7 @@ class USBDevice(object):
         return self._dev
 
     def __del__(self):
-        if self._dev is not None:
+        if hasattr(self, '_dev') and self._dev is not None:
             self._dev.reset()
 
 
@@ -215,6 +215,8 @@ class FitBitDongle(USBDevice):
             if ue.errno == errno.EACCES:
                 logger.error('Insufficient permissions to access the Fitbit'
                              ' dongle')
+                # Don't try to cleanup the connection in the destructor
+                del self._dev
                 raise PermissionDeniedException
             raise
         except NotImplementedError as nie:
