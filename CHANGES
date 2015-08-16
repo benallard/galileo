@@ -9,14 +9,15 @@ This release ...
 Contributor to this release: Dean Giberson, Richard Weait, Chris Wayne,
 David Vasak, Mike Frysinger and Nenad Jankovic.
 
-Main changes since 0.4.2:
+Main changes since 0.4.4:
 - Add a pair mode (issue#33)
 - Removal of the Timeout class (issue#43)
 - Get a UI abstraction layer (issue#31)
 - Keep a rolling log of the last communication to help debugging (issue#67)
-- Support sending logging output to the syslog (issue#134)
+- Support sending logging output to syslog (issue#134)
 - Catch HTTPError when syncing (issue#147)
 - Improve Charge HR support (issue#148)
+- Add Support for python 3.4 (issue#116)
 
 
 galileo 0.4.4 (2015-05-31)
