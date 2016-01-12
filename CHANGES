@@ -14,10 +14,11 @@ Main changes since 0.4.4:
 - Removal of the Timeout class (issue#43)
 - Get a UI abstraction layer (issue#31)
 - Keep a rolling log of the last communication to help debugging (issue#67)
-- Support sending logging output to the syslog (issue#134)
+- Support sending logging output to syslog (issue#134)
 - Catch HTTPError when syncing (issue#147)
 - Improve Charge HR support (issue#148)
 - Improve Discovery process (issue#231)
+- Add Support for python 3.4 (issue#116)
 
 
 galileo 0.4.4 (2015-05-31)
