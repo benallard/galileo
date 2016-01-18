@@ -23,6 +23,7 @@ class MyDongle(object):
     def __init__(self, responses):
         self.responses = responses
         self.idx = 0
+        self.establishLinkEx = False
     def read(self, ctrl):
         response = self.responses[self.idx]
         self.idx += 1
@@ -290,8 +291,50 @@ class testGetDongleInfo(unittest.TestCase):
         self.assertEqual(d.firmwareEndAddress, 124927)
         self.assertEqual(d.ccIC, 2)
 
+    def testNewerDongle75(self):
+        d = MyDongle([(0x16, 0x08, 0x07, 0x05, 0xA4, 0xA6, 0x69, 0xF3, 0x7B, 0x98, 0x74, 0x04, 0x00, 0x20, 0x00, 0x00, 0xFF, 0xE7, 0x01, 0x00, 0x02, 0x00)])
+        c = FitbitClient(d)
+        self.assertTrue(c.getDongleInfo())
+        self.assertEqual(d.v, (7,5))
+        self.assertEqual(d.flashEraseTime, 1140)
+        self.assertEqual(d.firmwareStartAddress, 8192)
+        self.assertEqual(d.firmwareEndAddress, 124927)
+        self.assertEqual(d.ccIC, 2)
 
-class testAirLink(unittest.TestCase):
+class testestablishLink(unittest.TestCase):
+
+    def testestablishLinkExOk(self):
+        d = MyDongle([(0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
+                      (0x20, 1, 0x45, 0x73, 0x74, 0x61, 0x62, 0x6C, 0x69, 0x73, 0x68, 0x4C, 0x69, 0x6E, 0x6B, 0x45, 0x78, 0x20, 0x63, 0x61, 0x6C, 0x6C, 0x65, 0x64, 0x2E, 0x2E, 0x2E, 0x00),
+                      (3, 4, 0),
+                      (0x20, 1, 0x47, 0x41, 0x50, 0x5F, 0x4C, 0x49, 0x4E, 0x4B, 0x5F, 0x45, 0x53, 0x54, 0x41, 0x42, 0x4C, 0x49, 0x53, 0x48, 0x45, 0x44, 0x5F, 0x45, 0x56, 0x45, 0x4E, 0x54, 0),
+                      (2, 7),])
+        d.establishLinkEx = True
+        c = FitbitClient(d)
+        t = MyTracker()
+        t.id = [0,0,42,0,0,43]
+        t.addrType = 1
+        self.assertTrue(c.establishLink(t))
+
+    def testestablishLinkExNotOk(self):
+        """ When our version test is wrong """
+        d = MyDongle([(4, 0xff, 2, 3),
+                      (0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
+                      (0x20, 1, 0x45, 0x73, 0x74, 0x61, 0x62, 0x6C, 0x69, 0x73, 0x68, 0x4C, 0x69, 0x6E, 0x6B, 0x45, 0x78, 0x20, 0x63, 0x61, 0x6C, 0x6C, 0x65, 0x64, 0x2E, 0x2E, 0x2E, 0),
+                      (3, 4, 0),
+                      (0x20, 1, 0x47, 0x41, 0x50, 0x5F, 0x4C, 0x49, 0x4E, 0x4B, 0x5F, 0x45, 0x53, 0x54, 0x41, 0x42, 0x4C, 0x49, 0x53, 0x48, 0x45, 0x44, 0x5F, 0x45, 0x56, 0x45, 0x4E, 0x54, 0),
+                      (2, 7),])
+        d.major = 169; d.minor=78
+        c = FitbitClient(d)
+        t = MyTracker()
+        t.id = [0,0,42,0,0,43]
+        t.addrType = 1
+        t.serviceUUID = 0xa005
+        self.assertTrue(c.establishLink(t))
+        # verify the value is set for later tests
+        self.assertTrue(d.establishLinkEx)
+
+class testinitAirLink(unittest.TestCase):
 
     def testCharge(self):
         d = MyDongle([(8, 6, 6, 0, 0, 0, 0xc8, 0),
@@ -309,6 +352,15 @@ class testAirLink(unittest.TestCase):
         t.id = [0,0,42,0,0,0]
         self.assertTrue(c.initializeAirlink(t))
 
+    def testEstablishEx(self):
+        """ When the dongle uses establishEx, he doesn't read back on the
+            ctrl channel """
+        d = MyDongle([(0xc0, 0x14, 0xc,1, 0,0, 0,0,42,0,0,0),])
+        d.establishLinkEx = True
+        c = FitbitClient(d)
+        t = MyTracker()
+        t.id = [0,0,42,0,0,0]
+        self.assertTrue(c.initializeAirlink(t))
 
 class testUpload(unittest.TestCase):
 

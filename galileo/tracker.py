@@ -160,9 +160,18 @@ class FitbitClient(object):
         return True
 
     def establishLink(self, tracker):
+        if self.dongle.establishLinkEx:
+            return self.establishLinkEx(tracker)
         self.dongle.ctrl_write(CM(6, tracker.id + [tracker.addrType] +
                                   i2lsba(tracker.serviceUUID, 2)))
-        if not isStatus(self.dongle.ctrl_read(), 'EstablishLink'):
+        d = self.dongle.ctrl_read()
+        if d == CM(0xff, [2, 3]):
+            # Our detection based on the dongle version is not perfect :(
+            logger.warning("Older tracker %d.%d also needs EstablishLinkEx",
+                           self.dongle.major, self.dongle.minor)
+            self.dongle.establishLinkEx = True
+            return self.establishLinkEx(tracker)
+        elif not isStatus(d, 'EstablishLink'):
             return False
         d = self.dongle.ctrl_read(5000)
         if d != CM(4, [0]):
@@ -180,6 +189,30 @@ class FitbitClient(object):
             return False
         return True
 
+    def establishLinkEx(self, tracker):
+        """ First heard from in #236 """
+        nums = [6, 6, 0, 200]  # Looks familiar ?
+        data = tracker.id + [tracker.addrType]
+        for n in nums:
+            data.extend(i2lsba(n, 2))
+        self.dongle.ctrl_write(CM(0x12, data))
+        if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
+            return False
+        if not isStatus(self.dongle.ctrl_read(), 'EstablishLinkEx'):
+            return False
+        d = self.dongle.ctrl_read(5000)
+        if d != CM(4, [0]):
+            logger.error('Unexpected message: %s', d)
+            return False
+        if not isStatus(self.dongle.ctrl_read(),
+                        'GAP_LINK_ESTABLISHED_EVENT'):
+            return False
+        d = self.dongle.ctrl_read()
+        if d != CM(7):
+            logger.error('Unexpected 2nd message: %s', d)
+            return False
+        return True
+
     def toggleTxPipe(self, on):
         """ `on` is a boolean that dictate the status of the pipe
         :returns: a boolean about the sucessfull execution
@@ -190,17 +223,20 @@ class FitbitClient(object):
 
     def initializeAirlink(self, tracker=None):
         """ :returns: a boolean about the successful execution """
-        nums = [0xa, 6, 6, 0, 200]
+        nums = [10, 6, 6, 0, 200]
         #nums = [1, 8, 16, 0, 200]
+        #nums = [1034, 6, 6, 0, 200]
         data = []
         for n in nums:
             data.extend(i2lsba(n, 2))
         #data = data + [1]
         self.dongle.data_write(DM([0xc0, 0xa] + data))
-        d = self.dongle.ctrl_read(10000)
-        if d != CM(6, data[-6:]):
-            logger.error("Unexpected message: %s != %s", d, CM(6, data[-6:]))
-            return False
+        if not self.dongle.establishLinkEx:
+            # Not necessary when using establishLinkEx
+            d = self.dongle.ctrl_read(10000)
+            if d != CM(6, data[-6:]):
+                logger.error("Unexpected message: %s != %s", d, CM(6, data[-6:]))
+                return False
         d = self.dongle.data_read()
         if d is None:
             return False

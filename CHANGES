@@ -19,6 +19,7 @@ Main changes since 0.4.4:
 - Improve Charge HR support (issue#148)
 - Improve Discovery process (issue#231)
 - Add Support for python 3.4 (issue#116)
+- Add support for newer dongles (issue#236)
 
 
 galileo 0.4.4 (2015-05-31)

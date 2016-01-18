@@ -198,6 +198,7 @@ class FitBitDongle(USBDevice):
     def __init__(self, logsize):
         USBDevice.__init__(self, self.VID, self.PID)
         self.hasVersion = False
+        self.establishLinkEx = False
         self.newerPyUSB = None
         global log
         log = DataRing(logsize)
@@ -232,6 +233,7 @@ class FitBitDongle(USBDevice):
         self.major = major
         self.minor = minor
         self.hasVersion = True
+        self.establishLinkEx = (major, minor) >= (7, 5)
         logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
                      self.minor)
 
