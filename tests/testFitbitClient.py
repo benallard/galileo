@@ -362,6 +362,27 @@ class testinitAirLink(unittest.TestCase):
         t.id = [0,0,42,0,0,0]
         self.assertTrue(c.initializeAirlink(t))
 
+class testUpload(unittest.TestCase):
+
+    def testLongMessage(self):
+
+        class MyDongle(object):
+            def __init__(self, len):
+                 self.i = -1
+                 self.len = len
+            def data_read(self ,*args):
+                self.i += 1
+                if self.i == 0:
+                    return MyDM([0xc0, 0x12, 4, 0, 0])
+                if self.i < self.len:
+                    return MyDM([0xc0, 0x13, (((self.i) % 16) << 4) + 4, 0, 0])
+                return MyDM([0xc0, 2])
+            def data_write(self, *args): pass
+
+        d = MyDongle(20)
+        c = FitbitClient(d)
+        self.assertTrue(c.uploadResponse([0] * 380))
+
 
 class testDownload(unittest.TestCase):
 
@@ -385,48 +406,6 @@ class testDownload(unittest.TestCase):
         c = FitbitClient(d)
         dump = c.getDump(0xd)
         self.assertTrue(dump.isValid())
-
-
-class MyUploadDongle(object):
-    def __init__(self, len):
-         self.i = -1
-         self.len = len
-    def data_read(self ,*args):
-        self.i += 1
-        if self.i == 0:
-            return MyDM([0xc0, 0x12, 4, 0, 0])
-        if self.i < self.len:
-            return MyDM([0xc0, 0x13, (((self.i) % 16) << 4) + 4, 0, 0])
-        return MyDM([0xc0, 2])
-    def data_write(self, *args): pass
-
-
-class MyNewerUploadDongle(MyUploadDongle):
-    def data_read(self, *args):
-        self.i += 1
-        if self.i == 0:
-            return MyDM([0xc0, 0x12, 4, 0, 0])
-        if self.i < self.len:
-            return MyDM([0xc0, 0x13, (((self.i) % 16) << 4) + 4, 0, 0])
-        if self.i == self.len:
-            return MyDM([0xc0, 0x03, (((self.i) % 16) << 4) + 4, 0, 0])
-        return MyDM([0xc0, 2])
-
-
-class testUpload(unittest.TestCase):
-
-    def testLongMessage(self):
-        d = MyUploadDongle(20)
-        c = FitbitClient(d)
-        self.assertTrue(c.uploadResponse([0] * 380))
-
-    def testIssue236(self):
-        """ looks like the sequence read back from the tracker is different
-            for newer dongles for the last message. """
-        d = MyNewerUploadDongle(11)
-        c = FitbitClient(d)
-        self.assertTrue(c.uploadResponse([0] * 215))
-
 
 class testSetPowerLevel(unittest.TestCase):
 

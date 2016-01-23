@@ -305,30 +305,10 @@ class FitbitClient(object):
             self.dongle.data_write(DM(response[i:i + CHUNK_LEN]))
             # This one can also take some time (Charge HR tracker)
             d = self.dongle.data_read(20000)
-
-            if d is None:
+            expected = DM([0xc0, 0x13, ((((i // CHUNK_LEN) + 1) % 16) << 4) + dumptype, 0, 0])
+            if d != expected:
+                logger.error("Wrong sequence number: %s", d)
                 return False
-
-            # First we check the first byte
-            if d.data[0] != 0xc0:
-                logger.error("Wrong message from dongle: %s", d)
-                return False
-
-            # Then we check the sequence number
-            seq = [((((i // CHUNK_LEN) + 1) % 16) << 4) + dumptype, 0, 0]
-            if d.data[2:] != seq:
-                logger.error("Wrong sequence number, received %s, expected %s", d.data[2:], seq)
-                return False
-
-            # Now the last one
-            if d.data[1] != 0x13:
-                if i <= (len(response) - CHUNK_LEN):
-                    logger.error("Byte should have been 0x13, is 0x%x", d.data[1])
-                    return False
-                # The last one might answer 0x3
-                if d.data[1] != 0x3:
-                    logger.error("Byte should have been 0x03, is 0x%x", d.data[1])
-                    return False
 
         self.dongle.data_write(DM([0xc0, 2]))
         # Next one can be very long. He is probably erasing the memory there
