@@ -215,7 +215,7 @@ class FitbitClient(object):
 
     def toggleTxPipe(self, on):
         """ `on` is a boolean that dictate the status of the pipe
-        :returns: a boolean about the sucessfull execution
+        :returns: a boolean about the successful execution
         """
         self.dongle.ctrl_write(CM(8, [int(on)]))
         d = self.dongle.data_read(5000)
@@ -251,7 +251,7 @@ class FitbitClient(object):
         return True
 
     def displayCode(self):
-        """ :returns: a boolean about the sucessfull execution """
+        """ :returns: a boolean about the successful execution """
         logger.debug('Displaying code on tracker')
         self.dongle.data_write(DM([0xc0, 6]))
         r = self.dongle.data_read()
