@@ -152,7 +152,7 @@ class FitbitClient(object):
     def setPowerLevel(self, level):
         # This is quite weird as in the log I took this from, they send:
         # 020D05 (level5), but as the length is 02, I believe the 05 is not
-        # even acknowledgded by the dongle ...
+        # even acknowledged by the dongle ...
         self.dongle.ctrl_write(CM(0xd, [level]))
         r = self.dongle.ctrl_read()
         if r != CM(0xFE):
@@ -296,7 +296,7 @@ class FitbitClient(object):
         self.dongle.data_write(DM([0xc0, 0x24, dumptype] + i2lsba(len(response), 6)))
         d = self.dongle.data_read()
         if d != DM([0xc0, 0x12, dumptype, 0, 0]):
-            logger.error("Tracker did not acknowledgded upload type: %s", d)
+            logger.error("Tracker did not acknowledged upload type: %s", d)
             return False
 
         CHUNK_LEN = 20
