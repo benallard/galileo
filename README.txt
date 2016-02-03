@@ -146,7 +146,7 @@ Acknowledgements
 
 Special thanks to the folks present @ the `issue 46`_ of libfitbit.
 
-Especialy to `sansneural <https://github.com/sansneural>`_ for
+Especially to `sansneural <https://github.com/sansneural>`_ for
 https://docs.google.com/file/d/0BwJmJQV9_KRcSE0ySGxkbG1PbVE/edit and
 `Ingo Lütkebohle`_ for http://pastebin.com/KZS2inpq.
 
