@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .dongle import CM, DM, isStatus
-from .dump import Dump
+from .dump import Dump, DumpResponse
 from .utils import a2s, a2x, i2lsba, a2lsbi
 
 MICRODUMP = 3
@@ -300,14 +300,15 @@ class FitbitClient(object):
             return False
 
         CHUNK_LEN = 20
+        response = DumpResponse(response, CHUNK_LEN)
 
-        for i in range(0, len(response), CHUNK_LEN):
-            self.dongle.data_write(DM(response[i:i + CHUNK_LEN]))
+        for i, chunk in enumerate(response):#range(0, len(response), CHUNK_LEN):
+            self.dongle.data_write(DM(chunk))
             # This one can also take some time (Charge HR tracker)
             d = self.dongle.data_read(20000)
-            expected = DM([0xc0, 0x13, ((((i // CHUNK_LEN) + 1) % 16) << 4) + dumptype, 0, 0])
+            expected = DM([0xc0, 0x13, (((i+1) % 16) << 4) + dumptype, 0, 0])
             if d != expected:
-                logger.error("Wrong sequence number: %s", d)
+                logger.error("Wrong sequence number: %s, expected: %s", d, expected)
                 return False
 
         self.dongle.data_write(DM([0xc0, 2]))

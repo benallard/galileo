@@ -107,3 +107,24 @@ class Dump(object):
 
     def toBase64(self):
         return base64.b64encode(a2b(self.data + self.footer)).decode('utf-8')
+
+class DumpResponse(object):
+    def __init__(self, data, chunk_len):
+        self.data = data
+        self._chunk_len = chunk_len
+        self.__index = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.__index >= len(self.data):
+            raise StopIteration
+        if self.data[self.__index] not in (0xC0, 0xDB):
+            self.__index += self._chunk_len
+            return self.data[self.__index-self._chunk_len:self.__index]
+        b = self.data[self.__index]
+        self.__index += self._chunk_len - 1
+        return [0xDB] + [{0xC0: 0xDC, 0xDB: 0xDD}[b]] + self.data[self.__index-self._chunk_len+2:self.__index]
+    # For python2
+    next = __next__

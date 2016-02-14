@@ -1,6 +1,5 @@
 import unittest
 
-
 from galileo.tracker import FitbitClient
 
 
@@ -365,6 +364,7 @@ class testinitAirLink(unittest.TestCase):
 class testUpload(unittest.TestCase):
 
     def testLongMessage(self):
+        """ Validate that the seq number rounds up """
 
         class MyDongle(object):
             def __init__(self, len):
