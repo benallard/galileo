@@ -4,6 +4,8 @@
 
 [Unit]
 Description=Synchronisation utility for Bluetooth LE-based Fitbit trackers
+Documentation=man:galileo(1) man:galileorc(5)
+Documentation=https://bitbucket.org/benallard/galileo
 After=network.target
 
 [Service]
