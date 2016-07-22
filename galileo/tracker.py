@@ -196,8 +196,6 @@ class FitbitClient(object):
         for n in nums:
             data.extend(i2lsba(n, 2))
         self.dongle.ctrl_write(CM(0x12, data))
-        if not isStatus(self.dongle.ctrl_read(), 'CancelDiscovery'):
-            return False
         if not isStatus(self.dongle.ctrl_read(), 'EstablishLinkEx'):
             return False
         d = self.dongle.ctrl_read(5000)
