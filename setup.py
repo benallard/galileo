@@ -4,6 +4,8 @@
 import re
 import sys
 
+from io import open
+
 try:
     from setuptools import setup, find_packages, Command
 except ImportError:
@@ -40,7 +42,7 @@ class CheckVersion(Command):
             if regex.search(content) is None:
                 raise ValueError('file %s mention the wrong version' % filename)
 
-with open('README.txt') as file:
+with open('README.txt',  encoding='utf8') as file:
     long_description = file.read()
 
 setup(
