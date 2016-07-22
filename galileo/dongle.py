@@ -233,7 +233,8 @@ class FitBitDongle(USBDevice):
         self.major = major
         self.minor = minor
         self.hasVersion = True
-        self.establishLinkEx = (major, minor) >= (7, 5)
+        # Leave it to False, I don't see any advantage in using it at the moment
+        # self.establishLinkEx = (major, minor) >= (2, 5)
         logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
                      self.minor)
 
