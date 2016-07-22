@@ -2,7 +2,7 @@ Galileo
 =======
 
 :author: Benoît Allard <benoit.allard@gmx.de>
-:version: 0.5dev
+:version: 0.5
 :license: LGPLv3+
 :bug tracker: https://bitbucket.org/benallard/galileo/issues
 :mailing list: galileo@freelists.org (subscribe_, archive_)
@@ -28,6 +28,10 @@ All Bluetooth-based trackers are supported. Those are:
 - Fitbit Force
 - Fitbit Charge
 - Fitbit Charge HR
+
+.. note:: The newer Trackers: Alta, Surge, and Blaze are **not supported**
+          due to a change in the network communication protocol.
+          Help with dumps is welcome !
 
 .. note:: The Fitbit Ultra tracker is **not supported** as it communicates
           using the ANT protocol. To synchronize it, please use libfitbit_.
