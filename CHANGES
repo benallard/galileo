@@ -7,7 +7,8 @@ synchronize fitbit bluetooth trackers with the fitbit web-service.
 This release ...
 
 Contributor to this release: Dean Giberson, Richard Weait, Chris Wayne,
-David Vasak, Mike Frysinger and Nenad Jankovic.
+David Vasak, Mike Frysinger, Nenad Jankovic, pozorvlak, Dylan Aïssi and
+Antenore Gatta.
 
 Main changes since 0.4.4:
 - Add a pair mode (issue#33)
@@ -20,6 +21,7 @@ Main changes since 0.4.4:
 - Improve Discovery process (issue#231)
 - Add Support for python 3.4 (issue#116)
 - Add support for newer dongles (issue#236)
+- Update the server name (issue#277)
 
 
 galileo 0.4.4 (2015-05-31)
