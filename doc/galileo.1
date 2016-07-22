@@ -12,6 +12,7 @@ galileo \- synchronize Fitbit devices
 .B galileo
 .RB [ "\-h" ]
 .RB [ "\-c \fIFILENAME\fR" ]
+.RB [ "\-s \fISERVERNAME\fR" ]
 .RB [ "\-\-dump\-dir \fIDIR\fR" ]
 .RB [ "\-\-daemon\-period \fIPERIOD\fR" ]
 .RB [ "\-I \fIID\fR" "[ \fIID \.\.\.\fR ] ]"
@@ -75,6 +76,10 @@ show command-line usage and exit.
 .BR "\-c \fIRCCONFIGNAME\fR" ", " "\-\-config \fIRCCONFIGNAME\fR"
 use \fIRCCONFIGNAME\fR as extra configuration file in order to allow overriding
 of settings.
+
+.TP
+.BR "\-s \fISERVERNAME\fR" ", " "\-\-fitbit\-server \fISERVERNAME\fR"
+use \fISERVERNAME\fR as alternative Fitbit.
 
 .P
 The remaining options are first read from configuration file, and can be

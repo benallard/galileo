@@ -34,7 +34,7 @@ def syncAllTrackers(config):
 
     fitbit = FitbitClient(dongle)
 
-    galileo = GalileoClient('https', 'api.fitbit.com',
+    galileo = GalileoClient('https', config.fitbitServer,
                             'tracker/client/message')
 
     if not fitbit.disconnect():
@@ -259,7 +259,6 @@ def main():
         # Syslog messages must have the time/name first.
         format = ('%(asctime)s ' + galileo.__name__ + ': '
                   '%(levelname)s: %(module)s: %(message)s')
-        # TODO: Make address into a config option.
         handler = logging.handlers.SysLogHandler(
             address='/dev/log',
             facility=logging.handlers.SysLogHandler.LOG_DAEMON)
