@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-import sys
 
 from io import open
 
@@ -20,13 +19,12 @@ class CheckVersion(Command):
     """ Check that the version in the docs is the correct one """
     description = "Check the version consistency"
     user_options = []
+
     def initialize_options(self):
         """init options"""
-        pass
 
     def finalize_options(self):
         """finalize options"""
-        pass
 
     def run(self):
         readme_re = re.compile(r'^:version:\s+' + __version__ + r'\s*$',
