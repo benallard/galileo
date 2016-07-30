@@ -12,7 +12,6 @@ galileo \- synchronize Fitbit devices
 .B galileo
 .RB [ "\-h" ]
 .RB [ "\-c \fIFILENAME\fR" ]
-.RB [ "\-s \fISERVERNAME\fR" ]
 .RB [ "\-\-dump\-dir \fIDIR\fR" ]
 .RB [ "\-\-daemon\-period \fIPERIOD\fR" ]
 .RB [ "\-I \fIID\fR" "[ \fIID \.\.\.\fR ] ]"
@@ -22,6 +21,7 @@ galileo \- synchronize Fitbit devices
 .RB [ "\-\-dump" | "\-\-no\-dump" ]
 .RB [ "\-\-upload" | "\-\-no\-upload" ]
 .RB [ "\-\-https\-only" | "\-\-no\-https\-only" ]
+.RB [ "\-s \fISERVERNAME\fR" ]
 .RB [ "\-\-log\-size \fISIZE\fR" ]
 .RB [ "\-\-syslog" | "\-\-no\-syslog" ]
 .RB [ "sync" | "daemon" | "version" ]
@@ -76,10 +76,6 @@ show command-line usage and exit.
 .BR "\-c \fIRCCONFIGNAME\fR" ", " "\-\-config \fIRCCONFIGNAME\fR"
 use \fIRCCONFIGNAME\fR as extra configuration file in order to allow overriding
 of settings.
-
-.TP
-.BR "\-s \fISERVERNAME\fR" ", " "\-\-fitbit\-server \fISERVERNAME\fR"
-use \fISERVERNAME\fR as alternative Fitbit.
 
 .P
 The remaining options are first read from configuration file, and can be
@@ -166,6 +162,10 @@ using HTTPS. This is the default.
 if HTTPS connection is not possible, this will allow the fallback to HTTP.
 This should only be required if problems with encryption libraries prevent
 data transfer without this option.
+.TP
+.BR "\-s \fISERVERNAME\fR" ", " "\-\-fitbit\-server \fISERVERNAME\fR"
+the server to connect to when performing the synchronization (default to
+\fBapi.fitbit.com\fR).
 .TP
 .BI \-\-log\-size " SIZE"
 indicate the amount of communication that should be displayed in case of
