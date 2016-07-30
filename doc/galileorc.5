@@ -109,7 +109,8 @@ setting this to \fBfalse\fR will prevent galileo from sending tracker
 data to the Fitbit web service.
 .TP
 .B fitbit-server
-setting this will send tracker data to an alternative server.
+this setting allow to specify the name of the server to connect to when
+performing the synchronization.
 .TP
 .B https-only
 setting this to \fBfalse\fR will allow galileo to fallback to
@@ -131,7 +132,6 @@ dump-dir: ~/.galileo-tracker-data
 logging: verbose
 force-sync: false
 https-only: false
-fitbit-server: api.fitbit.com
 include:
   - '123456789ABC'
   - '9876543210AB'
