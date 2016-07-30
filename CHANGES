@@ -1,3 +1,12 @@
+galileo 0.5.1 (????-??-??)
+--------------------------
+
+Contributors to this release: Antenore Gatta.
+
+Main changes since 0.5:
+- Make the server name a configuration option (PR#22)
+
+
 galileo 0.5 (2016-07-22)
 ------------------------
 
