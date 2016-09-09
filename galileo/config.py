@@ -251,7 +251,7 @@ class Config(object):
                 BoolParameter('keepDumps', 'keep-dumps', ('dump',), True, False, "enable saving of the megadump to file"),
                 BoolParameter('doUpload', 'do-upload',  ('upload',), True, False, "upload the dump to the server"),
                 BoolParameter('httpsOnly', 'https-only', ('https-only',), True, False, "use http if https is not available"),
-                StrParameter('fitbitServer', 'fitbit-server', ('-s', '--fitbit-server',), "api.fitbit.com", False, "server used for synchronisation"),
+                StrParameter('fitbitServer', 'fitbit-server', ('-s', '--fitbit-server',), "client.fitbit.com", False, "server used for synchronisation"),
                 IntParameter('logSize', 'log-size', ('--log-size',), 10, False, "Amount of communication to display in case of error"),
                 BoolParameter('syslog', 'syslog', ('syslog',), False, False, "send output to syslog instead of stderr"),
                 Argument(),
