@@ -12,6 +12,12 @@ except ImportError:
     # Python2
     from HTMLParser import HTMLParser
 
+try:
+    # Override the input from python2 with raw_input
+    input = raw_input
+except NameError:
+    pass
+
 class Form(object):
     def __init__(self):
         self.fields = set()
@@ -210,7 +216,7 @@ def query_yes_no(question, default="y"):
 
     while True:
         sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = input().lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
@@ -233,5 +239,5 @@ class InteractiveUI(HardCodedUI):
             return [('param', {'name': 'secret'}, [], ''),
                      ('param', {'name': 'tryOther'}, [], 'TRY_OTHER')]
         sys.stdout.write("Type here the number you see:")
-        secret = raw_input()
+        secret = input()
         return [('param', {'name': 'secret'}, [], secret)]

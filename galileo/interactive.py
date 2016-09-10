@@ -9,6 +9,12 @@ https://bitbucket.org/benallard/libfitbit/src/tip/python/ifitbit.py?at=default
 
 from __future__ import print_function
 
+try:
+    # Override the input from python2 with raw_input
+    input = raw_input
+except NameError:
+    pass
+
 #---------------------------
 # The engine
 
@@ -53,7 +59,7 @@ def main(config):
     exit = False
     print_help()
     while not exit:
-        orders = raw_input('> ').strip()
+        orders = input('> ').strip()
         if ';' in orders:
             orders = orders.split(';')
         else:
