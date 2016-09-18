@@ -1,10 +1,17 @@
-galileo 0.5.1 (????-??-??)
+galileo 0.5.1 (2016-09-18)
 --------------------------
+
+This is the first patch release of galileo 0.5, a free utility to securely
+synchronize fitbit bluetooth trackers with the fitbit web service.
+
+This release restores a working default for the synchronisation server name,
+and makes this setting a configurable parameter.
 
 Contributors to this release: Antenore Gatta.
 
 Main changes since 0.5:
 - Make the server name a configuration option (PR#22)
+- Change the default synchronisation server to a working default (issue#296)
 
 
 galileo 0.5 (2016-07-22)
