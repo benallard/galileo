@@ -1,3 +1,10 @@
+
+Contributors to this release: Dylan Aïssi
+
+Main changes since 0.5.1:
+- Add an AppStream file (issue#308)
+- Implement a draft of the newer network communication protocol (issue#149)
+
 galileo 0.5.1 (2016-09-18)
 --------------------------
 
