@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component>
+  <id>galileo</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LGPL-3+</project_license>
+  <name>galileo</name>
+  <summary>Utility to securely synchronize a Fitbit device with the Fitbit web service</summary>
+  <description>
+    <p>
+      Galileo is an utility to securely synchronize a Fitbit device with the
+      Fitbit web service. It allows you to browse your data on their website, and
+      compatible applications. The main features of Galileo are: Synchronize your
+      fitbit tracker with the fitbit server using the provided dongle; Securely
+      communicate (using HTTPS) with the fitbit server; Save all your dumps locally
+      for possible later analyse. Galileo supports the following trackers: One, Zip,
+      Flex, Force, Charge, Charge HR.
+    </p>
+  </description>
+  <url type="homepage">https://bitbucket.org/benallard/galileo/</url>
+  <provides>
+    <modalias>usb:v2687pfb01d*</modalias>
+  </provides>
+</component>

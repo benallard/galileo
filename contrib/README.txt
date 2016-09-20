@@ -25,3 +25,10 @@ galileo.upstart
 This is an **upstart** file that can be used to start and stop the galileo
 utility when running in 'daemon mode'. This was originally created for the
 Ubuntu distribution, and might need some customization to run elsewhere.
+
+
+galileo.metainfo.xml
+---------------
+
+This is an **AppStream** file which provides meta-information used by some
+software centers.
