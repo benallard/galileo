@@ -191,6 +191,7 @@ class FitbitClient(object):
 
     def establishLinkEx(self, tracker):
         """ First heard from in #236 """
+        self.dongle.ctrl_write(CM(0x19, [1, 0]))
         nums = [6, 6, 0, 200]  # Looks familiar ?
         data = tracker.id + [tracker.addrType]
         for n in nums:
