@@ -89,25 +89,20 @@ The following Linux distributions have packages available for installation:
   overlay. See https://wiki.gentoo.org/wiki/Layman for details of how
   to use Gentoo overlays.
 **Debian**:
-  galileo is now officially part of the sid_ distribution.
+  galileo is officially part of the stretch_ distribution (Debian 9).
+  Just use your favorite package manager.
 **Ubuntu**:
-  The utility is available over the ppa ``ppa:cwayne18/fitbit``. Use the
-  following commands to install it and start the daemon::
-
-    sudo add-apt-repository ppa:cwayne18/fitbit
-    sudo apt-get update && sudo apt-get install galileo
-    start galileo
-
-  .. note: This ppa has no support for newer Ubuntu releases. There are
-           reports that the Debian package (see above) can be installed there
-           though.
+  galileo is officially part of `The Yakkety Yak`_ (16.10). Just
+  use your favorite package manager.
 
 .. _AUR: https://aur.archlinux.org/packages/galileo/
 .. _yaourt: https://wiki.archlinux.org/index.php/yaourt
 
 .. _`COPR repo`: https://copr.fedoraproject.org/coprs/stbenjam/galileo/
 
-.. _sid: https://packages.debian.org/sid/main/galileo
+.. _stretch: https://packages.debian.org/stretch/galileo
+
+.. _`The Yakkety Yak`: https://launchpad.net/ubuntu/+source/galileo
 
 The more complicated way
 ~~~~~~~~~~~~~~~~~~~~~~~~
