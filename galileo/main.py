@@ -15,7 +15,7 @@ import requests
 from . import __version__
 from .config import Config, ConfigError
 from .conversation import Conversation
-from .net import GalileoClient, SyncError, BackOffException
+from .net import RemoteXMLDatabase, SyncError, BackOffException
 from .tracker import FitbitClient
 from .ui import InteractiveUI
 from .utils import a2x
@@ -34,7 +34,7 @@ def syncAllTrackers(config):
 
     fitbit = FitbitClient(dongle)
 
-    galileo = GalileoClient('https', config.fitbitServer,
+    galileo = RemoteXMLDatabase('https', config.fitbitServer,
                             'tracker/client/message')
 
     if not fitbit.disconnect():

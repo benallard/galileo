@@ -71,7 +71,7 @@ def ConnectionErrorToMessage(ce):
     return 'ConnectionError'
 
 
-class GalileoClient(object):
+class RemoteXMLDatabase(object):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
 
     def __init__(self, scheme, host, path, port=None):
@@ -256,7 +256,7 @@ class GalileoClient(object):
 
         return s2a(base64.b64decode(d))
 
-class GalileoClient2(GalileoClient):
+class RemoteRESTDatabase(RemoteXMLDatabase):
 
     def sync(self, dongle, trackerId, megadump):
 
