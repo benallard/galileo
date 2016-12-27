@@ -29,9 +29,9 @@ All Bluetooth-based trackers are supported. Those are:
 - Fitbit Charge
 - Fitbit Charge HR
 
-.. note:: The newer Trackers: Alta, Surge, and Blaze are **not supported**
-          due to a change in the network communication protocol.
-          Help with dumps is welcome !
+.. note:: Support for the newer trackers: Alta, Surge, and Blaze is now
+          **experimental** (see #149) due to a change in the network
+          communication protocol. Help with testing is welcome !
 
 .. note:: The Fitbit Ultra tracker is **not supported** as it communicates
           using the ANT protocol. To synchronize it, please use libfitbit_.
