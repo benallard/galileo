@@ -18,6 +18,6 @@
   </description>
   <url type="homepage">https://bitbucket.org/benallard/galileo/</url>
   <provides>
-    <modalias>usb:v2687pfb01d*</modalias>
+    <modalias>usb:v2687pFB01d*</modalias>
   </provides>
 </component>
