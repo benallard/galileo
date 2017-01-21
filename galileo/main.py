@@ -15,7 +15,7 @@ import requests
 from . import __version__
 from .config import Config, ConfigError
 from .conversation import Conversation
-from .net import RemoteXMLDatabase, SyncError, BackOffException
+from .net import SyncError, BackOffException
 from .tracker import FitbitClient
 from .ui import InteractiveUI
 from .utils import a2x
@@ -34,8 +34,8 @@ def syncAllTrackers(config):
 
     fitbit = FitbitClient(dongle)
 
-    galileo = RemoteXMLDatabase('https', config.fitbitServer,
-                            'tracker/client/message')
+    galileo = config.database('https', config.fitbitServer,
+                              'tracker/client/message')
 
     if not fitbit.disconnect():
         logger.error("Dirty state, not able to start synchronisation.")

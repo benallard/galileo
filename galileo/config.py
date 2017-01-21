@@ -9,6 +9,7 @@ try:
 except ImportError:
     from . import parser as yaml
 
+from . import net
 from .utils import a2x
 
 class ConfigError(Exception): pass
@@ -117,6 +118,7 @@ class BoolParameter(Parameter):
 
 
 class SetParameter(Parameter):
+    """ This parameter regroups multiple values under a `set` """
     def toArgParse(self, parser):
         parser.add_argument(*self.paramName,
                             nargs="+", metavar="ID", dest=self.name,
@@ -288,7 +290,8 @@ class Config(object):
                 LogLevelParameter(),
                 BoolParameter('forceSync', 'force-sync', ('force',), False, False, "synchronize even if tracker reports a recent sync"),
                 BoolParameter('keepDumps', 'keep-dumps', ('dump',), True, False, "enable saving of the megadump to file"),
-                BoolParameter('doUpload', 'do-upload',  ('upload',), True, False, "upload the dump to the server"),
+                BoolParameter('doUpload', 'do-upload',  ('upload',), True, False, "upload the dump to the database"),
+                ClassChooserParameter(net.Database, 'database', 'database', ('--db', '--database'), net.RemoteXMLDatabase, False, "database to use for synchronisation"),
                 BoolParameter('httpsOnly', 'https-only', ('https-only',), True, False, "use http if https is not available"),
                 StrParameter('fitbitServer', 'fitbit-server', ('-s', '--fitbit-server',), "client.fitbit.com", False, "server used for synchronisation"),
                 IntParameter('logSize', 'log-size', ('--log-size',), 10, False, "Amount of communication to display in case of error"),

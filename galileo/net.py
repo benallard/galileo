@@ -71,7 +71,11 @@ def ConnectionErrorToMessage(ce):
     return 'ConnectionError'
 
 
-class RemoteXMLDatabase(object):
+class Database(object):
+    pass
+
+
+class RemoteXMLDatabase(Database):
     ID = '6de4df71-17f9-43ea-9854-67f842021e05'
 
     def __init__(self, scheme, host, path, port=None):
