@@ -221,6 +221,45 @@ class HardCodedUIConfig(Parameter):
         return True
 
 
+def all_subclasses(cls):
+    """ generator that returns all the known subtypes of the given type """
+    for s in cls.__subclasses__():
+        yield s
+        for ss in all_subclasses(s):
+            yield ss
+
+
+class ClassChooserParameter(Parameter):
+    """ Allow to choose between the subclasses of a class """
+    def __init__(self, klassType, *args, **kwargs):
+        Parameter.__init__(self, *args, **kwargs)
+        self.mapping = {}
+        for kls in all_subclasses(klassType):
+            self.mapping[kls.__name__] = kls
+
+    def toArgParse(self, parser):
+        parser.add_argument(*self.paramName,
+                            dest=self.name, choices=self.mapping.keys(),
+                            help=self.helpText +
+                            " (default to %s)" % self.default)
+
+    def fromArgs(self, args, optdict):
+        """ Take the value from the args parameter (from 'argparse'), and fill
+        it in the dict """
+        val = getattr(args, self.name)
+        if val:
+            optdict[self.varName] = self.mapping[val]
+
+    def fromFile(self, filedict, optdict):
+        """ Take the value from the filedict parameter and fill it in the dict
+        :returns: False if something went wrong
+        """
+        if self.paramOnly: return True
+        if self.name in filedict:
+            optdict[self.varName] = self.mapping[filedict[self.name]]
+        return True
+
+
 class Config(object):
     """Class holding the configuration to be applied during synchronization.
     The configuration can be loaded from a file in which case the defaults
