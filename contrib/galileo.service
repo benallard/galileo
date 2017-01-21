@@ -6,12 +6,14 @@
 Description=Synchronisation utility for Bluetooth LE-based Fitbit trackers
 Documentation=man:galileo(1) man:galileorc(5)
 Documentation=https://bitbucket.org/benallard/galileo
-After=network.target
+After=network-online.target
 
 [Service]
 User=galileo
 Group=galileo
 ExecStart=/usr/bin/galileo --config /etc/galileorc daemon
+Restart=on-failure
+RestartSec=30s 15s
 
 [Install]
-WantedBy=network.target
+WantedBy=network-online.target
