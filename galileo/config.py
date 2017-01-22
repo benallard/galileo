@@ -284,7 +284,7 @@ class Config(object):
             opts = [
                 StrParameter('rcConfigName', 'rcconfigname', ('-c', '--config'), None, True, "use alternative configuration file"),
                 StrParameter('dumpDir', 'dump-dir', ('--dump-dir',), "~/.galileo", False, "directory for storing dumps"),
-                IntParameter('daemonPeriod', 'daemon-period', ('--daemon-period',), 15000, False, "sleep time in msec between sync runs when in daemon mode"),
+                IntParameter('daemonPeriod', 'daemon-period', ('--daemon-period',), 180000, False, "sleep time in msec between sync runs when in daemon mode"),
                 SetParameter('includeTrackers', 'include', ('-I', '--include'), None, False, "list of tracker IDs to sync (all if not specified)"),
                 SetParameter('excludeTrackers', 'exclude', ('-X', '--exclude'), set(), False, "list of tracker IDs to not sync"),
                 LogLevelParameter(),
