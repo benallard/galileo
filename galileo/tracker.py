@@ -206,6 +206,8 @@ class FitbitClient(object):
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
         d = self.dongle.ctrl_read()
+        if d.INS == 6:
+            d = self.dongle.ctrl_read()
         if d != CM(7):
             logger.error('Unexpected 2nd message: %s', d)
             return False
@@ -331,7 +333,11 @@ class FitbitClient(object):
         """ contrary to ``establishLink`` """
 
         self.dongle.ctrl_write(CM(7))
-        if not isStatus(self.dongle.ctrl_read(5000), 'TerminateLink'):
+        d = self.dongle.ctrl_read(5000)
+        if d.INS == 6:
+            # that is pretty bad because actually that message was sent long ago
+            d = self.dongle.ctrl_read()
+        if not isStatus(d, 'TerminateLink'):
             return False
 
         d = self.dongle.ctrl_read(3000)
