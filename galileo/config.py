@@ -9,6 +9,8 @@ try:
 except ImportError:
     from . import parser as yaml
 
+from . import ble
+from . import dongle
 from . import net
 from .utils import a2x
 
@@ -288,6 +290,7 @@ class Config(object):
                 SetParameter('includeTrackers', 'include', ('-I', '--include'), None, False, "list of tracker IDs to sync (all if not specified)"),
                 SetParameter('excludeTrackers', 'exclude', ('-X', '--exclude'), set(), False, "list of tracker IDs to not sync"),
                 LogLevelParameter(),
+                ClassChooserParameter(ble.API, 'bluetoothConn', 'bluetooth_connection', ('--bluetooth',), dongle.FitBitDongle, False, "Bluetooth API to use"),
                 BoolParameter('forceSync', 'force-sync', ('force',), False, False, "synchronize even if tracker reports a recent sync"),
                 BoolParameter('keepDumps', 'keep-dumps', ('dump',), True, False, "enable saving of the megadump to file"),
                 BoolParameter('doUpload', 'do-upload',  ('upload',), True, False, "upload the dump to the database"),

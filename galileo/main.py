@@ -27,7 +27,7 @@ FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
 
 def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
-    dongle = dgl.FitBitDongle(config.logSize)
+    dongle = config.bluetoothConn(config.logSize)
     if not dongle.setup():
         logger.error("No dongle connected, aborting")
         return

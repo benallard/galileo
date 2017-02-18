@@ -20,6 +20,7 @@ except ImportError as ie:
         print("Please upgrade your system to a newer version.")
     raise ie
 
+from . import ble
 from .utils import a2x, a2s
 
 IN, OUT = 1, -1
@@ -191,7 +192,7 @@ def isStatus(data, msg=None, logError=True):
     return True
 
 
-class FitBitDongle(USBDevice):
+class FitBitDongle(USBDevice, ble.API):
     VID = 0x2687
     PID = 0xfb01
 
