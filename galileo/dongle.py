@@ -200,7 +200,7 @@ class FitBitDongle(USBDevice, ble.API):
         USBDevice.__init__(self, self.VID, self.PID)
         self.hasVersion = False
         self.establishLinkEx = False
-        self.newerPyUSB = None
+        self.olderPyUSB = None
         global log
         log = DataRing(logsize)
 
@@ -240,9 +240,8 @@ class FitBitDongle(USBDevice, ble.API):
                      self.minor)
 
     def write(self, endpoint, data, timeout):
-        if self.newerPyUSB:
-            params = (endpoint, data, timeout)
-        else:
+        params = (endpoint, data, timeout)
+        if self.olderPyUSB:
             interface = {0x02: self.CtrlIF.bInterfaceNumber,
                          0x01: self.DataIF.bInterfaceNumber}[endpoint]
             params = (endpoint, data, interface, timeout)
@@ -250,11 +249,11 @@ class FitBitDongle(USBDevice, ble.API):
         try:
             return self.dev.write(*params)
         except TypeError:
-            if self.newerPyUSB is not None:
+            if self.olderPyUSB is not None:
                 # Already been there, something else is happening ...
                 raise
-            logger.debug('Switching to a newer pyusb compatibility mode')
-            self.newerPyUSB = True
+            logger.debug('Switching to an older pyusb compatibility mode')
+            self.olderPyUSB = True
             return self.write(endpoint, data, timeout)
         except usb.core.USBError as ue:
             if ue.errno != errno.EIO:
@@ -264,9 +263,8 @@ class FitBitDongle(USBDevice, ble.API):
             return self.dev.write(*params)
 
     def read(self, endpoint, length, timeout):
-        if self.newerPyUSB:
-            params = (endpoint, length, timeout)
-        else:
+        params = (endpoint, length, timeout)
+        if self.olderPyUSB:
             interface = {0x82: self.CtrlIF.bInterfaceNumber,
                          0x81: self.DataIF.bInterfaceNumber}[endpoint]
             params = (endpoint, length, interface, timeout)
@@ -274,11 +272,11 @@ class FitBitDongle(USBDevice, ble.API):
         try:
             data = self.dev.read(*params)
         except TypeError:
-            if self.newerPyUSB is not None:
+            if self.olderPyUSB is not None:
                 # Already been there, something else is happening ...
                 raise
-            logger.debug('Switching to a newer pyusb compatibility mode')
-            self.newerPyUSB = True
+            logger.debug('Switching to an older pyusb compatibility mode')
+            self.olderPyUSB = True
             return self.read(endpoint, length, timeout)
         except usb.core.USBError as ue:
             if not isATimeout(ue):
