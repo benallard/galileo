@@ -10,8 +10,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .dongle import FitBitDongle
+from .dump import MICRODUMP, MEGADUMP
 from .net import RemoteXMLDatabase
-from .tracker import FitbitClient, MICRODUMP, MEGADUMP
+from .tracker import FitbitClient
 from .ui import MissingConfigError
 from .utils import a2x, s2a
 

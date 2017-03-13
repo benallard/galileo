@@ -5,6 +5,9 @@ logger = logging.getLogger(__name__)
 
 from .utils import a2x, a2lsbi, a2b
 
+MICRODUMP = 3
+MEGADUMP = 13
+
 
 class CRC16(object):
     """ A rather generic CRC16 class """
