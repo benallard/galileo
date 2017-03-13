@@ -335,6 +335,8 @@ class FitbitClient(object):
 
         self.dongle.ctrl_write(CM(7))
         d = self.dongle.ctrl_read(5000)
+        if d is None:
+            return False
         if d.INS == 6:
             # that is pretty bad because actually that message was sent long ago
             d = self.dongle.ctrl_read()
