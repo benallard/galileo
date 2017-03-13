@@ -86,7 +86,6 @@ class testDump(unittest.TestCase):
         dump = Dump(13)
         dump.data = bytearray(x2a('2E 02 00 00 01 00 D0 00 00 00 AB CD EF 12 34 56'))
 
-        print(dir(dump))
         self.assertEqual(dump.serial, 'ABCDEF123456')
         self.assertEqual(dump.trackerType, 86)
 

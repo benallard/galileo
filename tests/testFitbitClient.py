@@ -5,7 +5,7 @@ from galileo.tracker import FitbitClient
 
 class MyDM(object):
     def __init__(self, data):
-        self.data = data
+        self.data = bytearray(data)
     def __str__(self): return str(self.data)
 
 
@@ -13,7 +13,7 @@ class MyCM(object):
     def __init__(self, data):
         self.len = data[0]
         self.INS = data[1]
-        self.payload = data[2:]
+        self.payload = bytearray(data[2:])
     def asList(self): return bytearray([self.len, self.INS]) + self.payload
     def __str__(self): return str(self.asList())
 
@@ -29,7 +29,6 @@ class MyDongle(object):
         if not response:
             return None
         if ctrl:
-            print(response  )
             return MyCM(bytearray(response))
         else:
             return MyDM(bytearray(response))
@@ -339,7 +338,7 @@ class testinitAirLink(unittest.TestCase):
                       (0xc0, 0x14, 0xc,0xa, 0,0, 0,0,42,0,0,0, 0x17,0),])
         c = FitbitClient(d)
         t = MyTracker()
-        t.id = [0,0,42,0,0,0]
+        t.id = bytearray([0,0,42,0,0,0])
         self.assertTrue(c.initializeAirlink(t))
 
     def testOthers(self):
@@ -347,7 +346,7 @@ class testinitAirLink(unittest.TestCase):
                       (0xc0, 0x14, 0xc,1, 0,0, 0,0,42,0,0,0),])
         c = FitbitClient(d)
         t = MyTracker()
-        t.id = [0,0,42,0,0,0]
+        t.id = bytearray([0,0,42,0,0,0])
         self.assertTrue(c.initializeAirlink(t))
 
     def testEstablishEx(self):
@@ -357,7 +356,7 @@ class testinitAirLink(unittest.TestCase):
         d.establishLinkEx = True
         c = FitbitClient(d)
         t = MyTracker()
-        t.id = [0,0,42,0,0,0]
+        t.id = bytearray([0,0,42,0,0,0])
         self.assertTrue(c.initializeAirlink(t))
 
 class testUpload(unittest.TestCase):
