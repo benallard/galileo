@@ -118,7 +118,7 @@ class testScenarii(unittest.TestCase):
         self.assertTrue(c.initializeAirlink(ts[0]))
         dump = c.getDump()
         self.assertFalse(dump is None)
-        self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
+        self.assertEqual(dump.data, bytearray([0x26, 2, 0,0,0,0,0]))
         self.assertTrue(c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)))
         self.assertTrue(c.terminateAirlink())
         self.assertTrue(c.toggleTxPipe(False))
@@ -161,7 +161,7 @@ class testScenarii(unittest.TestCase):
                 continue
             dump = c.getDump()
             self.assertFalse(dump is None)
-            self.assertEqual(dump.data, [0x26, 2, 0,0,0,0,0])
+            self.assertEqual(dump.data, bytearray([0x26, 2, 0,0,0,0,0]))
             if i < 22:
                 self.assertFalse(c.uploadResponse((0x26, 2, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)))
                 continue
@@ -392,8 +392,8 @@ class testDownload(unittest.TestCase):
         c = FitbitClient(d)
         dump = c.getDump(0xd)
         self.assertTrue(dump.isValid())
-        self.assertEqual(dump.data, [38, 2, 0, 0, 0, 0, 0])
-        self.assertEqual(dump.footer, [192, 0, 13, 147, 68, 7, 0])
+        self.assertEqual(dump.data, bytearray([38, 2, 0, 0, 0, 0, 0]))
+        self.assertEqual(dump.footer, bytearray([192, 0, 13, 147, 68, 7, 0]))
 
     def testSurge(self):
         # This is not completely correct

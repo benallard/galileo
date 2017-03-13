@@ -45,13 +45,60 @@ class CRC16(object):
         return self.value ^ self.FV
 
 
-class Dump(object):
+class TrackerBlock(object):
+    def __init__(self):
+        self.data = bytearray()
+        self.footer = bytearray()
+
+    @property
+    def len(self):
+        return len(self.data)
+
+
+    @property
+    def megadumpType(self):
+        if self.len < 1:
+            return None
+        return a2x(self.data[0:1])
+
+    @property
+    def encryption(self):
+        if self.len < 6:
+            return None
+        return a2lsbi(self.data[4:6])
+
+    @property
+    def nonce(self):
+        if self.len < 10:
+            return None
+        return self.data[6:10]
+
+    def toFile(self, filename):
+        logger.debug("Dumping megadump to %s", filename)
+        with open(filename, 'wt') as dumpfile:
+            for i in range(0, self.len, 20):
+                dumpfile.write(a2x(self.data[i:i + 20]) + '\n')
+            dumpfile.write(a2x(self.footer) + '\n')
+
+
+class Dump(TrackerBlock):
     def __init__(self, _type):
+        TrackerBlock.__init__(self)
         self._type = _type
-        self.data = []
-        self.footer = []
         self.crc = CRC16()
         self.esc = [0, 0]
+
+    @property
+    def serial(self):
+        if self.len < 16:
+            return None
+        return a2x(self.data[10:16], delim='')
+
+    @property
+    def trackerType(self):
+        if self.len < 16:
+            return None
+        return a2lsbi(self.data[15:16])
 
     def unSLIP1(self, data):
         """ The protocol uses a particular version of SLIP (RFC 1055) applied
@@ -69,16 +116,12 @@ class Dump(object):
 
     def add(self, data):
         if data[0] == 0xc0:
-            assert self.footer == []
-            self.footer = data
+            assert len(self.footer) == 0
+            self.footer = bytearray(data)
             return
         data = self.unSLIP1(data)
         self.crc.update(data)
         self.data.extend(data)
-
-    @property
-    def len(self):
-        return len(self.data)
 
     def isValid(self):
         if not self.footer:
@@ -101,19 +144,14 @@ class Dump(object):
             return False
         return True
 
-    def toFile(self, filename):
-        logger.debug("Dumping megadump to %s", filename)
-        with open(filename, 'wt') as dumpfile:
-            for i in range(0, self.len, 20):
-                dumpfile.write(a2x(self.data[i:i + 20]) + '\n')
-            dumpfile.write(a2x(self.footer) + '\n')
-
     def toBase64(self):
         return base64.b64encode(a2b(self.data + self.footer)).decode('utf-8')
 
-class DumpResponse(object):
+
+class DumpResponse(TrackerBlock):
     def __init__(self, data, chunk_len):
-        self.data = data
+        TrackerBlock.__init__(self)
+        self.data = bytearray(data)
         self._chunk_len = chunk_len
         self.__index = 0
 
