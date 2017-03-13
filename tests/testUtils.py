@@ -21,6 +21,10 @@ class testx2a(unittest.TestCase):
         self.assertEqual(x2a('02'), [2])
         self.assertEqual(x2a('2 3'), [2, 3])
 
+    def testMultipleLines(self):
+        self.assertEqual(x2a('00\n01\n02\n03'), [0, 1, 2, 3])
+        self.assertEqual(x2a('00 01\n02 03'), [0, 1, 2, 3])
+
 class testa2s(unittest.TestCase):
 
     def testSimple(self):

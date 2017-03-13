@@ -14,6 +14,7 @@ def a2x(a, delim=' '):
 
 def x2a(hexstr):
     """ String of hex a to array """
+    hexstr = hexstr.replace('\n', ' ')
     return [int(x, 16) for x in hexstr.split(' ')]
 
 
