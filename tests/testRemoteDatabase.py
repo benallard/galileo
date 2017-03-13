@@ -4,7 +4,8 @@ import sys
 from galileo import __version__
 
 import galileo.net
-from galileo.net import RemoteXMLDatabase, SyncError, BackOffException
+from galileo.net import RemoteXMLDatabase, SyncError
+from galileo.netUtils import BackOffException
 
 class requestResponse(object):
     def __init__(self, text, server_version='<server-version>\n\n</server-version>'):

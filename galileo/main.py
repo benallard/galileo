@@ -15,7 +15,7 @@ import requests
 from . import __version__
 from .config import Config, ConfigError
 from .conversation import Conversation
-from .net import SyncError, BackOffException
+from .netUtils import SyncError, BackOffException
 from .tracker import FitbitClient
 from .ui import InteractiveUI
 from .utils import a2x

@@ -3,7 +3,7 @@ import unittest
 import xml.etree.ElementTree as ET
 from io import BytesIO
 
-from galileo.net import toXML, tuplesToXML, XMLToTuple
+from galileo.netUtils import toXML, tuplesToXML, XMLToTuple
 
 class testtoXML(unittest.TestCase):
 
