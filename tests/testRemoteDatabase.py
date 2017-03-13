@@ -3,8 +3,9 @@ import sys
 
 from galileo import __version__
 
+from galileo.databases import SyncError
 import galileo.net
-from galileo.net import RemoteXMLDatabase, SyncError
+from galileo.net import RemoteXMLDatabase
 from galileo.netUtils import BackOffException
 
 class requestResponse(object):

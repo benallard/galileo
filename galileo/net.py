@@ -14,15 +14,7 @@ import requests
 from . import __version__
 from .netUtils import BackOffException, ConnectionErrorToMessage, tuplesToXML, toXML, XMLToTuple
 from .utils import s2a
-
-
-class SyncError(Exception):
-    def __init__(self, errorstring='Undefined'):
-        self.errorstring = errorstring
-
-
-class Database(object):
-    pass
+from .databases import Database, SyncError
 
 
 class RemoteXMLDatabase(Database):
