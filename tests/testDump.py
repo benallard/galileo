@@ -32,7 +32,7 @@ class testDump(unittest.TestCase):
     def testEsc1(self):
         d = Dump(0)
         self.assertEqual(d.esc[0], 0)
-        d.add([0xdb, 0xdc])
+        d.add(bytearray([0xdb, 0xdc]))
         self.assertEqual(d.len, 1)
         self.assertEqual(d.esc[0], 1)
         self.assertEqual(d.data, b'\xc0')
@@ -40,7 +40,7 @@ class testDump(unittest.TestCase):
     def testEsc2(self):
         d = Dump(0)
         self.assertEqual(d.esc[1], 0)
-        d.add([0xdb, 0xdd])
+        d.add(bytearray([0xdb, 0xdd]))
         self.assertEqual(d.len, 1)
         self.assertEqual(d.esc[1], 1)
         self.assertEqual(d.data, b'\xdb')

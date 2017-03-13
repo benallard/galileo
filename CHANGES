@@ -6,6 +6,7 @@ Main changes since 0.5.2:
 - Implement a draft of the newer network communication protocol (issue#149)
 - Improve the systemd .service file (issue#314)
 - Add a parameter to choose the database type to use
+- Switch the internal data representation type to `bytearray`
 
 
 galileo 0.5.2 (????-??-??)

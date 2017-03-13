@@ -14,7 +14,7 @@ class MyCM(object):
         self.len = data[0]
         self.INS = data[1]
         self.payload = data[2:]
-    def asList(self): return [self.len, self.INS] + self.payload
+    def asList(self): return bytearray([self.len, self.INS]) + self.payload
     def __str__(self): return str(self.asList())
 
 
@@ -29,9 +29,10 @@ class MyDongle(object):
         if not response:
             return None
         if ctrl:
-            return MyCM(list(response))
+            print(response  )
+            return MyCM(bytearray(response))
         else:
-            return MyDM(list(response))
+            return MyDM(bytearray(response))
     def ctrl_write(self, *args): pass
     def ctrl_read(self, *args):
         return self.read(True)
@@ -112,7 +113,7 @@ class testScenarii(unittest.TestCase):
         self.assertTrue(c.getDongleInfo())
         ts = [t for t in c.discover(MyUUID())]
         self.assertEqual(1, len(ts))
-        self.assertEqual(ts[0].id, [0,0,42,0,0,0])
+        self.assertEqual(ts[0].id, bytearray([0,0,42,0,0,0]))
         self.assertTrue(c.establishLink(ts[0]))
         self.assertTrue(c.toggleTxPipe(True))
         self.assertTrue(c.initializeAirlink(ts[0]))
@@ -143,7 +144,7 @@ class testScenarii(unittest.TestCase):
                 self.assertEqual([], ts, i)
                 continue
             self.assertEqual(1, len(ts), i)
-            self.assertEqual(ts[0].id, [0,0,42,0,0,0])
+            self.assertEqual(ts[0].id, bytearray([0,0,42,0,0,0]))
             if i < 12:
                 self.assertFalse(c.establishLink(ts[0]), i)
                 continue
@@ -194,7 +195,7 @@ class testDiscover(unittest.TestCase):
 
     def testOnetracker(self):
         d = MyDongle([(0x20, 1, 0x53, 0x74, 0x61, 0x72, 0x74, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0 ),
-                      (0x13, 3, 0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,1,-30, 2,6,4, 3,
+                      (0x13, 3, 0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,1,0xe2, 2,6,4, 3,
                        0x2c, 0x31, 0xf6, 0xd8, 0x58),
                       (3, 2, 1),
                       (0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
@@ -203,13 +204,13 @@ class testDiscover(unittest.TestCase):
         ts = [t for t in c.discover(MyUUID())]
         self.assertEqual(len(ts), 1)
         t = ts[0]
-        self.assertEqual(t.id, [0xaa] * 6)
+        self.assertEqual(t.id, bytearray([0xaa] * 6))
 
     def testTwotracker(self):
         d = MyDongle([(0x20, 1, 0x53, 0x74, 0x61, 0x72, 0x74, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0 ),
-                      (0x13, 3, 0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,1,-30, 2,6,4, 3,
+                      (0x13, 3, 0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,1,0xe2, 2,6,4, 3,
                        0x2c, 0x31, 0xf6, 0xd8, 0x58),
-                      (0x13, 3, 0xbb,0xbb,0xbb,0xbb,0xbb,0xbb,1,-30, 2,6,4, 3,
+                      (0x13, 3, 0xbb,0xbb,0xbb,0xbb,0xbb,0xbb,1,0xe2, 2,6,4, 3,
                        0x2c, 0x31, 0xf6, 0xd8, 0x58),
                       (3, 2, 2),
                       (0x20, 1, 0x43, 0x61, 0x6E, 0x63, 0x65, 0x6C, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0),
@@ -218,9 +219,9 @@ class testDiscover(unittest.TestCase):
         ts = [t for t in c.discover(MyUUID())]
         self.assertEqual(len(ts), 2)
         t = ts[0]
-        self.assertEqual(t.id, [0xaa] * 6)
+        self.assertEqual(t.id, bytearray([0xaa] * 6))
         t = ts[1]
-        self.assertEqual(t.id, [0xbb] * 6)
+        self.assertEqual(t.id, bytearray([0xbb] * 6))
 
     def testTimeout(self):
         d = MyDongle([(0x20, 1, 0x53, 0x74, 0x61, 0x72, 0x74, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x76, 0x65, 0x72, 0x79, 0 ),
@@ -310,7 +311,7 @@ class testestablishLink(unittest.TestCase):
         d.establishLinkEx = True
         c = FitbitClient(d)
         t = MyTracker()
-        t.id = [0,0,42,0,0,43]
+        t.id = bytearray([0,0,42,0,0,43])
         t.addrType = 1
         self.assertTrue(c.establishLink(t))
 
@@ -324,7 +325,7 @@ class testestablishLink(unittest.TestCase):
         d.major = 169; d.minor=78
         c = FitbitClient(d)
         t = MyTracker()
-        t.id = [0,0,42,0,0,43]
+        t.id = bytearray([0,0,42,0,0,43])
         t.addrType = 1
         t.serviceUUID = 0xa005
         self.assertTrue(c.establishLink(t))
