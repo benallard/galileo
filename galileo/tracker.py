@@ -35,7 +35,7 @@ class Tracker(object):
 
     @classmethod
     def fromDiscovery(klass, data, minRSSI=-255):
-        trackerId = data[:6]
+        trackerId = bytearray(data[:6])
         addrType = data[6]
         RSSI = c_byte(data[7]).value
         serviceDataLen = data[8]
@@ -159,8 +159,8 @@ class FitbitClient(object):
     def establishLink(self, tracker):
         if self.dongle.establishLinkEx:
             return self.establishLinkEx(tracker)
-        self.dongle.ctrl_write(CM(6, tracker.id + [tracker.addrType] +
-                                  i2lsba(tracker.serviceUUID, 2)))
+        self.dongle.ctrl_write(CM(6, tracker.id + bytearray([tracker.addrType] +
+                                  i2lsba(tracker.serviceUUID, 2))))
         d = self.dongle.ctrl_read()
         if d == CM(0xff, [2, 3]):
             # Our detection based on the dongle version is not perfect :(
@@ -190,7 +190,7 @@ class FitbitClient(object):
         """ First heard from in #236 """
         self.dongle.ctrl_write(CM(0x19, [1, 0]))
         nums = [6, 6, 0, 200]  # Looks familiar ?
-        data = tracker.id + [tracker.addrType]
+        data = tracker.id + bytearray([tracker.addrType])
         for n in nums:
             data.extend(i2lsba(n, 2))
         self.dongle.ctrl_write(CM(0x12, data))
@@ -238,7 +238,7 @@ class FitbitClient(object):
         d = self.dongle.data_read()
         if d is None:
             return False
-        if d.data[:2] != [0xc0, 0x14]:
+        if d.data[:2] != bytearray([0xc0, 0x14]):
             logger.error("Wrong header: %s", a2x(d.data[:2]))
             return False
         if (tracker is not None) and (d.data[6:12] != tracker.id):
@@ -253,7 +253,7 @@ class FitbitClient(object):
         logger.debug('Displaying code on tracker')
         self.dongle.data_write(DM([0xc0, 6]))
         r = self.dongle.data_read()
-        return (r is not None) and (r.data == [0xc0, 2])
+        return (r is not None) and (r.data == bytearray([0xc0, 2]))
 
     def getDump(self, dumptype=MEGADUMP):
         """ :returns: a `Dump` object or None """
@@ -262,7 +262,7 @@ class FitbitClient(object):
         # begin dump of appropriate type
         self.dongle.data_write(DM([0xc0, 0x10, dumptype]))
         r = self.dongle.data_read()
-        if r and (r.data[:3] != [0xc0, 0x41, dumptype]):
+        if r and (r.data[:3] != bytearray([0xc0, 0x41, dumptype])):
             logger.error("Tracker did not acknowledged the dump type: %s", r)
             return None
 

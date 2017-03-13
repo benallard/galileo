@@ -99,14 +99,14 @@ class CtrlMessage(object):
         if INS is None:  # incoming
             self.len = data[0]
             self.INS = data[1]
-            self.payload = data[2:self.len]
+            self.payload = bytearray(data[2:self.len])
         else:  # outgoing
             self.len = len(data) + 2
             self.INS = INS
-            self.payload = data
+            self.payload = bytearray(data)
 
     def asList(self):
-        return [self.len, self.INS] + self.payload
+        return bytearray([self.len, self.INS]) + self.payload
 
     def __eq__(self, other):
         if other is None: return False
@@ -132,17 +132,17 @@ class DataMessage(object):
         if out:  # outgoing
             if len(data) > (self.LENGTH - 1):
                 raise ValueError('data %s (%d) too big' % (data, len(data)))
-            self.data = data
+            self.data = bytearray(data)
             self.len = len(data)
         else:  # incoming
             if len(data) != self.LENGTH:
                 raise ValueError('data %s with wrong length' % data)
             # last byte is length
             self.len = data[-1]
-            self.data = list(data[:self.len])
+            self.data = bytearray(data[:self.len])
 
     def asList(self):
-        return self.data + [0] * (self.LENGTH - 1 - self.len) + [self.len]
+        return self.data + b'\x00' * (self.LENGTH - 1 - self.len) + bytearray([self.len])
 
     def __eq__(self, other):
         if other is None: return False

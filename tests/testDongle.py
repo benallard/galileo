@@ -56,6 +56,10 @@ class testDM(unittest.TestCase):
         self.assertFalse(DM(range(2)) == DM(range(5)))
         self.assertFalse(None == DM(range(5)))
 
+    def testAsList(self):
+        msg = DM(bytearray(range(5)))
+        self.assertEquals(msg.asList(), bytearray(b'\x00\x01\x02\x03\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x05'))
+
 
 class MyDev(object):
     """ Minimal object to reproduce issue#75 """

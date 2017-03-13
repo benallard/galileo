@@ -111,7 +111,7 @@ class Dump(TrackerBlock):
             # increment the escape counter
             self.esc[data[1] - 0xDC] += 1
             # return the escaped value
-            return [ESC_[data[1]]] + data[2:]
+            return bytearray([ESC_[data[1]]]) + data[2:]
         return data
 
     def add(self, data):
@@ -166,6 +166,6 @@ class DumpResponse(TrackerBlock):
             return self.data[self.__index-self._chunk_len:self.__index]
         b = self.data[self.__index]
         self.__index += self._chunk_len - 1
-        return [0xDB] + [{0xC0: 0xDC, 0xDB: 0xDD}[b]] + self.data[self.__index-self._chunk_len+2:self.__index]
+        return bytearray([0xDB, {0xC0: 0xDC, 0xDB: 0xDD}[b]]) + self.data[self.__index-self._chunk_len+2:self.__index]
     # For python2
     next = __next__
