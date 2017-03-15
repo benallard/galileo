@@ -1,5 +1,5 @@
 from .utils import a2msbi, i2msba, a2lsbi, i2lsba
-from .xtea import xtea_encrypt, xtea_decrypt
+from .xtea import xtea_encrypt
 
 def ba_xor(a, b):
     """ xor between 2 bytearrays """
@@ -76,7 +76,17 @@ def computeCounter(key, nonce):
 
 
 class XTEA_CTR(object):
-    pass
+    def __init__(self, key, nonce):
+        self.key = key
+        self.counter = counter(nonce)
+
+    def _keygen(self):
+        while True:
+            for k in xtea_encrypt(self.key, next(self.counter)):
+                yield k
+
+    def decrypt(self, data):
+        return [ x ^ y for (x,y) in zip(data,self._keygen) ]
 
 
 def decrypt(dump, key, offset=16):

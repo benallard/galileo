@@ -63,6 +63,9 @@ class Tracker(object):
             #continue
         return tracker
 
+    def getID(self):
+        return a2x(self.id, delim="")
+
 
 class FitbitClient(object):
     def __init__(self, dongle):

@@ -12,7 +12,8 @@ except ImportError:
 from . import ble
 from . import dongle
 from . import databases  # Database
-from .databases import xml, rest  # RemoteXMLDatabase
+# Load the various database implementations
+from .databases import local, rest, xml
 from .utils import a2x
 
 class ConfigError(Exception): pass
