@@ -1,5 +1,6 @@
 
-Contributors to this release: Dylan Aïssi, Gert van de Kraats
+Contributors to this release: Dylan Aïssi, Gert van de Kraats, Maarten
+Schellevis
 
 Main changes since 0.5.2:
 - Add an AppStream file (issue#308)
@@ -7,6 +8,7 @@ Main changes since 0.5.2:
 - Improve the systemd .service file (issue#314)
 - Add a parameter to choose the database type to use
 - Switch the internal data representation type to `bytearray`
+- Add the implementation for a local database (PR#24)
 
 
 galileo 0.5.2 (????-??-??)
