@@ -62,6 +62,13 @@ def i2lsba(value, width):
     return a
 
 
+def i2msba(value, width):
+    """ int to bytearray (MSB first) """
+    a = bytearray(width)
+    for i in range(width):
+        a[width - i - 1] = (value >> (i*8)) & 0xff
+    return a
+
 def s2a(s):
     """ string to array """
     if isinstance(s, str):
