@@ -4,8 +4,8 @@ import sys
 from galileo import __version__
 
 from galileo.databases import SyncError
-import galileo.net
-from galileo.net import RemoteXMLDatabase
+import galileo.databases.xml as mod
+from galileo.databases.xml import RemoteXMLDatabase
 from galileo.netUtils import BackOffException
 
 class requestResponse(object):
@@ -25,7 +25,7 @@ class testStatus(unittest.TestCase):
             self.assertEqual(headers['Content-Type'], 'text/xml')
             return requestResponse('')
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('scheme', 'host', 'path/to/stuff', 8888)
         gc.requestStatus()
 
@@ -40,7 +40,7 @@ class testStatus(unittest.TestCase):
             self.assertEqual(headers['Content-Type'], 'text/xml')
             return requestResponse('<error>Something is Wrong</error>')
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('h', 'c', 'p', 8)
         self.assertRaises(SyncError, gc.requestStatus)
 
@@ -66,7 +66,7 @@ class testStatus(unittest.TestCase):
         </client-display>
     </ui-request>""", '')
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('h', 'c', 'p', 4)
         with self.assertRaises(BackOffException) as cm:
             gc.requestStatus()
@@ -91,7 +91,7 @@ class testStatus(unittest.TestCase):
             delattr(res, 'text')
             return res
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('scheme', 'host', 'path/to/stuff', 8888)
         gc.requestStatus()
 
@@ -121,7 +121,7 @@ class testSync(unittest.TestCase):
             self.assertEqual(headers['Content-Type'], 'text/xml')
             return requestResponse('<tracker tracker-id="abcd" type="megadumpresponse"><data>ZWZnaA==</data></tracker>')
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('a', 'b', 'c', 0)
         self.assertEqual(gc.sync(D, T_ID, d),
                          [101, 102, 103, 104])
@@ -144,7 +144,7 @@ class testSync(unittest.TestCase):
             self.assertEqual(headers['Content-Type'], 'text/xml')
             return requestResponse('')
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('z', 'y', 'u', 42)
         self.assertRaises(SyncError, gc.sync, D, T_ID, d)
 
@@ -166,7 +166,7 @@ class testSync(unittest.TestCase):
             self.assertEqual(headers['Content-Type'], 'text/xml')
             return requestResponse('<tracker tracker-id="abcd" type="megadumpresponse"></tracker>')
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('y', 't', 'v', 8000)
         self.assertRaises(SyncError, gc.sync, D, T_ID, d)
 
@@ -188,7 +188,7 @@ class testSync(unittest.TestCase):
             self.assertEqual(headers['Content-Type'], 'text/xml')
             return requestResponse('<tracker tracker-id="abcd" type="megadumpresponse"><not_data /></tracker>')
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('rsync', 'ssh', 'a/b/c', 22)
         self.assertRaises(SyncError, gc.sync, D, T_ID, d)
 
@@ -200,24 +200,24 @@ class testSync(unittest.TestCase):
             class Reason(object):
                 class Error(object): strerror = ''
                 reason = Error()
-            raise galileo.net.requests.exceptions.ConnectionError(Reason())
+            raise mod.requests.exceptions.ConnectionError(Reason())
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
         gc = RemoteXMLDatabase('a', 'b', 'c', 0)
         self.assertRaises(SyncError, gc.sync,D, T_ID, d)
 
     def testHTTPError(self):  # issue147
         def mypost(url, data, headers):
             class Response(object): status_code=500
-            if galileo.net.requests.__build__ > 0x020000:
+            if mod.requests.__build__ > 0x020000:
                 # Only newer requests exceptions inherit from IOError
-                e = galileo.net.requests.exceptions.HTTPError('bad', response=Response())
+                e = mod.requests.exceptions.HTTPError('bad', response=Response())
             else:
                 # older inherit from RuntimeError (no kwargs)
-                e = galileo.net.requests.exceptions.HTTPError('bad')
+                e = mod.requests.exceptions.HTTPError('bad')
             raise e
 
-        galileo.net.requests.post = mypost
+        mod.requests.post = mypost
 
         T_ID = 'abcd'
         D = MyDongle(0, 0)
