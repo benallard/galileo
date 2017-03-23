@@ -20,7 +20,6 @@ except ImportError as ie:
         print("Please upgrade your system to a newer version.")
     raise ie
 
-from . import ble
 from .utils import a2x, a2s
 
 IN, OUT = 1, -1
@@ -192,14 +191,14 @@ def isStatus(data, msg=None, logError=True):
     return True
 
 
-class FitBitDongle(USBDevice, ble.API):
+class FitBitDongle(USBDevice):
     VID = 0x2687
     PID = 0xfb01
 
     def __init__(self, logsize):
         USBDevice.__init__(self, self.VID, self.PID)
         self.hasVersion = False
-        self.establishLinkEx = False
+        self.useEstablishLinkEx = False
         self.olderPyUSB = None
         global log
         log = DataRing(logsize)
@@ -235,7 +234,7 @@ class FitBitDongle(USBDevice, ble.API):
         self.minor = minor
         self.hasVersion = True
         # Leave it to False, I don't see any advantage in using it at the moment
-        self.establishLinkEx = (major, minor) >= (2, 5)
+        self.useEstablishLinkEx = (major, minor) >= (2, 5)
         logger.debug('Fitbit dongle version major:%d minor:%d', self.major,
                      self.minor)
 

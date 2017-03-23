@@ -28,12 +28,10 @@ FitBitUUID = uuid.UUID('{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}')
 
 def syncAllTrackers(config):
     logger.debug('%s initialising', os.path.basename(sys.argv[0]))
-    dongle = config.bluetoothConn(config.logSize)
-    if not dongle.setup():
+    fitbit = config.bluetoothConn(config.logSize)
+    if not fitbit.setup():
         logger.error("No dongle connected, aborting")
         return
-
-    fitbit = FitbitClient(dongle)
 
     galileo = config.database('https', config.fitbitServer,
                               'tracker/client/message')
@@ -112,7 +110,7 @@ def syncAllTrackers(config):
         else:
             logger.info('Sending tracker data to Fitbit')
             try:
-                response = galileo.sync(fitbit.dongle, trackerid, dump)
+                response = galileo.sync(fitbit, trackerid, dump)
 
                 if config.keepDumps:
                     logger.debug("Appending answer from server to %s",
