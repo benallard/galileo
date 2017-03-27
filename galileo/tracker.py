@@ -70,27 +70,28 @@ class Tracker(object):
 
 
 class FitbitClient(dongle.FitBitDongle, ble.API):
-    def disconnect(self):
+    def disconnectAll(self):
         logger.info('Disconnecting from any connected trackers')
 
         self.ctrl_write(CM(2))
         if not isStatus(self.ctrl_read(), 'CancelDiscovery'):
+            self._exhaust()
             return False
         # Next one is not critical. It can happen that it does not comes
         isStatus(self.ctrl_read(), 'TerminateLink')
 
-        self.exhaust()
+        self._exhaust()
 
         return True
 
-    def exhaust(self):
+    def _exhaust(self):
         """ We exhaust the pipe, then we know that we have a clean state """
         logger.debug("Exhausting the communication pipe")
         goOn = True
         while goOn:
             goOn = self.ctrl_read() is not None
 
-    def getDongleInfo(self):
+    def getHardwareInfo(self):
         self.ctrl_write(CM(1))
         d = self.ctrl_read()
         if (d is None) or (d.INS != 8):
@@ -158,9 +159,20 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
             return False
         return True
 
-    def establishLink(self, tracker):
+    def connect(self, tracker):
+        if not self._establishLink(tracker):
+            logger.error("establishLink failed")
+            return False
+
+        if not self._toggleTxPipe(True):
+            logger.error("Unable to toggle the TX pipe on")
+            return False
+
+        return self._initializeAirlink(tracker)
+
+    def _establishLink(self, tracker):
         if self.useEstablishLinkEx:
-            return self.establishLinkEx(tracker)
+            return self._establishLinkEx(tracker)
         self.ctrl_write(CM(6, tracker.id + bytearray([tracker.addrType] +
                                   i2lsba(tracker.serviceUUID, 2))))
         d = self.ctrl_read()
@@ -169,7 +181,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
             logger.warning("Older tracker %d.%d also needs EstablishLinkEx",
                            self.major, self.minor)
             self.useEstablishLinkEx = True
-            return self.establishLinkEx(tracker)
+            return self._establishLinkEx(tracker)
         elif not isStatus(d, 'EstablishLink'):
             return False
         d = self.ctrl_read(5000)
@@ -188,7 +200,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
             return False
         return True
 
-    def establishLinkEx(self, tracker):
+    def _establishLinkEx(self, tracker):
         """ First heard from in #236 """
         self.ctrl_write(CM(0x19, [1, 0]))
         nums = [6, 6, 0, 200]  # Looks familiar ?
@@ -213,7 +225,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
             return False
         return True
 
-    def toggleTxPipe(self, on):
+    def _toggleTxPipe(self, on):
         """ `on` is a boolean that dictate the status of the pipe
         :returns: a boolean about the successful execution
         """
@@ -221,7 +233,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
         d = self.data_read(5000)
         return d == DM([0xc0, 0xb])
 
-    def initializeAirlink(self, tracker=None):
+    def _initializeAirlink(self, tracker=None):
         """ :returns: a boolean about the successful execution """
         nums = [10, 6, 6, 0, 200]
         #nums = [1, 8, 16, 0, 200]
@@ -320,7 +332,18 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
 
         return True
 
-    def terminateAirlink(self):
+    def disconnect(self, tracker):
+        if not self._terminateAirlink():
+            logger.error("Unable to terminate the link")
+            return False
+
+        if not self._toggleTxPipe(False):
+            logger.error("Unable to close the TX pipe")
+            return False
+
+        return self._ceaseLink()
+
+    def _terminateAirlink(self):
         """ contrary to ``initializeAirlink`` """
 
         self.data_write(DM([0xc0, 1]))
@@ -329,7 +352,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
             return False
         return True
 
-    def ceaseLink(self):
+    def _ceaseLink(self):
         """ contrary to ``establishLink`` """
 
         self.ctrl_write(CM(7))

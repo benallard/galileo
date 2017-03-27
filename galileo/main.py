@@ -36,12 +36,11 @@ def syncAllTrackers(config):
     galileo = config.database('https', config.fitbitServer,
                               'tracker/client/message')
 
-    if not fitbit.disconnect():
+    if not fitbit.disconnectAll():
         logger.error("Dirty state, not able to start synchronisation.")
-        fitbit.exhaust()
         return
 
-    if not fitbit.getDongleInfo():
+    if not fitbit.getHardwareInfo():
         logger.warning('Failed to get connected Fitbit dongle information')
 
     logger.info('Discovering trackers to synchronize')
@@ -72,8 +71,7 @@ def syncAllTrackers(config):
                 break
 
         logger.debug('Establishing link with tracker')
-        if not (fitbit.establishLink(tracker) and fitbit.toggleTxPipe(True)
-                and fitbit.initializeAirlink(tracker)):
+        if not fitbit.connect(tracker):
             logger.warning('Unable to connect with tracker %s. Skipping',
                            trackerid)
             tracker.status = 'Unable to establish a connection.'
@@ -139,7 +137,7 @@ def syncAllTrackers(config):
                 tracker.status = "Synchronisation failed: %s" % e.errorstring
 
         logger.debug('Disconnecting from tracker')
-        if not (fitbit.terminateAirlink() and fitbit.toggleTxPipe(False) and fitbit.ceaseLink()):
+        if not fitbit.disconnect(tracker):
             logger.warning('Error while disconnecting from tracker %s',
                            trackerid)
             tracker.status += " (Error disconnecting)"
