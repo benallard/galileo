@@ -22,7 +22,7 @@ class RemoteRESTDatabase(RemoteXMLDatabase):
             "X-App-Version": "2.0.1.6809",
             "Fitbit-Code-Version": "0.4.42",
             "Fitbit-Transport-Info": "Dongle %d.%d" % (dongle.major, dongle.minor),  # "BLE"
-	}
+        }
 
         user = "228TQ5"
         authpass = "6e4b857924734e159418ccc0009ef274"
