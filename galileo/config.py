@@ -11,6 +11,7 @@ except ImportError:
 
 from . import ble  # ble.API
 # the various ble implementations
+from .ble import pydbus
 from . import tracker
 from . import databases  # Database
 # Load the various database implementations
