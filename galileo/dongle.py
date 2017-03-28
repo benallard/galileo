@@ -18,7 +18,8 @@ except ImportError as ie:
         print("You have an older pyusb version installed. This utility needs")
         print("at least version 1.0.0a2 to work properly.")
         print("Please upgrade your system to a newer version.")
-    raise ie
+    usb = None
+#    raise ie
 
 from .utils import a2x, a2s
 
@@ -83,6 +84,8 @@ class USBDevice(object):
 
     @property
     def dev(self):
+        if usb is None:
+            return None
         if self._dev is None:
             self._dev = usb.core.find(idVendor=self.vid, idProduct=self.pid)
         return self._dev

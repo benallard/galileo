@@ -158,16 +158,19 @@ The dongle must then be removed and reinserted to receive the new permissions.""
 def version(verbose, delim='\n'):
     s = ['%s: %s' % (sys.argv[0], __version__)]
     if verbose:
-        import usb
         import platform
         from .config import yaml
         # To get it on one line
         s.append('Python: %s' % ' '.join(sys.version.split()))
         s.append('Platform: %s' % ' '.join(platform.uname()))
-        if not hasattr(usb, '__version__'):
-            s.append('pyusb: < 1.0.0b1')
-        else:
-            s.append('pyusb: %s' % usb.__version__)
+        try:
+            import usb
+            if not hasattr(usb, '__version__'):
+                s.append('pyusb: < 1.0.0b1')
+            else:
+                s.append('pyusb: %s' % usb.__version__)
+        except ImportError:
+            s.append("No pyusb")
         s.append('requests: %s' % requests.__version__)
         if hasattr(yaml, '__with_libyaml__'):
             # Genuine PyYAML
