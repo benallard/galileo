@@ -9,23 +9,20 @@ except ImportError:
     pydbus = None
 
 from ..tracker import Tracker
+from ..utils import x2a
 from . import API
 
 class PyDBUS(API):
     def __init__(self, logsize):
         pass
 
-    def _getObjects(self, klass, filter=None):
+    def _getObjects(self, classtype, filter_=None):
         for path, obj in self.manager.GetManagedObjects().items():
-            if klass in obj:
-                if filter is None:
-                    yield path
-                    continue
-                logger.debug(obj)
-                if not filter(obj):
+            if classtype in obj:
+                if filter_ is not None and not filter_(obj[classtype]):
                     logger.info("Filter excluded %s", path)
                     continue
-                yield path, obj
+                yield path, obj[classtype]
 
     def setup(self):
         if pydbus is None:
@@ -45,16 +42,14 @@ class PyDBUS(API):
 
     def discover(self, service):
         service = list(service.fields)
-        logger.debug(service[0])
         service[0] |= 0xfb00
         service = str(uuid.UUID(fields=service))
-        logger.debug(service)
-        self.adapter.StartDiscovery()
 
+        self.adapter.StartDiscovery()
         time.sleep(5)
         self.adapter.StopDiscovery()
 
-        for path, obj in self._getObjects('org.bluez.Device1', lambda obj: service in obj['org.bluez.Device1']['UUIDs']):
+        for _, obj in self._getObjects('org.bluez.Device1', lambda obj: service in obj['UUIDs']):
             logger.info("Found: %s", obj)
 
-            yield obj
+            yield Tracker(x2a(obj['Address']))
