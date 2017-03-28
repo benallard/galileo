@@ -49,20 +49,17 @@ def syncAllTrackers(config):
 
     logger.info('%d trackers discovered', len(trackers))
     for tracker in trackers:
-        logger.debug('Discovered tracker with ID %s',
-                     a2x(tracker.id, delim=""))
+        logger.debug('Discovered tracker with ID %s', tracker.id)
 
     for tracker in trackers:
 
-        trackerid = a2x(tracker.id, delim="")
-
         # Skip this tracker based on include/exclude lists.
         if config.shouldSkip(tracker):
-            logger.info('Tracker %s skipped due to configuration', trackerid)
+            logger.info('Tracker %s skipped due to configuration', tracker.id)
             yield tracker
             continue
 
-        logger.info('Attempting to synchronize tracker %s', trackerid)
+        logger.info('Attempting to synchronize tracker %s', tracker.id)
 
         if config.doUpload:
             logger.debug('Connecting to Fitbit server and requesting status')
@@ -73,7 +70,7 @@ def syncAllTrackers(config):
         logger.debug('Establishing link with tracker')
         if not fitbit.connect(tracker):
             logger.warning('Unable to connect with tracker %s. Skipping',
-                           trackerid)
+                           tracker.id)
             tracker.status = 'Unable to establish a connection.'
             yield tracker
             continue
@@ -92,7 +89,7 @@ def syncAllTrackers(config):
         if config.keepDumps:
             # Write the dump somewhere for archiving ...
             dirname = os.path.expanduser(os.path.join(config.dumpDir,
-                                                      trackerid))
+                                                      tracker.id))
             if not os.path.exists(dirname):
                 logger.debug("Creating non-existent directory for dumps %s",
                              dirname)
@@ -108,7 +105,7 @@ def syncAllTrackers(config):
         else:
             logger.info('Sending tracker data to Fitbit')
             try:
-                response = galileo.sync(fitbit, trackerid, dump)
+                response = galileo.sync(fitbit, tracker.id, dump)
 
                 if config.keepDumps:
                     logger.debug("Appending answer from server to %s",
@@ -126,20 +123,20 @@ def syncAllTrackers(config):
                 logger.info('Passing Fitbit response to tracker')
                 if not fitbit.uploadResponse(response):
                     logger.warning("Error while trying to give Fitbit response"
-                                   " to tracker %s", trackerid)
+                                   " to tracker %s", tracker.id)
                     tracker.status = "Failed to upload fitbit response to tracker"
                 else:
                     tracker.status = "Synchronisation successful"
 
             except SyncError as e:
                 logger.error("Fitbit server refused data from tracker %s,"
-                             " reason: %s", trackerid, e.errorstring)
+                             " reason: %s", tracker.id, e.errorstring)
                 tracker.status = "Synchronisation failed: %s" % e.errorstring
 
         logger.debug('Disconnecting from tracker')
         if not fitbit.disconnect(tracker):
             logger.warning('Error while disconnecting from tracker %s',
-                           trackerid)
+                           tracker.id)
             tracker.status += " (Error disconnecting)"
         yield tracker
 
@@ -191,8 +188,7 @@ def sync(config):
     statuses = []
     try:
         for tracker in syncAllTrackers(config):
-            statuses.append("Tracker: %s: %s" % (a2x(tracker.id, ''),
-                                                 tracker.status))
+            statuses.append("Tracker: %s: %s" % (tracker.id, tracker.status))
     except BackOffException as boe:
         print("The server requested that we come back between %d and %d"\
             " minutes." % (boe.min / (60*1000), boe.max / (60*1000)))
@@ -213,8 +209,7 @@ def daemon(config):
             # TODO: Extract the initialization part, and do it once for all
             try:
                 for tracker in syncAllTrackers(config):
-                    logger.info("Tracker %s: %s" % (a2x(tracker.id, ''),
-                                                    tracker.status))
+                    logger.info("Tracker %s: %s" % (tracker.id, tracker.status))
             except BackOffException as boe:
                 logger.warning("Received a back-off notice from the server,"
                                " waiting for a bit longer.")

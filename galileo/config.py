@@ -16,7 +16,6 @@ from . import tracker
 from . import databases  # Database
 # Load the various database implementations
 from .databases import local, rest, xml
-from .utils import a2x
 
 class ConfigError(Exception): pass
 
@@ -380,28 +379,27 @@ class Config(object):
         - `tracker`: Tracker (object), to check.
 
         """
-        trackerid = a2x(tracker.id, delim='')
 
         # If a list of trackers to sync is configured then was
         # provided then ignore this tracker if it's not in that list.
-        if (self.includeTrackers is not None) and (trackerid not in self.includeTrackers):
-            logger.info("Include list not empty, and tracker %s not there, skipping.", trackerid)
+        if (self.includeTrackers is not None) and (tracker.id not in self.includeTrackers):
+            logger.info("Include list not empty, and tracker %s not there, skipping.", tracker.id)
             tracker.status = "Skipped because not in include list"
             return True
 
         # If a list of trackers to avoid syncing is configured then
         # ignore this tracker if it is in that list.
-        if trackerid in self.excludeTrackers:
-            logger.info("Tracker %s in exclude list, skipping.", trackerid)
+        if tracker.id in self.excludeTrackers:
+            logger.info("Tracker %s in exclude list, skipping.", tracker.id)
             tracker.status = "Skipped because in exclude list"
             return True
 
         if tracker.syncedRecently:
             if not self.forceSync:
-                logger.info('Tracker %s was recently synchronized; skipping for now', trackerid)
+                logger.info('Tracker %s was recently synchronized; skipping for now', tracker.id)
                 tracker.status = "Skipped because recently synchronised"
                 return True
-            logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', trackerid)
+            logger.info('Tracker %s was recently synchronized, but forcing synchronization anyway', tracker.id)
 
         return False
 

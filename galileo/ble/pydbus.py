@@ -8,6 +8,7 @@ try:
 except ImportError:
     pydbus = None
 
+from ..tracker import Tracker
 from . import API
 
 class PyDBUS(API):
@@ -24,7 +25,7 @@ class PyDBUS(API):
                 if not filter(obj):
                     logger.info("Filter excluded %s", path)
                     continue
-                yield path
+                yield path, obj
 
     def setup(self):
         if pydbus is None:
@@ -36,7 +37,7 @@ class PyDBUS(API):
             logger.error("No bluetooth adapters found")
             return False
         logger.info('Found adapter: %s', adapterpaths)
-        self.adapter = self.bus.get('org.bluez', adapterpaths[0])['org.bluez.Adapter1']
+        self.adapter = self.bus.get('org.bluez', adapterpaths[0][0])['org.bluez.Adapter1']
         return True
 
     def disconnectAll(self):
@@ -53,6 +54,7 @@ class PyDBUS(API):
         time.sleep(5)
         self.adapter.StopDiscovery()
 
-        for obj in self._getObjects('org.bluez.Device1', lambda obj: service in obj['org.bluez.Device1']['UUIDs']):
+        for path, obj in self._getObjects('org.bluez.Device1', lambda obj: service in obj['org.bluez.Device1']['UUIDs']):
             logger.info("Found: %s", obj)
+
             yield obj

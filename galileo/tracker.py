@@ -9,10 +9,18 @@ from .dongle import CM, DM, isStatus
 from .dump import Dump, DumpResponse, MEGADUMP
 from .utils import a2s, a2x, i2lsba, a2lsbi
 
-
 class Tracker(object):
+    def __init__(self, id):
+        self._id = id
+        self.status = 'unknown'  # If we happen to read it before anyone set it
+    @property
+    def id(self):
+        return a2x(self._id, delim="")
+
+class FBTracker(Tracker):
+    """ The tracker that get used by the Fitbit dongle implementation """
     def __init__(self, Id, addrType, serviceData, RSSI, serviceUUID=None):
-        self.id = Id
+        Tracker.__init__(self, Id)
         self.addrType = addrType
         if serviceUUID is None:
             self.serviceUUID = a2lsbi([Id[1] ^ Id[3] ^ Id[5],
@@ -25,7 +33,6 @@ class Tracker(object):
         # canDisplayNumber
         # colorCode
         self.RSSI = RSSI
-        self.status = 'unknown'  # If we happen to read it before anyone set it
 
     @property
     def productId(self):
@@ -64,9 +71,6 @@ class Tracker(object):
                            "dropping", a2x(trackerId, delim=""), minRSSI)
             #continue
         return tracker
-
-    def getID(self):
-        return a2x(self.id, delim="")
 
 
 class FitbitClient(dongle.FitBitDongle, ble.API):
@@ -136,7 +140,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
             elif (d.INS != 3) or (len(d.payload) < 17):
                 logger.error('payload unexpected: %s', d)
                 break
-            yield Tracker.fromDiscovery(d.payload, minRSSI)
+            yield FBTracker.fromDiscovery(d.payload, minRSSI)
             amount += 1
 
         if d != CM(2, [amount]):
@@ -173,7 +177,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
     def _establishLink(self, tracker):
         if self.useEstablishLinkEx:
             return self._establishLinkEx(tracker)
-        self.ctrl_write(CM(6, tracker.id + bytearray([tracker.addrType] +
+        self.ctrl_write(CM(6, tracker._id + bytearray([tracker.addrType] +
                                   i2lsba(tracker.serviceUUID, 2))))
         d = self.ctrl_read()
         if d == CM(0xff, [2, 3]):
@@ -204,7 +208,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
         """ First heard from in #236 """
         self.ctrl_write(CM(0x19, [1, 0]))
         nums = [6, 6, 0, 200]  # Looks familiar ?
-        data = tracker.id + bytearray([tracker.addrType])
+        data = tracker._id + bytearray([tracker.addrType])
         for n in nums:
             data.extend(i2lsba(n, 2))
         self.ctrl_write(CM(0x12, data))
@@ -257,7 +261,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
         if d.data[:2] != bytearray([0xc0, 0x14]):
             logger.error("Wrong header: %s", a2x(d.data[:2]))
             return False
-        if (tracker is not None) and (d.data[6:12] != tracker.id):
+        if (tracker is not None) and (d.data[6:12] != tracker._id):
             logger.error("Connected to wrong tracker: %s", a2x(d.data[6:12]))
             return False
         logger.debug("Connection established: %d, %d",
