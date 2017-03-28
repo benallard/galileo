@@ -218,7 +218,9 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
                         'GAP_LINK_ESTABLISHED_EVENT'):
             return False
         d = self.ctrl_read()
-        if d.INS == 6:
+        if d is None:
+            return False
+        elif d.INS == 6:
             d = self.ctrl_read()
         if d != CM(7):
             logger.error('Unexpected 2nd message: %s', d)
