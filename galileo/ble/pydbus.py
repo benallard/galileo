@@ -35,6 +35,9 @@ class PyDBUS(API):
             return False
         logger.info('Found adapter: %s', adapterpaths)
         self.adapter = self.bus.get('org.bluez', adapterpaths[0][0])['org.bluez.Adapter1']
+        if not self.adapter.Powered:
+            logger.info("Adapter wasn't powered, powering it up.")
+            self.adapter.Powered = True
         return True
 
     def disconnectAll(self):
