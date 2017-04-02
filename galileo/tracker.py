@@ -12,12 +12,15 @@ from .utils import a2s, a2x, i2lsba, a2lsbi
 class Tracker(object):
     def __init__(self, id):
         self._id = id
-        self.syncedRecently = False
         self.status = 'unknown'  # If we happen to read it before anyone set it
 
     @property
     def id(self):
         return a2x(self._id, delim="")
+
+    @property
+    def syncedRecently(self):
+        return False
 
 class FBTracker(Tracker):
     """ The tracker that get used by the Fitbit dongle implementation """
