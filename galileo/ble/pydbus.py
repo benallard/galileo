@@ -16,13 +16,16 @@ class PyDBUS(API):
     def __init__(self, logsize):
         pass
 
-    def _getObjects(self, classtype, filter_=None):
+    def _getObjects(self, classtype=None, filter_=None):
         for path, obj in self.manager.GetManagedObjects().items():
-            if classtype in obj:
-                if filter_ is not None and not filter_(obj[classtype]):
+            logger.debug('object %s has the following classes: %s', path, ', '.join(obj))
+            if classtype is None or classtype in obj:
+                if classtype is not None:
+                    obj = obj[classtype]
+                if filter_ is not None and not filter_(obj):
                     logger.info("Filter excluded %s", path)
                     continue
-                yield path, obj[classtype]
+                yield path, obj
 
     def setup(self):
         if pydbus is None:
