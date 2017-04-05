@@ -10,7 +10,7 @@ except ImportError:
 
 from ..tracker import Tracker
 from ..utils import x2a, a2x
-from . import API
+from . import API, DM
 
 class DbusTracker(Tracker):
     def __init__(self, id, path):
@@ -89,20 +89,20 @@ class PyDBUS(API):
             else:
                 self.write = self.bus.get('org.bluez', path)
         # init airlink
-        self._dataWrite([0xC0, 0x0A, 0x0A, 0x00, 0x06, 0x00, 0x06, 0x00, 0x00, 0x00, 0xC8, 0x00])
+        self._dataWrite(DM([0xC0, 0x0A, 0x0A, 0x00, 0x06, 0x00, 0x06, 0x00, 0x00, 0x00, 0xC8, 0x00]))
         self._dataRead()
         # display code
-        self._dataWrite([0xc0, 6])
+        self._dataWrite(DM([0xc0, 6]))
         self._dataRead()
         return True
 
     def _dataWrite(self, data):
-        logger.debug('=> %s', a2x(data))
-        self.write.WriteValue(data, {})
+        logger.debug('=> %s', data)
+        self.write.WriteValue(data.data, {})
 
     def _dataRead(self):
-        data = bytearray(self.read.ReadValue({}))
-        logger.debug('<= %s', a2x(data))
+        data = DM(bytearray(self.read.ReadValue({})), False)
+        logger.debug('<= %s', data)
         return data
 
     def disconnect(self, tracker):
@@ -115,4 +115,3 @@ class PyDBUS(API):
 
     def uploadResponse(self, dump):
         raise NotImplementedError
-
