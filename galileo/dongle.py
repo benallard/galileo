@@ -21,6 +21,7 @@ except ImportError as ie:
     usb = None
 #    raise ie
 
+from .ble import DM
 from .utils import a2x, a2s
 
 IN, OUT = 1, -1
@@ -124,39 +125,6 @@ class CtrlMessage(object):
         return ' '.join(['%02X' % self.INS] + d + ['-', str(self.len)])
 
 CM = CtrlMessage
-
-
-class DataMessage(object):
-    """ A message that get communicated over the data link """
-    LENGTH = 32
-
-    def __init__(self, data, out=True):
-        if out:  # outgoing
-            if len(data) > (self.LENGTH - 1):
-                raise ValueError('data %s (%d) too big' % (data, len(data)))
-            self.data = bytearray(data)
-            self.len = len(data)
-        else:  # incoming
-            if len(data) != self.LENGTH:
-                raise ValueError('data %s with wrong length' % data)
-            # last byte is length
-            self.len = data[-1]
-            self.data = bytearray(data[:self.len])
-
-    def asList(self):
-        return self.data + b'\x00' * (self.LENGTH - 1 - self.len) + bytearray([self.len])
-
-    def __eq__(self, other):
-        if other is None: return False
-        return self.data == other.data
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __str__(self):
-        return ' '.join(['[', a2x(self.data), ']', '-', str(self.len)])
-
-DM = DataMessage
 
 
 def isATimeout(excpt):

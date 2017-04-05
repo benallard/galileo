@@ -88,7 +88,8 @@ def main(config):
 #---------------------------
 # The commands
 
-from .dongle import FitBitDongle, CM, DM
+from .ble import DM
+from .dongle import FitBitDongle, CM
 from .tracker import FitbitClient
 from .utils import x2a
 
