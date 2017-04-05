@@ -7,7 +7,6 @@ from . import ble
 from . import dongle
 from .ble import DM
 from .dongle import CM, isStatus
-from .dump import Dump, DumpResponse, MEGADUMP
 from .utils import a2s, a2x, i2lsba, a2lsbi
 
 class Tracker(object):
@@ -178,7 +177,17 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
             logger.error("Unable to toggle the TX pipe on")
             return False
 
-        return self._initializeAirlink(tracker)
+        if not self._initializeAirlink(tracker):
+            return False
+
+        if not self.useEstablishLinkEx:
+            # Not necessary when using establishLinkEx
+            d = self.ctrl_read(10000)
+            #if d != CM(6, data[-6:]):
+            #    logger.error("Unexpected message: %s != %s", d, CM(6, data[-6:]))
+            #    return False
+
+        return True
 
     def _establishLink(self, tracker):
         if self.useEstablishLinkEx:
@@ -244,105 +253,6 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
         self.ctrl_write(CM(8, [int(on)]))
         d = self.data_read(5000)
         return d == DM([0xc0, 0xb])
-
-    def _initializeAirlink(self, tracker=None):
-        """ :returns: a boolean about the successful execution """
-        nums = [10, 6, 6, 0, 200]
-        #nums = [1, 8, 16, 0, 200]
-        #nums = [1034, 6, 6, 0, 200]
-        data = []
-        for n in nums:
-            data.extend(i2lsba(n, 2))
-        #data = data + [1]
-        self.data_write(DM([0xc0, 0xa] + data))
-        if not self.useEstablishLinkEx:
-            # Not necessary when using establishLinkEx
-            d = self.ctrl_read(10000)
-            if d != CM(6, data[-6:]):
-                logger.error("Unexpected message: %s != %s", d, CM(6, data[-6:]))
-                return False
-        d = self.data_read()
-        if d is None:
-            return False
-        if d.data[:2] != bytearray([0xc0, 0x14]):
-            logger.error("Wrong header: %s", a2x(d.data[:2]))
-            return False
-        if (tracker is not None) and (d.data[6:12] != tracker._id):
-            logger.error("Connected to wrong tracker: %s", a2x(d.data[6:12]))
-            return False
-        logger.debug("Connection established: %d, %d",
-                     a2lsbi(d.data[2:4]), a2lsbi(d.data[4:6]))
-        return True
-
-    def displayCode(self):
-        """ :returns: a boolean about the successful execution """
-        logger.debug('Displaying code on tracker')
-        self.data_write(DM([0xc0, 6]))
-        r = self.data_read()
-        return (r is not None) and (r.data == bytearray([0xc0, 2]))
-
-    def getDump(self, dumptype=MEGADUMP):
-        """ :returns: a `Dump` object or None """
-        logger.debug('Getting dump type %d', dumptype)
-
-        # begin dump of appropriate type
-        self.data_write(DM([0xc0, 0x10, dumptype]))
-        r = self.data_read()
-        if r and (r.data[:3] != bytearray([0xc0, 0x41, dumptype])):
-            logger.error("Tracker did not acknowledged the dump type: %s", r)
-            return None
-
-        dump = Dump(dumptype)
-        # Retrieve the dump
-        d = self.data_read()
-        if d is None:
-            return None
-        dump.add(d.data)
-        while d.data[0] != 0xc0:
-            d = self.data_read()
-            if d is None:
-                return None
-            dump.add(d.data)
-        # Analyse the dump
-        if not dump.isValid():
-            logger.error('Dump not valid')
-            return None
-        logger.debug("Dump done, length %d, transportCRC=0x%04x, esc1=0x%02x,"
-                     " esc2=0x%02x", dump.len, dump.crc.final(), dump.esc[0],
-                     dump.esc[1])
-        return dump
-
-    def uploadResponse(self, response):
-        """ 4 and 6 are magic values here ...
-        :returns: a boolean about the success of the operation.
-        """
-        dumptype = 4  # ???
-        self.data_write(DM([0xc0, 0x24, dumptype] + i2lsba(len(response), 6)))
-        d = self.data_read()
-        if d != DM([0xc0, 0x12, dumptype, 0, 0]):
-            logger.error("Tracker did not acknowledged upload type: %s", d)
-            return False
-
-        CHUNK_LEN = 20
-        response = DumpResponse(response, CHUNK_LEN)
-
-        for i, chunk in enumerate(response):#range(0, len(response), CHUNK_LEN):
-            self.data_write(DM(chunk))
-            # This one can also take some time (Charge HR tracker)
-            d = self.data_read(20000)
-            expected = DM([0xc0, 0x13, (((i+1) % 16) << 4) + dumptype, 0, 0])
-            if d != expected:
-                logger.error("Wrong sequence number: %s, expected: %s", d, expected)
-                return False
-
-        self.data_write(DM([0xc0, 2]))
-        # Next one can be very long. He is probably erasing the memory there
-        d = self.data_read(60000)
-        if d != DM([0xc0, 2]):
-            logger.error("Unexpected answer from tracker: %s", d)
-            return False
-
-        return True
 
     def disconnect(self, tracker):
         if not self._terminateAirlink():

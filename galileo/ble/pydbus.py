@@ -9,7 +9,7 @@ except ImportError:
     pydbus = None
 
 from ..tracker import Tracker
-from ..utils import x2a, a2x
+from ..utils import x2a
 from . import API, DM
 
 class DbusTracker(Tracker):
@@ -88,19 +88,17 @@ class PyDBUS(API):
                 self.read = self.bus.get('org.bluez', path)
             else:
                 self.write = self.bus.get('org.bluez', path)
-        # init airlink
-        self._dataWrite(DM([0xC0, 0x0A, 0x0A, 0x00, 0x06, 0x00, 0x06, 0x00, 0x00, 0x00, 0xC8, 0x00]))
-        self._dataRead()
-        # display code
-        self._dataWrite(DM([0xc0, 6]))
-        self._dataRead()
+
+
+        if not self._initializeAirlink(tracker):
+            return False
         return True
 
-    def _dataWrite(self, data):
+    def _writeData(self, data):
         logger.debug('=> %s', data)
         self.write.WriteValue(data.data, {})
 
-    def _dataRead(self):
+    def _readData(self, timeout=0):
         data = DM(bytearray(self.read.ReadValue({})), False)
         logger.debug('<= %s', data)
         return data

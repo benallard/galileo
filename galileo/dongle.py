@@ -290,3 +290,6 @@ class FitBitDongle(USBDevice):
             msg = DM(data, out=False)
         logger.debug('<== %s', msg or '...')
         return msg
+
+    _readData = data_read
+    _writeData = data_write
