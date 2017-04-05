@@ -9,13 +9,19 @@ except ImportError:
     pydbus = None
 
 from ..tracker import Tracker
-from ..utils import x2a
+from ..utils import x2a, a2x
 from . import API
 
 class DbusTracker(Tracker):
     def __init__(self, id, path):
         Tracker.__init__(self, id)
         self.path = path
+
+def maskUUID(base, mask):
+    """ returns a UUID with the mask OR'd to the first field """
+    base = list(base.fields)
+    base[0] |= mask
+    return uuid.UUID(fields=base)
 
 class PyDBUS(API):
     def __init__(self, logsize):
@@ -36,13 +42,13 @@ class PyDBUS(API):
         if pydbus is None:
             return False
         self.bus = pydbus.SystemBus()
-        self.manager = self.bus.get('org.bluez', '/')['org.freedesktop.DBus.ObjectManager']
+        self.manager = self.bus.get('org.bluez', '/')#['org.freedesktop.DBus.ObjectManager']
         adapterpaths = list(self._getObjects('org.bluez.Adapter1'))
         if len(adapterpaths) == 0:
             logger.error("No bluetooth adapters found")
             return False
         logger.info('Found adapter: %s', adapterpaths)
-        self.adapter = self.bus.get('org.bluez', adapterpaths[0][0])['org.bluez.Adapter1']
+        self.adapter = self.bus.get('org.bluez', adapterpaths[0][0])
         if not self.adapter.Powered:
             logger.info("Adapter wasn't powered, powering it up.")
             self.adapter.Powered = True
@@ -52,9 +58,8 @@ class PyDBUS(API):
         return True
 
     def discover(self, service):
-        service = list(service.fields)
-        service[0] |= 0xfb00
-        service = str(uuid.UUID(fields=service))
+        self.serviceUUID = maskUUID(service, 0xfb00)
+        service = str(self.serviceUUID)
 
         self.adapter.StartDiscovery()
         time.sleep(5)
@@ -68,19 +73,37 @@ class PyDBUS(API):
     def connect(self, tracker):
         self.tracker = self.bus.get('org.bluez', tracker.path)#['org.bluez.Device1']
         logger.debug(dir(self.tracker))
-        if not self.tracker.Connected:
-            logger.info("Connecting to tracker")
-            self.tracker.Connect()
-            #pass
         if not self.tracker.Paired:
             logger.info("Pairing with tracker")
             self.tracker.Pair()
-        #self.tracker.GetAll('org.bluez.Device1')
-        for path, obj in self._getObjects('org.bluez.GattService1'):#, lambda obj: obj['UUID'] == 'adabfb00-6e7d-4601-bda2-bffaa68956ba'):
-            logger.debug(path, obj)
-        logger.debug(self.tracker.GattServices)
-        self.tracker.Disconnect()
+        if not self.tracker.Connected:
+            logger.info("Connecting to tracker")
+            self.tracker.Connect()
+        # Now, wait for ServicesResolved to turn 'True'
+
+        read = str(maskUUID(self.serviceUUID, 0x01))
+        write = str(maskUUID(self.serviceUUID, 0x02))
+        for path, obj in self._getObjects('org.bluez.GattCharacteristic1', lambda obj: obj['UUID'] in (read, write)):
+            if obj['UUID'] == read:
+                self.read = self.bus.get('org.bluez', path)
+            else:
+                self.write = self.bus.get('org.bluez', path)
+        # init airlink
+        self._dataWrite([0xC0, 0x0A, 0x0A, 0x00, 0x06, 0x00, 0x06, 0x00, 0x00, 0x00, 0xC8, 0x00])
+        self._dataRead()
+        # display code
+        self._dataWrite([0xc0, 6])
+        self._dataRead()
         return True
+
+    def _dataWrite(self, data):
+        logger.debug('=> %s', a2x(data))
+        self.write.WriteValue(data, {})
+
+    def _dataRead(self):
+        data = bytearray(self.read.ReadValue({}))
+        logger.debug('<= %s', a2x(data))
+        return data
 
     def disconnect(self, tracker):
         if self.tracker is not None:
