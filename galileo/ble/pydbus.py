@@ -5,11 +5,12 @@ import uuid
 
 try:
     import pydbus
+    from gi.repository import GLib
 except ImportError:
     pydbus = None
 
 from ..tracker import Tracker
-from ..utils import x2a
+from ..utils import x2a, a2x
 from . import API, DM
 
 class DbusTracker(Tracker):
@@ -41,6 +42,7 @@ class PyDBUS(API):
     def setup(self):
         if pydbus is None:
             return False
+        self.loop = GLib.MainLoop()
         self.bus = pydbus.SystemBus()
         self.manager = self.bus.get('org.bluez', '/')#['org.freedesktop.DBus.ObjectManager']
         adapterpaths = list(self._getObjects('org.bluez.Adapter1'))
@@ -100,12 +102,34 @@ class PyDBUS(API):
         logger.debug('=> %s', data)
         self.write.WriteValue(data.data, {})
 
-    def _readData(self, timeout=0):
+    def _readData(self, timeout=3000):
+        def received(iface, changed, invalidated):
+            if 'Value' not in changed:
+                return
+            logger.debug('received: %s', changed)
+            self.loop.quit()
+            if self.read.Notifying:
+                self.read.StopNotify()
+        def timeout_expired():
+            logger.debug("Timeout expired")
+            self.loop.quit()
+            if self.read.Notifying:
+                self.read.StopNotify()
+        logger.debug(dir(self.read))
+        self.read.onPropertiesChanged = received
+        self.read.StartNotify()
+        logger.info("Entering the loop")
+        timeoutid = GLib.timeout_add(timeout, timeout_expired)
+        self.loop.run()
+        logger.info("Now out of the loop")
+        GLib.source_remove(timeoutid)
         data = DM(bytearray(self.read.ReadValue({})), False)
         logger.debug('<= %s', data)
         return data
 
     def disconnect(self, tracker):
         if self.tracker is not None:
+            logger.info("Disconnecting from tracker %s", tracker.id)
             self.tracker.Disconnect()
             self.tracker = None
+        self.adapter.RemoveDevice(tracker.path)

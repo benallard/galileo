@@ -41,7 +41,7 @@ class API(object):
             logger.error("Wrong header: %s", a2x(d.data[:2]))
             return False
         if (tracker is not None) and (d.data[6:12] != tracker._id):
-            logger.error("Connected to wrong tracker: %s", a2x(d.data[6:12]))
+            logger.error("Connected to wrong tracker: %r != %r", d.data[6:12], tracker._id)
             return False
         logger.debug("Connection established: %d, %d",
                      a2lsbi(d.data[2:4]), a2lsbi(d.data[4:6]))
