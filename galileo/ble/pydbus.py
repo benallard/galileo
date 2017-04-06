@@ -109,9 +109,3 @@ class PyDBUS(API):
         if self.tracker is not None:
             self.tracker.Disconnect()
             self.tracker = None
-
-    def getDump(self):
-        raise NotImplementedError
-
-    def uploadResponse(self, dump):
-        raise NotImplementedError
