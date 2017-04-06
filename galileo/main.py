@@ -71,6 +71,7 @@ def syncAllTrackers(config):
         if not fitbit.connect(tracker):
             logger.warning('Unable to connect with tracker %s. Skipping',
                            tracker.id)
+            fitbit.disconnect(tracker)
             tracker.status = 'Unable to establish a connection.'
             yield tracker
             continue
@@ -82,6 +83,7 @@ def syncAllTrackers(config):
         dump = fitbit.getDump()
         if dump is None:
             logger.error("Error downloading the dump from tracker")
+            fitbit.disconnect(tracker)
             tracker.status = "Failed to download the dump"
             yield tracker
             continue
