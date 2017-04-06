@@ -67,8 +67,10 @@ class PyDBUS(API):
 
         for path, obj in self._getObjects('org.bluez.Device1', lambda obj: service in obj['UUIDs']):
             logger.info("Found: %s", obj)
-
-            yield DbusTracker(x2a(obj['Address']), path)
+            tracker_id = x2a(obj['Address'])
+            # Somehow, the Address is the inverse of what fitbit calls the tracker_id.
+            tracker_id.reverse()
+            yield DbusTracker(tracker_id, path)
 
     def connect(self, tracker):
         self.tracker = self.bus.get('org.bluez', tracker.path)#['org.bluez.Device1']
