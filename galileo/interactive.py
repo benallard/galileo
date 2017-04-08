@@ -26,6 +26,7 @@ exit = None
 
 cmds = {}
 helps = {}
+config = None
 
 def command(cmd, help):
     def decorator(fn):
@@ -51,12 +52,14 @@ def print_help():
     print("""Note:
  - You can enter multiple commands separated by ';'
  - To establish a link with the tracker, enter the following command:
-      c ; d ; l ; tx 1 ; al
+      s ; d ; c (setup the bluetooth connection, discover the trackers, and connect)
 """)
 
-def main(config):
+def main(_config):
     global exit
     exit = False
+    global config
+    config = _config
     print_help()
     while not exit:
         orders = input('> ').strip()
@@ -89,32 +92,26 @@ def main(config):
 # The commands
 
 from .ble import DM
-from .dongle import FitBitDongle, CM
-from .tracker import FitbitClient
+from .dongle import CM
 from .utils import x2a
 
 import uuid
 
-dongle = None
 fitbit = None
 trackers = []
 tracker = None
 
-@command('c', "Connect")
+@command('s', "Setup the bluetooth connection")
 def connect():
-    global dongle
-    dongle = FitBitDongle(0)  # No DataRing needed
-    if not dongle.setup():
-        print("No dongle connected, aborting")
-        quit()
     global fitbit
-    fitbit = FitbitClient(dongle)
+    fitbit = config.bluetoothConn(0)
+    fitbit.setup()
     print('Ok')
 
 
 def needfitbit(fn):
     def wrapped(*args):
-        if dongle is None:
+        if fitbit is None:
             print("No connection, connect (c) first")
             return
         return fn(*args)
@@ -128,7 +125,7 @@ def send_ctrl(INS, *payload):
     else:
         payload = []
     m = CM(int(INS, 16), payload)
-    dongle.ctrl_write(m)
+    fitbit.ctrl_write(m)
 
 @command('<-', "Receive once on the control channel")
 @needfitbit
@@ -136,27 +133,27 @@ def receive_ctrl(param='1'):
     if param == '-':
         goOn = True
         while goOn:
-            goOn = dongle.ctrl_read() is not None
+            goOn = fitbit.ctrl_read() is not None
     else:
         for i in range(int(param)):
-            dongle.ctrl_read()
+            fitbit.ctrl_read()
 
-@command('=>', "Send on the control channel")
+@command('=>', "Send on the bluetooth channel")
 @needfitbit
 def send_data(*payload):
     m = DM(x2a(' '.join(payload)))
-    dongle.data_write(m)
+    fitbit._writeData(m)
 
-@command('<=', "Receive once on the control channel")
+@command('<=', "Receive once on the bluetooth channel")
 @needfitbit
 def receive_data(param='1'):
     if param == '-':
         goOn = True
         while goOn:
-            goOn = dongle.data_read() is not None
+            goOn = fitbit._readData() is not None
     else:
         for i in range(int(param)):
-            dongle.data_read()
+            fitbit._readData()
 
 @command('d', "Discovery")
 @needfitbit
@@ -174,23 +171,15 @@ def needtrackers(fn):
         return fn(*args)
     return wrapped
 
-@command('l', "establishLink")
+@command('c', "Connect to the given tracker (default 0)")
 @needtrackers
 def establishLink(idx='0'):
     global tracker
     tracker = trackers[int(idx)]
-    if fitbit.establishLink(tracker):
+    if fitbit.connect(tracker):
         print('Ok')
     else:
         tracker = None
-
-@command('L', "ceaseLink")
-@needfitbit
-def ceaseLink():
-    if not fitbit.ceaseLink():
-        print('Bad')
-    else:
-        print('Ok')
 
 def needtracker(fn):
     def wrapped(*args):
@@ -200,22 +189,18 @@ def needtracker(fn):
         return fn(*args)
     return wrapped
 
+@command('C', "disconnect to the connected tracker")
+@needtracker
+def disconnect():
+    if not fitbit.disconnect(tracker):
+        print('Bad')
+    else:
+        print('Ok')
+
 @command('tx', "toggle Tx Pipe")
 @needfitbit
 def toggleTxPipe(on):
     if fitbit.toggleTxPipe(bool(int(on))):
-        print('Ok')
-
-@command('al', "initialise airLink")
-@needtracker
-def initialiseAirLink():
-    if fitbit.initializeAirlink(tracker):
-        print('Ok')
-
-@command('AL', "terminate airLink")
-@needfitbit
-def terminateairLink():
-    if fitbit.terminateAirlink():
         print('Ok')
 
 @command('D', 'getDump')
