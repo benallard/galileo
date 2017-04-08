@@ -146,6 +146,7 @@ class PyDBUS(API):
             self.tracker.Disconnect()
             self.tracker = None
         self.adapter.RemoveDevice(tracker.path)
+        return True
 
     def info(self):
         return "BLE (via pydbus)"
