@@ -65,6 +65,7 @@ class PyDBUS(API):
         self.serviceUUID = maskUUID(service, 0xfb00)
         service = str(self.serviceUUID)
 
+        self.adapter.SetDiscoveryFilter({'UUIDs': GLib.Variant('as', [service]), 'Transport': GLib.Variant('s', 'le')})
         self.adapter.StartDiscovery()
         time.sleep(5)
         self.adapter.StopDiscovery()
