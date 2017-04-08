@@ -293,3 +293,6 @@ class FitBitDongle(USBDevice):
 
     _readData = data_read
     _writeData = data_write
+
+    def info(self):
+        return "Dongle %d.%d" % (self.major, self.minor)

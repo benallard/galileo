@@ -133,10 +133,19 @@ class PyDBUS(API):
     def disconnect(self, tracker):
         if self.read is not None:
             self.read.StopNotify()
+            # unroll the loop
+            context = self.loop.get_context()
+            while context.pending():
+                context.iteration(False)
             self.read.onPropertiesChanged = None
             self.read = None
+        if self.readqueue:
+            logger.warning("read queue not empty while disconecting.: %d", len(self.readqueue))
         if self.tracker is not None:
             logger.info("Disconnecting from tracker %s", tracker.id)
             self.tracker.Disconnect()
             self.tracker = None
         self.adapter.RemoveDevice(tracker.path)
+
+    def info(self):
+        return "BLE (via pydbus)"

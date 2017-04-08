@@ -21,6 +21,8 @@ class API(object):
         raise NotImplementedError
     def _readData(self, timeout=0):
         raise NotImplementedError
+    def info(self):
+        raise NotImplementedError
 
 
 
