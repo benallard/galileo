@@ -27,6 +27,7 @@ def maskUUID(base, mask):
 class PyDBUS(API):
     def __init__(self, logsize):
         self.tracker = None
+        self.read = None
         self.readqueue = []
 
     def _getObjects(self, classtype=None, filter_=None):
@@ -94,18 +95,6 @@ class PyDBUS(API):
             else:
                 self.write = self.bus.get('org.bluez', path)
 
-        if not self._initializeAirlink(tracker):
-            return False
-        return True
-
-    def _initializeAirlink(self, tracker):
-        """ We need to surround the original one with our event loop stuff """
-        retval = {}
-        def idle(retval):
-            retval['return'] = API._initializeAirlink(self, tracker)
-            self.read.StopNotify()
-            self.loop.quit()
-            return False
         def received(iface, changed, invalidated):
             logger.debug("received: %s", list(changed))
             value = changed.get('Value', [])
@@ -117,15 +106,15 @@ class PyDBUS(API):
 
         self.read.onPropertiesChanged = received
         self.read.StartNotify()
-        GLib.idle_add(idle, retval)
-        logger.info("Entering the loop")
-        self.loop.run()
-        logger.info("Now out of the loop")
-        return retval['return']
+
+        if not self._initializeAirlink(tracker):
+            return False
+        return True
 
     def _writeData(self, data):
         logger.debug('=> %s', data)
         self.write.WriteValue(data.data, {})
+
 
     def _readData(self, timeout=3000):
         """ So, read data only empty the queue """
@@ -142,6 +131,10 @@ class PyDBUS(API):
         return data
 
     def disconnect(self, tracker):
+        if self.read is not None:
+            self.read.StopNotify()
+            self.read.onPropertiesChanged = None
+            self.read = None
         if self.tracker is not None:
             logger.info("Disconnecting from tracker %s", tracker.id)
             self.tracker.Disconnect()
