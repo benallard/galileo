@@ -1,7 +1,7 @@
 import logging
 logger = logging.getLogger(__name__)
 
-from ..dump import Dump, DumpResponse, MEGADUMP
+from ..dump import Dump, DumpResponse, MEGADUMP, CRC16
 from ..utils import a2x, i2lsba, a2lsbi
 
 class API(object):
@@ -88,12 +88,14 @@ class API(object):
         return dump
 
     def uploadResponse(self, response):
-        """ 4 and 6 are magic values here ...
+        """
         :returns: a boolean about the success of the operation.
         """
         dumptype = 4  # ???
-        self._writeData(DM([0xc0, 0x24, dumptype] + i2lsba(len(response), 6)))
-        d = self.data_read()
+        crc = CRC16()
+        crc.update(response)
+        self._writeData(DM([0xc0, 0x24, dumptype] + i2lsba(len(response), 4) + i2lsba(crc.final(), 2)))
+        d = self._readData()
         if d != DM([0xc0, 0x12, dumptype, 0, 0]):
             logger.error("Tracker did not acknowledged upload type: %s", d)
             return False
