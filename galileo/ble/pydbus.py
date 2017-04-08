@@ -27,6 +27,7 @@ def maskUUID(base, mask):
 class PyDBUS(API):
     def __init__(self, logsize):
         self.tracker = None
+        self.readqueue = []
 
     def _getObjects(self, classtype=None, filter_=None):
         for path, obj in self.manager.GetManagedObjects().items():
@@ -93,37 +94,50 @@ class PyDBUS(API):
             else:
                 self.write = self.bus.get('org.bluez', path)
 
-
         if not self._initializeAirlink(tracker):
             return False
         return True
+
+    def _initializeAirlink(self, tracker):
+        """ We need to surround the original one with our event loop stuff """
+        retval = {}
+        def idle(retval):
+            retval['return'] = API._initializeAirlink(self, tracker)
+            self.read.StopNotify()
+            self.loop.quit()
+            return False
+        def received(iface, changed, invalidated):
+            logger.debug("received: %s", list(changed))
+            value = changed.get('Value', [])
+            if len(value) <= 1:
+                logger.debug("Discarding %s", a2x(value))
+                return
+            logger.debug('received: %s', changed)
+            self.readqueue.append(changed['Value'])
+
+        self.read.onPropertiesChanged = received
+        self.read.StartNotify()
+        GLib.idle_add(idle, retval)
+        logger.info("Entering the loop")
+        self.loop.run()
+        logger.info("Now out of the loop")
+        return retval['return']
 
     def _writeData(self, data):
         logger.debug('=> %s', data)
         self.write.WriteValue(data.data, {})
 
     def _readData(self, timeout=3000):
-        def received(iface, changed, invalidated):
-            if 'Value' not in changed:
-                return
-            logger.debug('received: %s', changed)
-            self.loop.quit()
-            if self.read.Notifying:
-                self.read.StopNotify()
-        def timeout_expired():
-            logger.debug("Timeout expired")
-            self.loop.quit()
-            if self.read.Notifying:
-                self.read.StopNotify()
-        logger.debug(dir(self.read))
-        self.read.onPropertiesChanged = received
-        self.read.StartNotify()
-        logger.info("Entering the loop")
-        timeoutid = GLib.timeout_add(timeout, timeout_expired)
-        self.loop.run()
-        logger.info("Now out of the loop")
-        GLib.source_remove(timeoutid)
-        data = DM(bytearray(self.read.ReadValue({})), False)
+        """ So, read data only empty the queue """
+        while not self.readqueue:
+            if timeout <= 0:
+                logger.debug("<= ...")
+                return None
+            timeout -= 100
+            time.sleep(.1)
+            self.loop.get_context().iteration(False)
+
+        data = DM(bytearray(self.readqueue.pop(0)), False)
         logger.debug('<= %s', data)
         return data
 
