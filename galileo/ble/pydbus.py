@@ -66,10 +66,14 @@ class PyDBUS(API):
         service = str(self.serviceUUID)
 
         self.adapter.SetDiscoveryFilter({'UUIDs': GLib.Variant('as', [service]), 'Transport': GLib.Variant('s', 'le')})
+        # listen for InterfaceAdded
+        # add a timeout stop function
         self.adapter.StartDiscovery()
+        # run the loop
         time.sleep(5)
         self.adapter.StopDiscovery()
 
+        # Go through the one that have actually been added
         for path, obj in self._getObjects('org.bluez.Device1', lambda obj: service in obj['UUIDs']):
             logger.info("Found: %s", obj)
             tracker_id = x2a(obj['Address'])
@@ -86,10 +90,13 @@ class PyDBUS(API):
         if not self.tracker.Connected:
             logger.info("Connecting to tracker")
             self.tracker.Connect()
-        # Now, wait for ServicesResolved to turn 'True'
+        # listen for PropertiesChanged
+        # Now, wait for ServicesResolved to turn 'True' or some kind of timeout
+        # continue.
 
         read = str(maskUUID(self.serviceUUID, 0x01))
         write = str(maskUUID(self.serviceUUID, 0x02))
+        # We should make sure that we are selecting the one from the device we want to connect to ...
         for path, obj in self._getObjects('org.bluez.GattCharacteristic1', lambda obj: obj['UUID'] in (read, write)):
             if obj['UUID'] == read:
                 self.read = self.bus.get('org.bluez', path)
