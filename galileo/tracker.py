@@ -116,8 +116,7 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
 #        self.revision = d.payload[19]
         return True
 
-    def discover(self, uuid, service1=0xfb00, write=0xfb01, read=0xfb02,
-                 minRSSI=-255, minDuration=4000):
+    def discover(self, uuid, service1, read, write, minRSSI, timeout):
         """\
         The uuid is a mask on the service (characteristics ?) we understand
         service1 parameter is unused (at lease for the 'One')
@@ -127,13 +126,13 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
         logger.debug('Discovering for UUID %s: %s', uuid,
                      ', '.join(hex(s) for s in (service1, write, read)))
         data = i2lsba(uuid.int, 16)
-        for i in (service1, write, read, minDuration):
+        for i in (service1, write, read, timeout):
             data += i2lsba(i, 2)
         self.ctrl_write(CM(4, data))
         amount = 0
         while True:
             # Give the dongle 100ms margin
-            d = self.ctrl_read(minDuration + 100)
+            d = self.ctrl_read(timeout + 100)
             if d is None: break
             elif isStatus(d, None, False):
                 # We know this can happen almost any time during 'discovery'

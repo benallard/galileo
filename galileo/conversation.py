@@ -170,8 +170,8 @@ class Conversation(object):
 
         self.trackers = {}
         res = []
-        for tracker in self.fitbit.discover(FitBitUUID, minRSSI=immediateRsi,
-                                             minDuration=minDuration):
+        for tracker in self.fitbit.discover(FitBitUUID, 0xfb00, 0xfb01, 0xfb02, immediateRsi,
+                                             minDuration):
             trackerId = a2x(tracker.id, delim="")
             self.trackers[trackerId] = tracker
             res.append(('available-tracker', {},

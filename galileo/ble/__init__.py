@@ -11,7 +11,7 @@ class API(object):
         pass
     def getHardwareInfo(self):
         pass
-    def discover(self, UUID):
+    def discover(self, UUID, service1, read, write, minRSSI, timeout):
         raise NotImplementedError
     def connect(self, tracker):
         raise NotImplementedError

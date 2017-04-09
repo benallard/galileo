@@ -46,7 +46,7 @@ def syncAllTrackers(config):
 
     logger.info('Discovering trackers to synchronize')
 
-    trackers = [t for t in fitbit.discover(FitBitUUID)]
+    trackers = [t for t in fitbit.discover(FitBitUUID, 0xfb00, 0xfb01, 0xfb02, -255, 4000)]
 
     logger.info('%d trackers discovered', len(trackers))
     for tracker in trackers:

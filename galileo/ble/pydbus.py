@@ -61,9 +61,10 @@ class PyDBUS(API):
     def disconnectAll(self):
         return True
 
-    def discover(self, service):
-        self.serviceUUID = maskUUID(service, 0xfb00)
-        service = str(self.serviceUUID)
+    def discover(self, baseUUID, service1, read, write, minRSSI, timeout):
+        service = str(maskUUID(baseUUID, service1))
+        self.readUUID = str(maskUUID(baseUUID, read))
+        self.writeUUID = str(maskUUID(baseUUID, write))
 
         self.adapter.SetDiscoveryFilter({'UUIDs': GLib.Variant('as', [service]), 'Transport': GLib.Variant('s', 'le')})
         # listen for InterfaceAdded
@@ -94,10 +95,8 @@ class PyDBUS(API):
         # Now, wait for ServicesResolved to turn 'True' or some kind of timeout
         # continue.
 
-        read = str(maskUUID(self.serviceUUID, 0x01))
-        write = str(maskUUID(self.serviceUUID, 0x02))
         # We should make sure that we are selecting the one from the device we want to connect to ...
-        for path, obj in self._getObjects('org.bluez.GattCharacteristic1', lambda obj: obj['UUID'] in (read, write)):
+        for path, obj in self._getObjects('org.bluez.GattCharacteristic1', lambda obj: obj['UUID'] in (self.readUUID, self.writeUUID)):
             if obj['UUID'] == read:
                 self.read = self.bus.get('org.bluez', path)
             else:
