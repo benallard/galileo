@@ -16,6 +16,7 @@ from . import __version__
 from .config import Config, ConfigError
 from .conversation import Conversation
 from .databases import SyncError
+from .dump import MEGADUMP
 from .netUtils import BackOffException
 from .tracker import FitbitClient
 from .ui import InteractiveUI
@@ -80,7 +81,7 @@ def syncAllTrackers(config):
         #time.sleep(5)
 
         logger.info('Getting data from tracker')
-        dump = fitbit.getDump()
+        dump = fitbit.getDump(MEGADUMP)
         if dump is None:
             logger.error("Error downloading the dump from tracker")
             fitbit.disconnect(tracker)

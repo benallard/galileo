@@ -56,7 +56,7 @@ class API(object):
         r = self._readData()
         return (r is not None) and (r.data == bytearray([0xc0, 2]))
 
-    def getDump(self, dumptype=MEGADUMP):
+    def getDump(self, dumptype):
         """ :returns: a `Dump` object or None """
         logger.debug('Getting dump type %d', dumptype)
 
