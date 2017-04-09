@@ -32,12 +32,11 @@ class PyDBUS(API):
 
     def _getObjects(self, classtype=None, filter_=None):
         for path, obj in self.manager.GetManagedObjects().items():
-            logger.debug('object %s has the following classes: %s', path, ', '.join(obj))
             if classtype is None or classtype in obj:
                 if classtype is not None:
                     obj = obj[classtype]
                 if filter_ is not None and not filter_(obj):
-                    logger.info("Filter excluded %s", path)
+                    logger.debug("Filter excluded %s", path)
                     continue
                 yield path, obj
 
@@ -59,6 +58,9 @@ class PyDBUS(API):
         return True
 
     def disconnectAll(self):
+        # Remove all not-connected devices from the managed objects
+        for path, obj in self._getObjects('org.bluez.Device1', lambda obj: not obj['Connected']):
+            self.adapter.RemoveDevice(path)
         return True
 
     def discover(self, baseUUID, service1, read, write, minRSSI, timeout):
@@ -66,16 +68,34 @@ class PyDBUS(API):
         self.readUUID = str(maskUUID(baseUUID, read))
         self.writeUUID = str(maskUUID(baseUUID, write))
 
-        self.adapter.SetDiscoveryFilter({'UUIDs': GLib.Variant('as', [service]), 'Transport': GLib.Variant('s', 'le')})
+        trackers = []
+        def new_iface(*args):
+            logger.debug("Discovered: %s", args)
+            trackers.append(args[0])
+
+        def stop_discovery():
+            self.adapter.StopDiscovery()
+            self.loop.quit()
+            logger.info("Discovery done, found %d trackers", len(trackers))
+            return False
+
         # listen for InterfaceAdded
+        self.manager.onInterfacesAdded = new_iface
         # add a timeout stop function
+        GLib.timeout_add(timeout, stop_discovery)
+        # Start the discovery
+        self.adapter.SetDiscoveryFilter({'UUIDs': GLib.Variant('as', [service]), 'Transport': GLib.Variant('s', 'le')})
         self.adapter.StartDiscovery()
         # run the loop
-        time.sleep(5)
-        self.adapter.StopDiscovery()
+        self.loop.run()
+        # Deregister our event listener
+        self.manager.onInterfacesAdded = None
 
         # Go through the one that have actually been added
         for path, obj in self._getObjects('org.bluez.Device1', lambda obj: service in obj['UUIDs']):
+            if path not in trackers:
+                # Old one, was not discovered this round
+                continue
             logger.info("Found: %s", obj)
             tracker_id = x2a(obj['Address'])
             # Somehow, the Address is the inverse of what fitbit calls the tracker_id.
