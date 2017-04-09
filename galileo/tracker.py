@@ -10,34 +10,14 @@ from .dongle import CM, isStatus
 from .utils import a2s, a2x, i2lsba, a2lsbi
 
 class Tracker(object):
-    def __init__(self, id):
+    def __init__(self, id, serviceData):
         self._id = id
+        self.serviceData = serviceData
         self.status = 'unknown'  # If we happen to read it before anyone set it
 
     @property
     def id(self):
         return a2x(self._id, delim="")
-
-    @property
-    def syncedRecently(self):
-        return False
-
-class FBTracker(Tracker):
-    """ The tracker that get used by the Fitbit dongle implementation """
-    def __init__(self, Id, addrType, serviceData, RSSI, serviceUUID=None):
-        Tracker.__init__(self, Id)
-        self.addrType = addrType
-        if serviceUUID is None:
-            self.serviceUUID = a2lsbi([Id[1] ^ Id[3] ^ Id[5],
-                                       Id[0] ^ Id[2] ^ Id[4]])
-        else:
-            self.serviceUUID = serviceUUID
-        self.serviceData = serviceData
-        # following three are coded somewhere here ...
-        # specialMode
-        # canDisplayNumber
-        # colorCode
-        self.RSSI = RSSI
 
     @property
     def productId(self):
@@ -47,13 +27,29 @@ class FBTracker(Tracker):
     def syncedRecently(self):
         return self.serviceData[1] != 4
 
+class FBTracker(Tracker):
+    """ The tracker that get used by the Fitbit dongle implementation """
+    def __init__(self, Id, addrType, serviceData, RSSI, serviceUUID=None):
+        Tracker.__init__(self, Id, serviceData)
+        self.addrType = addrType
+        if serviceUUID is None:
+            self.serviceUUID = a2lsbi([Id[1] ^ Id[3] ^ Id[5],
+                                       Id[0] ^ Id[2] ^ Id[4]])
+        else:
+            self.serviceUUID = serviceUUID
+        # following three are coded somewhere here ...
+        # specialMode
+        # canDisplayNumber
+        # colorCode
+        self.RSSI = RSSI
+
     @classmethod
     def fromDiscovery(klass, data, minRSSI=-255):
         trackerId = bytearray(data[:6])
         addrType = data[6]
         RSSI = c_byte(data[7]).value
         serviceDataLen = data[8]
-        serviceData = data[9:9+serviceDataLen+1]  # '+1': go figure !
+        serviceData = data[9:9+serviceDataLen]
         sUUID = a2lsbi(data[15:17])
         serviceUUID = a2lsbi([trackerId[1] ^ trackerId[3] ^ trackerId[5],
                               trackerId[0] ^ trackerId[2] ^ trackerId[4]])

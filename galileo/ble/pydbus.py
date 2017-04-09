@@ -14,8 +14,8 @@ from ..utils import x2a, a2x
 from . import API, DM
 
 class DbusTracker(Tracker):
-    def __init__(self, id, path):
-        Tracker.__init__(self, id)
+    def __init__(self, id, serviceData, path):
+        Tracker.__init__(self, id, serviceData)
         self.path = path
 
 def maskUUID(base, mask):
@@ -100,7 +100,8 @@ class PyDBUS(API):
             tracker_id = x2a(obj['Address'])
             # Somehow, the Address is the inverse of what fitbit calls the tracker_id.
             tracker_id.reverse()
-            yield DbusTracker(tracker_id, path)
+            serviceData = obj['ServiceData'].get('0000180a-0000-1000-8000-00805f9b34fb')
+            yield DbusTracker(tracker_id, serviceData, path)
 
     def connect(self, tracker):
         self.tracker = self.bus.get('org.bluez', tracker.path)#['org.bluez.Device1']
