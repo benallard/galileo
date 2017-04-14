@@ -18,7 +18,6 @@ from .conversation import Conversation
 from .databases import SyncError
 from .dump import MEGADUMP
 from .netUtils import BackOffException
-from .tracker import FitbitClient
 from .ui import InteractiveUI
 from .utils import a2x
 from . import dongle as dgl
