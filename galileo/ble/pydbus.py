@@ -1,3 +1,6 @@
+# Prevent conflict between the global pydbus and this one in python2
+from __future__ import absolute_import
+
 import logging
 logger = logging.getLogger(__name__)
 import time
