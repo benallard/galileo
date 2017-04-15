@@ -48,7 +48,18 @@ class PyDBUS(API):
             return False
         self.loop = GLib.MainLoop()
         self.bus = pydbus.SystemBus()
-        self.manager = self.bus.get('org.bluez', '/')
+        try:
+            self.manager = self.bus.get('org.bluez', '/')
+        except GLib.GError as gerr:
+            if gerr.code == 9:
+                # GDBus.Error:org.freedesktop.DBus.Error.AccessDenied
+                logger.error("Insuficient permission to talk to the bluetooth daemon")
+                return False
+            if gerr.code == 36:
+                # GDBus.Error:org.freedesktop.systemd1.NoSuchUnit
+                logger.error("bluez service not found. Is the bluetooth daemon running ?")
+                return False
+            raise
         adapterpaths = list(self._getObjects('org.bluez.Adapter1'))
         if len(adapterpaths) == 0:
             logger.error("No bluetooth adapters found")
@@ -133,6 +144,7 @@ class PyDBUS(API):
             logger.error("Never saw service discovery come to an end (after 2sec).")
             return False
 
+        logger.debug("Fetching the communication Characteristics")
         # We should make sure that we are selecting the one from the device we want to connect to ...
         for path, obj in self._getObjects('org.bluez.GattCharacteristic1', lambda obj: obj['UUID'] in (self.readUUID, self.writeUUID)):
             if obj['UUID'] == self.readUUID:
@@ -149,6 +161,7 @@ class PyDBUS(API):
             logger.debug('received: %s', changed)
             self.readqueue.append(changed['Value'])
 
+        logger.debug("Installing my read handler.")
         self.read.onPropertiesChanged = received
         self.read.StartNotify()
 
