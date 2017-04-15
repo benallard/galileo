@@ -109,14 +109,13 @@ class PyDBUS(API):
 
     def connect(self, tracker):
         self.tracker = self.bus.get('org.bluez', tracker.path)
-        logger.debug(dir(self.tracker))
-        if not self.tracker.Paired:
-            logger.info("Pairing with tracker")
-            self.tracker.Pair()
         if not self.tracker.Connected:
             logger.info("Connecting to tracker")
             self.tracker.Connect()
-
+        if not self.tracker.Paired:
+            logger.info("Pairing with tracker")
+            self.tracker.Pair()
+        logger.debug("Waiting for service discovery")
         def discovered(iface, changed, invalidated):
             if not changed.get('ServicesResolved', False):
                 return
