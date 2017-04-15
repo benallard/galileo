@@ -48,7 +48,7 @@ class PyDBUS(API):
             return False
         self.loop = GLib.MainLoop()
         self.bus = pydbus.SystemBus()
-        self.manager = self.bus.get('org.bluez', '/')#['org.freedesktop.DBus.ObjectManager']
+        self.manager = self.bus.get('org.bluez', '/')
         adapterpaths = list(self._getObjects('org.bluez.Adapter1'))
         if len(adapterpaths) == 0:
             logger.error("No bluetooth adapters found")
@@ -61,7 +61,7 @@ class PyDBUS(API):
         return True
 
     def disconnectAll(self):
-        # Remove all not-connected devices from the managed objects
+        """ Remove all not-connected devices from the managed objects """
         for path, obj in self._getObjects('org.bluez.Device1', lambda obj: not obj['Connected']):
             self.adapter.RemoveDevice(path)
         return True
@@ -80,6 +80,7 @@ class PyDBUS(API):
             self.adapter.StopDiscovery()
             self.loop.quit()
             logger.info("Discovery done, found %d trackers", len(trackers))
+            # remove the timeout handler from the sources.
             return False
 
         # listen for InterfaceAdded
@@ -107,7 +108,7 @@ class PyDBUS(API):
             yield DbusTracker(tracker_id, serviceData, path)
 
     def connect(self, tracker):
-        self.tracker = self.bus.get('org.bluez', tracker.path)#['org.bluez.Device1']
+        self.tracker = self.bus.get('org.bluez', tracker.path)
         logger.debug(dir(self.tracker))
         if not self.tracker.Paired:
             logger.info("Pairing with tracker")
@@ -115,9 +116,23 @@ class PyDBUS(API):
         if not self.tracker.Connected:
             logger.info("Connecting to tracker")
             self.tracker.Connect()
-        # listen for PropertiesChanged
-        # Now, wait for ServicesResolved to turn 'True' or some kind of timeout
-        # continue.
+
+        def discovered(iface, changed, invalidated):
+            if not changed.get('ServicesResolved', False):
+                return
+            self.loop.quit()
+        def timeout():
+            self.loop.quit()
+            # explicitely remove the timeout always
+            return True
+        self.tracker.onPropertiesChanged = discovered
+        # Stop after 2 sec.
+        timeout_id = GLib.timeout_add(2000, timeout)
+        self.loop.run()
+        GLib.source_remove(timeout_id)
+        if not self.tracker.ServicesResolved:
+            logger.error("Never saw service discovery come to an end (after 2sec).")
+            return False
 
         # We should make sure that we are selecting the one from the device we want to connect to ...
         for path, obj in self._getObjects('org.bluez.GattCharacteristic1', lambda obj: obj['UUID'] in (self.readUUID, self.writeUUID)):
