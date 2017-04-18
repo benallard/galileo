@@ -29,6 +29,9 @@ All Bluetooth-based trackers are supported. Those are:
 - Fitbit Charge
 - Fitbit Charge HR
 
+.. note:: Support for synchronisation without the provided USB dongle is now
+          **experimental** (See #28). Help with testing is welcome !
+
 .. note:: Support for the newer trackers: Alta, Surge, and Blaze is now
           **experimental** (see #149) due to a change in the network
           communication protocol. Help with testing is welcome !
