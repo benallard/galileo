@@ -99,7 +99,11 @@ class PyDBUS(API):
         # add a timeout stop function
         GLib.timeout_add(timeout, stop_discovery)
         # Start the discovery
-        self.adapter.SetDiscoveryFilter({'UUIDs': GLib.Variant('as', [service]), 'Transport': GLib.Variant('s', 'le')})
+        try:
+            self.adapter.SetDiscoveryFilter({'UUIDs': GLib.Variant('as', [service]), 'Transport': GLib.Variant('s', 'le')})
+        except AttributeError:
+            # SetDiscoveryFilter not present. It's not critical as we filter afterward anyway.
+            logger.warning("Setting of discovery filter not supported")
         self.adapter.StartDiscovery()
         # run the loop
         self.loop.run()
@@ -115,7 +119,12 @@ class PyDBUS(API):
             tracker_id = x2a(obj['Address'])
             # Somehow, the Address is the inverse of what fitbit calls the tracker_id.
             tracker_id.reverse()
-            serviceData = obj['ServiceData'].get('0000180a-0000-1000-8000-00805f9b34fb')
+            try:
+                serviceData = obj['ServiceData'].get('0000180a-0000-1000-8000-00805f9b34fb')
+            except KeyError:
+                # ServiceData not present
+                logger.error("bluez version too old (no ServiceData from advertisement)")
+                continue
             yield DbusTracker(tracker_id, serviceData, path)
 
     def connect(self, tracker):
