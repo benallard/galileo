@@ -87,16 +87,20 @@ class API(object):
                      dump.esc[1])
         return dump
 
-    def uploadResponse(self, response):
+    def _uploadResponse(self, response, fastAirlink):
         """
         :returns: a boolean about the success of the operation.
         """
         dumptype = 4  # ???
         crc = CRC16()
         crc.update(response)
-        self._writeData(DM([0xc0, 0x24, dumptype] + i2lsba(len(response), 4) + i2lsba(crc.final(), 2)))
+        extension  = []
+        if fastAirlink:
+            # Seems like adding a 0 indicate fastAirlink.
+            extension = [0]
+        self._writeData(DM([0xc0, 0x24, dumptype] + i2lsba(len(response), 4) + i2lsba(crc.final(), 2) + extension))
         d = self._readData()
-        if d != DM([0xc0, 0x12, dumptype, 0, 0]):
+        if d != DM([0xc0, 0x12, dumptype, 0, 0] + extension):
             logger.error("Tracker did not acknowledged upload type: %s", d)
             return False
 
@@ -106,11 +110,12 @@ class API(object):
         for i, chunk in enumerate(response):#range(0, len(response), CHUNK_LEN):
             self._writeData(DM(chunk))
             # This one can also take some time (Charge HR tracker)
-            d = self._readData(20000)
-            expected = DM([0xc0, 0x13, (((i+1) % 16) << 4) + dumptype, 0, 0])
-            if d != expected:
-                logger.error("Wrong sequence number: %s, expected: %s", d, expected)
-                return False
+            if not fastAirlink:
+                d = self._readData(20000)
+                expected = DM([0xc0, 0x13, (((i+1) % 16) << 4) + dumptype, 0, 0])
+                if d != expected:
+                    logger.error("Wrong sequence number: %s, expected: %s", d, expected)
+                    return False
 
         self._writeData(DM([0xc0, 2]))
         # Next one can be very long. He is probably erasing the memory there

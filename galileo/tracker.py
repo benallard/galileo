@@ -249,6 +249,9 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
         d = self.data_read(5000)
         return d == DM([0xc0, 0xb])
 
+    def uploadResponse(self, response):
+        return self._uploadResponse(response, False)
+
     def disconnect(self, tracker):
         if not self._terminateAirlink():
             logger.error("Unable to terminate the link")

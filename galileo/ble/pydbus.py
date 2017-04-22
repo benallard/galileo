@@ -195,6 +195,9 @@ class PyDBUS(API):
         logger.debug('<= %s', data)
         return data
 
+    def uploadResponse(self, response):
+        return self._uploadResponse(response, True)
+
     def disconnect(self, tracker):
         if self.read is not None:
             self.read.StopNotify()
