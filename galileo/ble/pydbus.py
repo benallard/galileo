@@ -129,6 +129,7 @@ class PyDBUS(API):
 
     def connect(self, tracker):
         self.tracker = self.bus.get('org.bluez', tracker.path)
+        self.tracker.Trusted = True
         if not self.tracker.Connected:
             logger.info("Connecting to tracker")
             self.tracker.Connect()
