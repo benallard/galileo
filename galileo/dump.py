@@ -126,23 +126,24 @@ class Dump(TrackerBlock):
     def isValid(self):
         if not self.footer:
             return False
+        ret = True
         dataType = self.footer[2]
         if dataType != self._type:
             logger.error('Dump is not of requested type: %x != %x',
                          dataType, self._type)
-            return False
+            ret = False
+        nbBytes = a2lsbi(self.footer[5:9])
+        if self.len != nbBytes:
+            logger.error("Error in communication, Expected length: %d bytes,"
+                         " received %d bytes", nbBytes, self.len)
+            ret = False
         crcVal = self.crc.final()
         transportCRC = a2lsbi(self.footer[3:5])
         if transportCRC != crcVal:
             logger.error("Error in communication, Expected CRC: 0x%04X,"
                          " received 0x%04X", crcVal, transportCRC)
-            return False
-        nbBytes = a2lsbi(self.footer[5:9])
-        if self.len != nbBytes:
-            logger.error("Error in communication, Expected length: %d bytes,"
-                         " received %d bytes", nbBytes, self.len)
-            return False
-        return True
+            ret = False
+        return ret
 
     def toBase64(self):
         return base64.b64encode(a2b(self.data + self.footer)).decode('utf-8')
