@@ -132,7 +132,11 @@ class PyDBUS(API):
         self.tracker.Trusted = True
         if not self.tracker.Connected:
             logger.info("Connecting to tracker")
-            self.tracker.Connect()
+            try:
+                self.tracker.Connect()
+            except GLib.GError as gerr:
+                logger.error("Received GLib Error: %s", gerr.message)
+                return False
         logger.debug("Waiting for service discovery")
         def discovered(iface, changed, invalidated):
             if not changed.get('ServicesResolved', False):
