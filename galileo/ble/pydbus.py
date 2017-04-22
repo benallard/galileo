@@ -143,12 +143,12 @@ class PyDBUS(API):
             # explicitely remove the timeout always
             return True
         self.tracker.onPropertiesChanged = discovered
-        # Stop after 2 sec.
-        timeout_id = GLib.timeout_add(2000, timeout)
+        # Stop after 20 sec.
+        timeout_id = GLib.timeout_add(20000, timeout)
         self.loop.run()
         GLib.source_remove(timeout_id)
         if not self.tracker.ServicesResolved:
-            logger.error("Never saw service discovery come to an end (after 2sec).")
+            logger.error("Never saw service discovery come to an end (after 20sec).")
             return False
 
         logger.debug("Fetching the communication Characteristics")
