@@ -79,7 +79,7 @@ class PyDBUS(API):
             except GLib.GError as gerr:
                 if gerr.code == 36:
                     # GDBus.Error:org.bluez.Error.DoesNotExist: Does Not Exist
-                    pass
+                    continue
                 raise
         return True
 
