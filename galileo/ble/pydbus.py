@@ -74,7 +74,13 @@ class PyDBUS(API):
     def disconnectAll(self):
         """ Remove all not-connected devices from the managed objects """
         for path, obj in self._getObjects('org.bluez.Device1', lambda obj: not obj['Connected']):
-            self.adapter.RemoveDevice(path)
+            try:
+                self.adapter.RemoveDevice(path)
+            except GLib.GError as gerr:
+                if gerr.code == 36:
+                    # GDBus.Error:org.bluez.Error.DoesNotExist: Does Not Exist
+                    pass
+                raise
         return True
 
     def discover(self, baseUUID, service1, read, write, minRSSI, timeout):
