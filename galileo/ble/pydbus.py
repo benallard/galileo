@@ -180,8 +180,14 @@ class PyDBUS(API):
         self.read.onPropertiesChanged = received
         self.read.StartNotify()
 
-        if not self._initializeAirlink(tracker):
-            return False
+        try:
+            if not self._initializeAirlink(tracker):
+                return False
+        except GLib.GError as gerr:
+            if gerr.code == 36:
+                # GDBus.Error:org.bluez.Error.Failed: Not connected
+                return False
+            raise
         return True
 
     def _writeData(self, data):
