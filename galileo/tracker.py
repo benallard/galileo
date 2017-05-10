@@ -124,9 +124,9 @@ class FitbitClient(dongle.FitBitDongle, ble.API):
         transmission and reception.
         """
         logger.debug('Discovering for UUID %s: %s', uuid,
-                     ', '.join(hex(s) for s in (service1, write, read)))
+                     ', '.join(hex(s) for s in (service1, read, write)))
         data = i2lsba(uuid.int, 16)
-        for i in (service1, write, read, timeout):
+        for i in (service1, read, write, timeout):
             data += i2lsba(i, 2)
         self.ctrl_write(CM(4, data))
         amount = 0
