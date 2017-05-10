@@ -34,7 +34,7 @@ class API(object):
             data.extend(i2lsba(n, 2))
         #data = data + [1]
         self._writeData(DM([0xc0, 0xa] + data))
-        d = self._readData()
+        d = self._readData(10000)
         if d is None:
             return False
         if d.data[:2] != bytearray([0xc0, 0x14]):
