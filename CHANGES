@@ -1,6 +1,13 @@
+galileo 1.0 (????-??-??)
+------------------------
+
+This release is a great improvement over the 0.5 branch that introduces
+flexibility over the bluetooth layer as well as the database connection layer.
+Additionally, the internal handling of the transmitted data has been switched
+to a more suitable native type.
 
 Contributors to this release: Dylan Aïssi, Gert van de Kraats, Maarten
-Schellevis
+Schellevis, Tomasz Drozda
 
 Main changes since 0.5.2:
 - Add an AppStream file (issue#308)
@@ -9,13 +16,19 @@ Main changes since 0.5.2:
 - Add a parameter to choose the database type to use
 - Switch the internal data representation type to `bytearray`
 - Add the implementation for a local database (PR#24)
+- Add a bluetooth abstraction layer and allow synchronization using raw (linux)
+  bluetooth via DBus. (issue #28)
+- Add a parameter to select the bluetooth layer.
 
 
 galileo 0.5.2 (????-??-??)
 --------------------------
 
+Contributors to this release: Geert van de Kraats.
+
 Main changes since 0.5.1:
 - Add support for the Alta (issue#261)
+- Always disconnect before quitting (issue#320).
 
 
 galileo 0.5.1 (2016-09-18)
