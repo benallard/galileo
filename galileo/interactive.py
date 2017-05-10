@@ -157,7 +157,7 @@ def receive_data(param='1'):
 
 @command('d', "Discovery")
 @needfitbit
-def discovery(UUID="{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}", service="0xfb00", read="0xfb01", write=0xfb02, minRSSI="-255", timeout="4000"):
+def discovery(UUID="{ADAB0000-6E7D-4601-BDA2-BFFAA68956BA}", service="0xfb00", read="0xfb01", write="0xfb02", minRSSI="-255", timeout="4000"):
     UUID = uuid.UUID(UUID)
     global trackers
     trackers = [t for t in fitbit.discover(UUID, int(service, 0), int(read, 0), int(write, 0), int(minRSSI, 0), int(timeout, 0))]
