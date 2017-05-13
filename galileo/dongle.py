@@ -89,7 +89,7 @@ class USBDevice(object):
 
     def __del__(self):
         if hasattr(self, '_dev') and self._dev is not None:
-            self._dev.reset()
+            usb.util.dispose_resources(self._dev)
 
 
 class CtrlMessage(object):
