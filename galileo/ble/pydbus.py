@@ -170,9 +170,9 @@ class PyDBUS(API):
                 self.write = self.bus.get('org.bluez', path)
 
         def received(iface, changed, invalidated):
-            value = changed.get('Value', [])
-            if len(value) <= 1:
-                logger.debug("Discarding %s", a2x(value))
+            value = changed.get('Value')
+            if value is None:
+                logger.debug("No Value received")
                 return
             self.readqueue.append(changed['Value'])
 
