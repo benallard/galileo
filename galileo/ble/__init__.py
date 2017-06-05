@@ -39,6 +39,8 @@ class API(object):
         d = self._readData(10000)
         if d is None:
             return False
+        while d == DM([0xc0]):
+            d = self._readData(10000)
         if d.data[:2] != bytearray([0xc0, 0x14]):
             logger.error("Wrong header: %s", a2x(d.data[:2]))
             return False
