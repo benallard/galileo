@@ -210,7 +210,13 @@ class PyDBUS(API):
         return data
 
     def uploadResponse(self, response):
-        return self._uploadResponse(response, True)
+        try:
+            return self._uploadResponse(response, True)
+        except GLib.GError as gerr:
+            if gerr.code == 36:
+                # GDBus.Error:org.bluez.Error.Failed: Not connected
+                return False
+            raise
 
     def disconnect(self, tracker):
         if self.read is not None:
