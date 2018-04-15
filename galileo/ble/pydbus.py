@@ -45,6 +45,7 @@ class PyDBUS(API):
 
     def setup(self):
         if pydbus is None:
+            logger.warn("pydbus not installed")
             return False
         self.loop = GLib.MainLoop()
         self.bus = pydbus.SystemBus()
@@ -58,6 +59,10 @@ class PyDBUS(API):
             if gerr.code == 36:
                 # GDBus.Error:org.freedesktop.systemd1.NoSuchUnit
                 logger.error("bluez service not found. Is the bluetooth daemon running ?")
+                return False
+            if gerr.code == 2:
+                # GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown
+                logger.error("bluez service unknown. Is bluez installed ?")
                 return False
             raise
         adapterpaths = list(self._getObjects('org.bluez.Adapter1'))
