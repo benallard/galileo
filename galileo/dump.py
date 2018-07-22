@@ -75,10 +75,13 @@ class TrackerBlock(object):
 
     def toFile(self, filename):
         logger.debug("Dumping megadump to %s", filename)
-        with open(filename, 'wt') as dumpfile:
-            for i in range(0, self.len, 20):
-                dumpfile.write(a2x(self.data[i:i + 20]) + '\n')
-            dumpfile.write(a2x(self.footer) + '\n')
+        try:
+            with open(filename, 'wt') as dumpfile:
+                for i in range(0, self.len, 20):
+                    dumpfile.write(a2x(self.data[i:i + 20]) + '\n')
+                dumpfile.write(a2x(self.footer) + '\n')
+        except EnvironmentError as err:
+            logger.warn("Unable to write the dump to file: %s", err)
 
 
 class Dump(TrackerBlock):
