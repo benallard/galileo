@@ -10,7 +10,7 @@ class API(object):
     def disconnectAll(self):
         pass
     def getHardwareInfo(self):
-        pass
+        return True
     def discover(self, UUID, service1, read, write, minRSSI, timeout):
         raise NotImplementedError
     def connect(self, tracker):
@@ -41,6 +41,8 @@ class API(object):
             return False
         while d == DM([0xc0]):
             d = self._readData(10000)
+        if d is None:
+            return False
         if d.data[:2] != bytearray([0xc0, 0x14]):
             logger.error("Wrong header: %s", a2x(d.data[:2]))
             return False
