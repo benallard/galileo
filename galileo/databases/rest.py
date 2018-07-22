@@ -7,6 +7,7 @@ import requests
 
 from ..utils import s2a
 from .xml import RemoteXMLDatabase
+from . import SyncError
 
 class RemoteRESTDatabase(RemoteXMLDatabase):
 
@@ -30,6 +31,13 @@ class RemoteRESTDatabase(RemoteXMLDatabase):
         headers['Authorization'] = "Basic "  + auth.decode()
 
         r = requests.post(url, data=megadump.toBase64(), headers=headers)
-        r.raise_for_status()
+        try:
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as he:
+            status_code = 500
+            if getattr(he, 'response', None) is not None:
+                status_code = he.response.status_code
+            msg = he.args[0]
+            raise SyncError("HTTPError: %s (%d)" % (msg, status_code))
 
         return s2a(base64.b64decode(r.text))
