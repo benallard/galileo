@@ -11,6 +11,10 @@ from . import SyncError
 
 class RemoteRESTDatabase(RemoteXMLDatabase):
 
+    def requestStatus(self, allowHTTP=False):
+        logger.debug("Skipping status request")
+        return True
+
     def sync(self, dongle, trackerId, megadump):
 
         url = "https://desktop-client.fitbit.com/1/devices/client/tracker/data/sync.json"
