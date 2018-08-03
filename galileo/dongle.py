@@ -86,6 +86,7 @@ class USBDevice(object):
     @property
     def dev(self):
         if usb is None:
+            logger.info("pyusb does not seems to be installed")
             return None
         if self._dev is None:
             self._dev = usb.core.find(idVendor=self.vid, idProduct=self.pid)
@@ -149,14 +150,14 @@ def isStatus(data, msg=None, logError=True):
         return False
     if data.INS != 1:
         if logError:
-            logging.warning("Message is not a status message: %x", data.INS)
+            logger.warning("Message is not a status message: %x", data.INS)
         return False
     if msg is None:
         return True
     message = a2s(data.payload)
     if not message.startswith(msg):
         if logError:
-            logging.warning("Message '%s' (received) is not '%s' (expected)",
+            logger.warning("Message '%s' (received) is not '%s' (expected)",
                             message, msg)
         return False
     return True
