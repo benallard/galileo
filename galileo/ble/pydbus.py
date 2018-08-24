@@ -170,10 +170,10 @@ class PyDBUS(API):
         # We should make sure that we are selecting the one from the device we want to connect to ...
         for path, obj in self._getObjects('org.bluez.GattCharacteristic1', lambda obj: obj['UUID'] in (self.readUUID, self.writeUUID)):
             if obj['UUID'] == self.readUUID:
-                logger.debug("read is: ", path)
+                logger.debug("read is: %s", path)
                 self.read = self.bus.get('org.bluez', path)
             else:
-                logger.debug("write is: ", path)
+                logger.debug("write is: %s", path)
                 self.write = self.bus.get('org.bluez', path)
 
         if self.read is None:
