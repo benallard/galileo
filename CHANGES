@@ -19,6 +19,7 @@ Main changes since 0.5.2:
 - Add a bluetooth abstraction layer and allow synchronization using raw (linux)
   bluetooth via DBus. (issue #28)
 - Add a parameter to select the bluetooth layer.
+- Make the REST interface the default one.
 
 
 galileo 0.5.2 (????-??-??)
