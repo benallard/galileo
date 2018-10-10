@@ -290,7 +290,7 @@ class FitBitDongle(USBDevice):
         msg = None
         data = self.read(0x81, DM.LENGTH, timeout)
         if data is not None:
-            msg = DM(data, out=False)
+            msg = DM(data, decode=True)
         logger.debug('<== %s', msg or '...')
         return msg
 

@@ -136,20 +136,14 @@ class DataMessage(object):
     """ A message that get communicated over the BLE link """
     LENGTH = 32
 
-    def __init__(self, data, out=True):
-        if out:  # outgoing
-            if len(data) > (self.LENGTH - 1):
-                raise ValueError('data %s (%d) too big' % (data, len(data)))
+    def __init__(self, data, decode=False):
+        if decode and len(data) == self.LENGTH:
+            # last byte is length
+            self.len = data[-1]
+            self.data = bytearray(data[:self.len])
+        else:
             self.data = bytearray(data)
             self.len = len(data)
-        else:  # incoming
-            if len(data) == self.LENGTH:
-                # last byte is length
-                self.len = data[-1]
-                self.data = bytearray(data[:self.len])
-            else:
-                # Same as outgoing actually
-                self.__init__(data)
 
     def asList(self):
         return self.data + b'\x00' * (self.LENGTH - 1 - self.len) + bytearray([self.len])

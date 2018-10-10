@@ -69,7 +69,8 @@ class PyDBUS(API):
         if len(adapterpaths) == 0:
             logger.error("No bluetooth adapters found")
             return False
-        logger.info('Found adapter: %s', adapterpaths)
+        logger.info('Found %d adapters: %s', len(adapterpaths), adapterpaths)
+        logger.info('Using: %s', adapterpaths[0][0])
         self.adapter = self.bus.get('org.bluez', adapterpaths[0][0])
         if not self.adapter.Powered:
             logger.info("Adapter wasn't powered, powering it up.")
@@ -216,7 +217,7 @@ class PyDBUS(API):
             time.sleep(.1)
             self.loop.get_context().iteration(False)
 
-        data = DM(bytearray(self.readqueue.pop(0)), False)
+        data = DM(bytearray(self.readqueue.pop(0)), decode=False)
         logger.debug('<= %s', data)
         return data
 
