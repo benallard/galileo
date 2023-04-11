@@ -51,7 +51,7 @@ setup(
     long_description=long_description,
     author="Benoît Allard",
     author_email="benoit.allard@gmx.de",
-    url="https://bitbucket.org/benallard/galileo",
+    url="https://github.com/benallard/galileo",
     platforms=['any'],
     keywords=['fitbit', 'synchronize', 'health', 'tracker'],
     license="LGPL",
