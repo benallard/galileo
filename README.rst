@@ -4,7 +4,7 @@ Galileo
 :author: Benoît Allard <benoit.allard@gmx.de>
 :version: 1.0dev
 :license: LGPLv3+
-:bug tracker: https://bitbucket.org/benallard/galileo/issues
+:bug tracker: https://github.com/benallard/galileo/issues
 :mailing list: galileo@freelists.org (subscribe_, archive_)
 :build status: |droneio_badge|_
 

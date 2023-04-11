@@ -16,7 +16,7 @@
       Flex, Force, Charge, Charge HR.
     </p>
   </description>
-  <url type="homepage">https://bitbucket.org/benallard/galileo/</url>
+  <url type="homepage">https://github.com/benallard/galileo</url>
   <provides>
     <modalias>usb:v2687pFB01d*</modalias>
   </provides>

@@ -286,7 +286,7 @@ def main():
         logger.critical("# A serious error happened, which is probably due to a")
         logger.critical("# programming error. Please open a new issue with the following")
         logger.critical("# information on the galileo bug tracker:")
-        logger.critical("#    https://bitbucket.org/benallard/galileo/issues/new")
+        logger.critical("#    https://github.com/benallard/galileo/issues/new")
         logger.critical('# %s', version(True, '\n# '))
         if hasattr(dgl, 'log'):
             logger.critical('# Last communications:')
